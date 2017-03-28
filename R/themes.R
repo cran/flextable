@@ -1,0 +1,118 @@
+#' @importFrom officer fp_border fp_par
+#' @export
+#' @title Apply vanilla theme
+#' @description Apply theme vanilla to a flextable
+#' @param x a flextable object
+#' @examples
+#' ft <- flextable(iris)
+#' ft <- theme_vanilla(ft)
+theme_vanilla <- function(x){
+  x <- border(x = x, border.bottom = fp_border(width = 1, color = "#333333"),
+              border.top = fp_border(width = 1, color = "#333333"),
+              border.left = fp_border(width = 0),
+              border.right = fp_border(width = 0),
+              part = "all")
+  x <- style( x = x, pr_p = fp_par(text.align = "right", padding = 2), part = "all")
+  x <- bg(x = x, bg = "transparent", part = "all")
+  x <- bold(x = x, bold = TRUE, part = "header")
+  x
+}
+
+#' @export
+#' @title Apply zebra theme
+#' @description Apply theme zebra to a flextable
+#' @param x a flextable object
+#' @param odd_header,odd_body,even_header,even_body odd/even colors for table header and body
+#' @examples
+#' ft <- flextable(iris)
+#' ft <- theme_zebra(ft)
+theme_zebra <- function(x, odd_header = "#CFCFCF", odd_body = "#EFEFEF",
+                        even_header = "transparent", even_body = "transparent" ){
+  x <- border(x = x, border = fp_border(width = 0), part = "all")
+  x <- padding(x = x, padding = 2, part = "all")
+  x <- align(x = x, align = "right", part = "all")
+  even <- seq_len( nrow(x$body$dataset) ) %% 2 == 0
+  odd <- !even
+
+  x <- bg(x = x, i = odd, bg = odd_body, part = "body")
+  x <- bg(x = x, i = even, bg = even_body, part = "body")
+
+  even <- seq_len( nrow(x$header$dataset) ) %% 2 == 0
+  odd <- !even
+
+  x <- bg(x = x, i = odd, bg = odd_header, part = "header")
+  x <- bg(x = x, i = even, bg = even_header, part = "header")
+  x <- bold(x = x, bold = TRUE, part = "header")
+
+  x
+}
+
+#' @export
+#' @title Apply tron legacy theme
+#' @description Apply theme tron legacy to a flextable
+#' @param x a flextable object
+#' @examples
+#' ft <- flextable(iris)
+#' ft <- theme_tron_legacy(ft)
+theme_tron_legacy <- function(x){
+  x <- border(x = x, border = fp_border(width = 1, color = "#6FC3DF"),
+              part = "all")
+  x <- padding(x = x, padding = 2, part = "all")
+  x <- align(x = x, align = "right", part = "all")
+  x <- bg(x = x, bg = "#0C141F", part = "all")
+  x <- bold(x = x, bold = TRUE, part = "header")
+  x <- color(x = x, color = "#DF740C", part = "header")
+  x <- color(x = x, color = "#FFE64D", part = "body")
+  x
+}
+
+#' @export
+#' @title Apply tron theme
+#' @description Apply theme tron to a flextable
+#' @param x a flextable object
+#' @examples
+#' ft <- flextable(iris)
+#' ft <- theme_tron(ft)
+theme_tron <- function(x){
+  x <- border(x = x, border = fp_border(width = 1, color = "#a4cee5"),
+              part = "all")
+  x <- padding(x = x, padding = 2, part = "all")
+  x <- align(x = x, align = "right", part = "all")
+  x <- bg(x = x, bg = "#000000", part = "all")
+  x <- bold(x = x, bold = TRUE, part = "header")
+  x <- color(x = x, color = "#ec9346", part = "header")
+  x <- color(x = x, color = "#a4cee5", part = "body")
+  x
+}
+
+#' @export
+#' @title Apply booktabs theme
+#' @description Apply theme tron to a flextable
+#' @param x a flextable object
+#' @examples
+#' ft <- flextable(iris)
+#' ft <- theme_booktabs(ft)
+theme_booktabs <- function(x){
+  null_border <- fp_border(width = 0)
+  big_border <- fp_border(width = 2)
+  std_border <- fp_border(width = 1)
+  h_nrow <- nrow(x$header$dataset)
+  b_nrow <- nrow(x$body$dataset)
+
+  x <- border(x = x, border = null_border, part = "header")
+  x <- border(x = x, i = 1, border.top = big_border, part = "header")
+  x <- border(x = x, i = h_nrow, border.bottom = big_border, part = "header")
+
+  x <- border(x = x, border.bottom = fp_border(width = 1, color = "black"),
+              border.top = fp_border(width = 1, color = "black"),
+              border.left = fp_border(width = 0),
+              border.right = fp_border(width = 0),
+              part = "body")
+  x <- border(x = x, i = b_nrow, border.bottom = big_border, part = "body")
+
+  x <- style( x = x, pr_p = fp_par(text.align = "right", padding = 2), part = "all")
+  x <- bg(x = x, bg = "transparent", part = "all")
+  x <- bold(x = x, bold = TRUE, part = "header")
+  x
+
+}
