@@ -14,9 +14,6 @@
 #' @seealso \code{\link{flextable}}
 width <- function(x, j = NULL, width){
 
-  if( inherits(j, "formula") ){
-    j <- attr(terms(j), "term.labels")
-  }
   j <- get_columns_id(x[["body"]], j )
 
   stopifnot(length(j)==length(width) || length(width) == 1)
@@ -74,9 +71,6 @@ height <- function(x, i = NULL, height, part = "body"){
     return(x)
   }
 
-  if( inherits(i, "formula") ){
-    i <- lazy_eval(i[[2]], x[[part]]$dataset)
-  }
   i <- get_rows_id(x[[part]], i )
   if( !(length(i) == length(height) || length(height) == 1)){
     stop("height should be of length 1 or ", length(i))
@@ -116,9 +110,8 @@ dim.flextable <- function(x){
 #' each table columns and rows.
 #' @examples
 #'
-#' # get estimated widths
 #' ft <- flextable(mtcars)
-#' dim_pretty(ft)
+#' \donttest{dim_pretty(ft)}
 dim_pretty <- function( x ){
   max_widths <- list()
   max_heights <- list()
@@ -143,8 +136,7 @@ dim_pretty <- function( x ){
 #' @examples
 #'
 #' ft <- flextable(mtcars)
-#' ft <- autofit(ft)
-#'
+#' \donttest{ft <- autofit(ft)}
 #' ft
 autofit <- function(x, add_w = 0.1, add_h = 0.1 ){
   max_widths <- list()

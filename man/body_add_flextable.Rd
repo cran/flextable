@@ -4,12 +4,14 @@
 \alias{body_add_flextable}
 \title{wml table code}
 \usage{
-body_add_flextable(x, value, pos = "after")
+body_add_flextable(x, value, align = "center", pos = "after")
 }
 \arguments{
 \item{x}{a docx object}
 
 \item{value}{\code{flextable} object}
+
+\item{align}{left (default), center or right.}
 
 \item{pos}{where to add the flextable relative to the cursor,
 one of "after", "before", "on" (end of line).}
@@ -21,7 +23,7 @@ produces the wml of a flextable
 library(officer)
 ft <- flextable(head(mtcars))
 ft <- theme_zebra(ft)
-ft <- autofit(ft)
+\donttest{ft <- autofit(ft)}
 doc <- read_docx()
 doc <- body_add_flextable(doc, value = ft)
 print(doc, target = "test.docx")

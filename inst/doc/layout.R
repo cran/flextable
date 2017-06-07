@@ -10,6 +10,32 @@ library(flextable)
 library(officer)
 library(magrittr)
 
+## ----warning=FALSE, message=FALSE----------------------------------------
+select_columns <- c("Species", "Petal.Length", "Petal.Width")
+myft <- flextable(iris[46:55,], col_keys = select_columns) %>% 
+  merge_v(~ Species + Petal.Width )
+
+tabwid(myft) 
+
+## ----warning=FALSE, message=FALSE----------------------------------------
+select_columns <- c("Species", "Petal.Length", "Petal.Width")
+myft <- flextable(head(mtcars, n = 10 ) ) %>% 
+  merge_h( ) %>%
+  border(border = fp_border(), part = "all") # and add borders
+
+tabwid(myft)
+
+## ----warning=FALSE, message=FALSE----------------------------------------
+select_columns <- c("Species", "Petal.Length", "Petal.Width")
+myft <- flextable(head(mtcars, n = 6 ) ) %>% 
+  merge_at( i = 1:3, j = 1:3) %>%
+  border(border = fp_border(), part = "all") # and add borders
+
+tabwid(myft)
+
+## ------------------------------------------------------------------------
+tabwid(myft %>% merge_none())
+
 ## ------------------------------------------------------------------------
 library(dplyr)
 iris %>% 
@@ -46,6 +72,10 @@ ft <- ft %>%
   add_header(Sepal.Length = "Inches",
     Sepal.Width = "Inches", Petal.Length = "Inches",
     Petal.Width = "Inches", Species = "Species", top = TRUE )
+
+# merge identical cells
+ft <- ft %>% merge_h(part = "header") %>% merge_v(part = "header")
+
 ft %>% theme_vanilla() %>% autofit() %>% tabwid()
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
@@ -61,25 +91,8 @@ typology %>% flextable() %>% theme_vanilla() %>% autofit() %>% tabwid()
 ## ----warning=FALSE, message=FALSE----------------------------------------
 flextable( head( iris ) ) %>% 
   set_header_df( mapping = typology, key = "col_keys" ) %>% 
+  merge_h(part = "header") %>% merge_v(part = "header") %>% 
   theme_vanilla() %>% autofit() %>% tabwid()
-
-## ----warning=FALSE, message=FALSE----------------------------------------
-select_columns <- c("Species", "Petal.Length", "Petal.Width")
-myft <- flextable(iris[46:55,], col_keys = select_columns) %>% 
-  flextable::merge_v(~ Species + Petal.Width )
-
-tabwid(myft) 
-
-## ----warning=FALSE, message=FALSE----------------------------------------
-select_columns <- c("Species", "Petal.Length", "Petal.Width")
-myft <- flextable(head(mtcars, n = 10 ) ) %>% 
-  flextable::merge_h( ) %>% # merge
-  border(border = fp_border(), part = "all") # and add borders
-
-tabwid(myft)
-
-## ------------------------------------------------------------------------
-tabwid(myft %>% merge_none())
 
 ## ------------------------------------------------------------------------
 ft_base <- flextable(head(iris)) %>% 

@@ -1,4 +1,4 @@
-#' @title flextable object
+#' @title flextable creation
 #'
 #' @description Create a flextable object with function \code{flextable}.
 #'
@@ -16,13 +16,14 @@
 #' @param data dataset
 #' @param col_keys columns names/keys to display. If some column names are not in
 #' the dataset, they will be added as blank columns by default.
+#' @param cwidth,cheight initial width and height to use for cell sizes.
 #' @examples
 #' ft <- flextable(mtcars)
 #' ft
 #' @export
 #' @importFrom stats setNames
 #' @importFrom purrr map
-flextable <- function( data, col_keys = names(data) ){
+flextable <- function( data, col_keys = names(data), cwidth = .75, cheight = .25 ){
 
   blanks <- setdiff( col_keys, names(data))
   if( length( blanks ) > 0 ){
@@ -31,14 +32,14 @@ flextable <- function( data, col_keys = names(data) ){
     data[blanks] <- blanks_col
   }
 
-  body <- table_part( data = data, col_keys = col_keys )
+  body <- table_part( data = data, col_keys = col_keys, cwidth = cwidth, cheight = cheight )
 
   # header
   header_data <- setNames(as.list(col_keys), col_keys)
   header_data[blanks] <- as.list( rep("", length(blanks)) )
-  header_data <- as.data.frame(header_data, stringsAsFactors = FALSE)
+  header_data <- as.data.frame(header_data, stringsAsFactors = FALSE, check.names = FALSE)
 
-  header <- table_part( data = header_data, col_keys = col_keys )
+  header <- table_part( data = header_data, col_keys = col_keys, cwidth = cwidth, cheight = cheight )
 
   out <- list( header = header, body = body, col_keys = col_keys,
                blanks = blanks )
@@ -60,15 +61,7 @@ print.flextable <- function(x, ...){
   if (!interactive() ){
     print(x$body$dataset)
   } else {
-    html_ft <- html_flextable(x)
-    tcss <- scan(system.file(package = "flextable",
-                             "htmlwidgets/customcss/tabwid.css"),
-                 what = "character", quiet = TRUE, sep = "\n")
-    tcss <- paste(tcss, collapse = "\n")
-    html_ <- paste0("<style type=\"text/css\">", attr(html_ft, "css"), "</style>",
-                    "<style type=\"text/css\">\n", tcss, "</style>",
-                    "<div class=\"tabwid\">", html_ft, "</div>" )
-    print( browsable( HTML( html_ ) ) )
+    print(tabwid(x))
   }
 
 }
@@ -100,7 +93,7 @@ print.flextable <- function(x, ...){
 #'   Sepal.Width = "Inches", Petal.Length = "Inches",
 #'   Petal.Width = "Inches", Species = "Species", top = TRUE )
 #' ft <- merge_h(ft, part = "header")
-#' ft <- autofit(ft)
+#' ft
 add_header <- function(x, top = TRUE, ...){
 
   args <- list(...)
@@ -108,10 +101,7 @@ add_header <- function(x, top = TRUE, ...){
   names(args_) <- x$col_keys
   args_[names(args)] <- map(args, format)
   header_data <- as.data.frame( args_, stringsAsFactors = FALSE )
-  header_ <- add_rows( x$header, header_data, first = top )
-
-  header_ <- span_rows(header_, rows = seq_len(nrow(header_data)))
-  x$header <- span_columns(header_, x$col_keys)
+  x$header <- add_rows( x$header, header_data, first = top )
 
   x
 }
@@ -132,7 +122,7 @@ add_header <- function(x, top = TRUE, ...){
 #'   Sepal.Width = "Sepal width", Petal.Length = "Petal length",
 #'   Petal.Width = "Petal width"
 #' )
-#' ft_1 <- autofit(ft_1)
+#' ft_1
 #' @export
 set_header_labels <- function(x, ...){
 
@@ -148,7 +138,7 @@ set_header_labels <- function(x, ...){
   values[names(args)] <- args
 
   x$header$dataset <- bind_rows( header_[-nrow(header_),],
-             as.data.frame(values, stringsAsFactors = FALSE ))
+             as.data.frame(values, stringsAsFactors = FALSE, check.names = FALSE ))
   x
 }
 
@@ -166,8 +156,7 @@ set_header_labels <- function(x, ...){
 #' \code{col_keys} argument, this column will be used as join key. The
 #' other columns will be displayed as header rows. The leftmost column
 #' is used as the top header row and the rightmost column
-#' is used as the bottom header row. Identical values will be merged (
-#' vertically and horizontally).
+#' is used as the bottom header row.
 #'
 #' @param x a \code{flextable} object
 #' @param mapping a \code{data.frame} specyfing for each colname
@@ -183,8 +172,10 @@ set_header_labels <- function(x, ...){
 #'
 #' ft <- flextable( head( iris ))
 #' ft <- set_header_df(ft, mapping = typology, key = "col_keys" )
+#' ft <- merge_h(ft, part = "header")
+#' ft <- merge_v(ft, j = "Species", part = "header")
 #' ft <- theme_vanilla(ft)
-#' ft <- autofit(ft)
+#' ft
 set_header_df <- function(x, mapping = NULL, key = "col_keys"){
 
   keys <- data.frame( col_keys = x$col_keys, stringsAsFactors = FALSE )
@@ -209,9 +200,11 @@ set_header_df <- function(x, mapping = NULL, key = "col_keys"){
   if( length(x$blanks) )
     header_data <- mutate_at(header_data, x$blanks, funs(character(length(.)) ) )
 
+  colwidths <- x$header$colwidths
+  cheight <- x$header$rowheights[length(x$header$rowheights)]
 
-  header_ <- table_part( data = header_data, col_keys = x$col_keys )
-  header_ <- span_rows(header_, rows = seq_len(nrow(header_data)))
-  x$header <- span_columns(header_, x$col_keys)
+  x$header <- table_part( data = header_data, col_keys = x$col_keys, cwidth = .75, cheight = cheight )
+  x$header$colwidths <- colwidths
+
   x
 }

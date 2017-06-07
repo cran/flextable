@@ -25,7 +25,9 @@ data <- iris %>%
 ft <- flextable(data, 
           col_keys = c("Species", "sep_1", "Sepal.Length", "Sepal.Width", "sep_2",  "Petal.Length", "Petal.Width" ) ) %>% 
   set_header_df(mapping = typology, key = "col_keys" ) %>% 
-  merge_v(j = "Species") %>% 
+  merge_h(part = "header") %>% 
+  merge_v(j = "Species", part = "body") %>% 
+  merge_v(j = "Species", part = "header") %>% 
   theme_vanilla() %>% empty_blanks() %>% autofit() 
 
 tabwid(ft)
@@ -54,7 +56,8 @@ tabwid(myft)
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
 myft <- myft %>%
-  set_header_labels( carb = "# carb." )
+  set_header_labels( carb = "# carb." ) %>% 
+  width(width = .75) # set width of all columns to .75 in
 tabwid(myft)
 
 ## ------------------------------------------------------------------------

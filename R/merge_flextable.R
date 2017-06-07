@@ -14,12 +14,8 @@
 merge_v <- function(x, j = NULL, part = "body" ){
   part <- match.arg(part, c("body", "header"), several.ok = FALSE )
 
-  if( inherits(j, "formula") ){
-    j <- attr(terms(j), "term.labels")
-  } else {
-    j <- get_columns_id(x[[part]], j = j )
-    j <- x$col_keys[j]
-  }
+  j <- get_columns_id(x[[part]], j = j )
+  j <- x$col_keys[j]
 
   x[[part]] <- span_columns(x = x[[part]], columns = j)
 
@@ -46,9 +42,6 @@ merge_h <- function(x, i = NULL, part = "body" ){
 
   part <- match.arg(part, c("body", "header"), several.ok = FALSE )
 
-  if( inherits(i, "formula") ){
-    i <- lazy_eval(i[[2]], x[[part]]$dataset)
-  }
   i <- get_rows_id( x[[part]], i )
 
   x[[part]] <- span_rows(x = x[[part]], rows = i)
@@ -93,4 +86,40 @@ merge_none <- function(x, part = "all" ){
 
   x
 }
+
+
+
+
+
+#' @title Merge flextable cells
+#'
+#' @description Merge flextable cells
+#'
+#' @param x \code{flextable} object
+#' @param i,j columns and rows to merge
+#' @param part partname of the table where merge has to be done.
+#' @examples
+#' library(officer)
+#' library(magrittr)
+#'
+#' ft_merge <- head( mtcars ) %>%
+#'   flextable( cwidth = .5 ) %>%
+#'   merge_at( i = 1:2, j = 1:3)
+#' ft_merge
+#' @export
+merge_at <- function(x, i = NULL, j = NULL, part = "body" ){
+  part <- match.arg(part, c("body", "header"), several.ok = FALSE )
+
+  j <- get_columns_id(x[[part]], j = j )
+  j <- x$col_keys[j]
+
+  i <- get_rows_id( x[[part]], i )
+
+  x[[part]] <- span_cells_at(x = x[[part]], columns = j, rows = i)
+
+  x
+}
+
+
+
 
