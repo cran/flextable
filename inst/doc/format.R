@@ -5,7 +5,8 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 
-dir.create("assets/format", recursive = TRUE, showWarnings = FALSE)
+dir.create("assets/docx", recursive = TRUE, showWarnings = FALSE)
+dir.create("assets/pptx", recursive = TRUE, showWarnings = FALSE)
 office_doc_link <- function(url){
   stopifnot(requireNamespace("htmltools", quietly = TRUE))
   htmltools::tags$p(  htmltools::tags$span("Download file "),
@@ -20,14 +21,14 @@ office_doc_link <- function(url){
 
 ## ----warning=FALSE, echo=FALSE, message=FALSE----------------------------
 library(flextable)
-library(dplyr)
+library(magrittr)
 
 ## ------------------------------------------------------------------------
-myft <- flextable(head(iris))
+myft <- regulartable(head(iris))
 tabwid(myft)
 
 ## ------------------------------------------------------------------------
-myft <- flextable(head(iris)) %>% 
+myft <- regulartable(head(iris)) %>% 
   # bold header
   bold(part = "header") 
 tabwid(myft)
@@ -70,7 +71,7 @@ myft <- myft %>%
 tabwid(myft)
 
 ## ------------------------------------------------------------------------
-ft <- flextable(head(iris)) %>% 
+ft <- regulartable(head(iris)) %>% 
   rotate(rotation = "tbrl", align = "top", part = "header") %>% 
   theme_vanilla() %>% 
   autofit() %>% 
@@ -82,11 +83,22 @@ ft <- flextable(head(iris)) %>%
 library(officer)
 read_docx() %>% 
   body_add_flextable(ft) %>% 
-  print(target = "assets/format/rotate.docx") %>% 
+  print(target = "assets/docx/rotate.docx") %>% 
   invisible()
 
 ## ----echo=FALSE----------------------------------------------------------
-office_doc_link( url = paste0( "https://davidgohel.github.io/flextable/articles/", "assets/format/rotate.docx" ) )
+office_doc_link( url = paste0( "https://davidgohel.github.io/flextable/articles/", "assets/docx/rotate.docx" ) )
+
+## ------------------------------------------------------------------------
+library(officer)
+read_pptx() %>% 
+  add_slide(layout = "Title and Content", master = "Office Theme") %>% 
+  ph_with_flextable(ft) %>% 
+  print(target = "assets/pptx/rotate.pptx") %>% 
+  invisible()
+
+## ----echo=FALSE----------------------------------------------------------
+office_doc_link( url = paste0( "https://davidgohel.github.io/flextable/articles/", "assets/pptx/rotate.pptx" ) )
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
 myft <- myft %>% 
@@ -113,12 +125,23 @@ def_par <- fp_par(text.align = "center")
 def_text <- fp_text(color="#999999", italic = TRUE)
 def_text_header <- update(color="black", def_text, bold = TRUE)
 
-ft <- flextable(head(mtcars, n = 10 )) %>% 
+ft <- regulartable(head(mtcars, n = 10 )) %>% 
   style( pr_c = def_cell, pr_p = def_par, pr_t = def_text, part = "all")  
 tabwid(ft)
 
 ft <- ft %>% 
   style( pr_t = def_text_header, part = "header")  
+tabwid(ft)
+
+## ------------------------------------------------------------------------
+ft <- regulartable(head(mtcars, n = 10 ), 
+                   col_keys = c("gear", "mpg", "qsec")) %>% 
+  set_formatter(
+    mpg = function(x) sprintf("%.04f", x),
+    gear = function(x) sprintf("%.0f gears", x)
+  ) %>% 
+  theme_booktabs() %>% 
+  autofit()
 tabwid(ft)
 
 ## ------------------------------------------------------------------------

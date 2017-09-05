@@ -1,5 +1,5 @@
 
-globalVariables(c("str", "col_key", "id", ".", "str_is_run"))
+globalVariables(c("str", ".", "str_is_run"))
 
 
 image_entry <- function(src, width, height){
@@ -82,3 +82,49 @@ as_image <- function(x, src, width = 1, height = .2) {
   image_entry(src = rep(src, length(x)),
               width = width, height = height)
 }
+
+drop_column <- function(x, cols){
+  x[, !(colnames(x) %in% cols), drop = FALSE]
+}
+
+
+
+
+
+#' @importFrom tibble tibble
+#' @importFrom purrr pmap_df map_df map_lgl map_dbl map_chr
+
+as_grp_index <- function(x){
+  sprintf( "gp_%09.0f", x )
+}
+
+group_index <- function(x, by, varname = "grp"){
+  order_ <- do.call( order, x[ by ] )
+  x$ids_ <- seq_along(order_)
+  x <- x[order_, ,drop = FALSE]
+  gprs <- cumsum(!duplicated(x[, by ]) )
+  gprs <- gprs[order(x$ids_)]
+  as_grp_index(gprs)
+}
+
+group_ref <- function(x, by, varname = "grp"){
+  order_ <- do.call( order, x[ by ] )
+  x$ids_ <- seq_along(order_)
+  x <- x[order_, ,drop = FALSE]
+  ref <- x[!duplicated(x[, by ]), by]
+  ref$index_ <- as_grp_index( seq_len( nrow(ref) ) )
+  row.names(ref) <- NULL
+  ref
+}
+
+drop_useless_blank <- function( x ){
+  grp <- group_index(x, by = c("col_key", "id") )
+  x <- split( x, grp)
+  x <- lapply( x, function(x){
+    non_empty <- which( !x$str %in% c("", NA) | x$type_out %in% "image_entry" )
+    if(length(non_empty)) x[non_empty,]
+    else x[1,]
+  })
+  do.call(rbind, x)
+}
+

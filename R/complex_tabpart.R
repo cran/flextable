@@ -1,6 +1,5 @@
 #' @importFrom officer fp_sign fp_cell fp_par fp_text
-#' @importFrom gdtools str_extents
-table_part <- function( data, col_keys = names(data),
+complex_tabpart <- function( data, col_keys = names(data),
                         default_pr_text = fp_text(),
                         default_pr_par = fp_par(),
                         default_pr_cell = fp_cell(),
@@ -28,17 +27,16 @@ table_part <- function( data, col_keys = names(data),
                  text = pr_text_init, formats = pr_display_init
                  )
                )
-  class( out ) <- "table_part"
-
+  class( out ) <- "complex_tabpart"
   out
 }
 
+add_rows <- function(doc, rows, first = FALSE){
+  UseMethod("add_rows")
+}
 
-
-#' @importFrom dplyr bind_rows
-#' @importFrom utils tail
-#' @importFrom utils head
-add_rows <- function( x, rows, first = FALSE ){
+#' @importFrom utils tail head
+add_rows.complex_tabpart <- function( x, rows, first = FALSE ){
 
   data <- x$dataset
   spans <- x$spans
@@ -55,14 +53,13 @@ add_rows <- function( x, rows, first = FALSE ){
   span_new <- matrix( 1, ncol = ncol, nrow = nrow )
   rowheights <- x$rowheights
 
-
   if( !first ){
-    data <- bind_rows(data, rows )
+    data <- rbind(data, rows )
     spans$rows <- rbind( spans$rows, span_new )
     spans$columns <- rbind( spans$columns, span_new )
     rowheights <- c(rowheights, rep(0.6, nrow(rows)))
   } else {
-    data <- bind_rows(rows, data )
+    data <- rbind(rows, data )
     spans$rows <- rbind( span_new, spans$rows )
     spans$columns <- rbind( span_new, spans$columns )
     rowheights <- c(rep(0.6, nrow(rows)), rowheights)
@@ -189,6 +186,7 @@ get_columns_id <- function( x, j = NULL ){
     else j = which(j)
 
   } else if( is.character (j) ){
+    j <- gsub("(^`|`$)", "", j)
     if( any( is.na( j ) ) ) stop("invalid columns selection: NA in selection")
     else if( !all( is.element(j, x$col_keys )) )
       stop("invalid columns selection:", paste(j[!is.element(j, x$col_keys )], collapse = ",") )
@@ -254,4 +252,5 @@ set_formatting_properties <- function( x, i = NULL, j = NULL, value ){
 
   x
 }
+
 

@@ -1,7 +1,7 @@
 Package: flextable
 Type: Package
 Title: Functions for Tabular Reporting
-Version: 0.2.0
+Version: 0.3.0
 Authors@R: c(
     person("David", "Gohel", role = c("aut", "cre"),
     email = "david.gohel@ardata.fr"))
@@ -12,17 +12,17 @@ Description: Create pretty tables for 'Microsoft Word', 'Microsoft PowerPoint' a
 License: GPL-3
 LazyData: TRUE
 Depends: officer
-Imports: stats,utils,grDevices,
-        dplyr,lazyeval,purrr,tibble,magrittr,tidyr,R6,stringr,
-        htmltools,htmlwidgets, gdtools
+Imports: stats,utils,grDevices,magrittr,
+        lazyeval,purrr,tibble,R6,stringr, htmltools,htmlwidgets,
+        gdtools (>= 0.1.6)
 RoxygenNote: 6.0.1.9000
-Suggests: rmarkdown, knitr, xml2, testthat
+Suggests: rmarkdown, knitr, xml2, dplyr, testthat
 URL: https://davidgohel.github.io/flextable
 BugReports: https://github.com/davidgohel/flextable/issues
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2017-06-07 11:32:08 UTC; davidgohel
+Packaged: 2017-09-05 09:48:27 UTC; davidgohel
 Author: David Gohel [aut, cre]
 Maintainer: David Gohel <david.gohel@ardata.fr>
 Repository: CRAN
-Date/Publication: 2017-06-07 11:49:05 UTC
+Date/Publication: 2017-09-05 09:56:54 UTC

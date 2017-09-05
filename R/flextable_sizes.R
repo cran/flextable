@@ -117,7 +117,7 @@ dim_pretty <- function( x ){
   max_heights <- list()
   for(j in c("header", "body")){
     if( !is.null(x[[j]])){
-      dimensions_ <- get_adjusted_sizes(x[[j]])
+      dimensions_ <- optimal_sizes(x[[j]])
       x[[j]]$colwidths <- dimensions_$widths
       x[[j]]$rowheights <- dimensions_$heights
     }
@@ -143,7 +143,7 @@ autofit <- function(x, add_w = 0.1, add_h = 0.1 ){
   max_heights <- list()
   for(j in c("header", "body")){
     if( !is.null(x[[j]])){
-      dimensions_ <- get_adjusted_sizes(x[[j]])
+      dimensions_ <- optimal_sizes(x[[j]])
 
       x[[j]]$colwidths <- dimensions_$widths + add_w
       x[[j]]$rowheights <- dimensions_$heights + add_h
@@ -152,4 +152,182 @@ autofit <- function(x, add_w = 0.1, add_h = 0.1 ){
   x
 }
 
+
+
+
+#' @importFrom gdtools m_str_extents
+optimal_sizes <- function( x ){
+  UseMethod("optimal_sizes")
+}
+
+optimal_sizes.complex_tabpart <- function( x ){
+
+  txt_data <- x$styles$formats$get_map(x$styles$text, x$dataset)
+  text_fp <- x$styles$text$get_fp()
+  text_fp <- append( text_fp, x$styles$formats$get_all_fp() )
+
+  img_sizes <- images_metric(txt_data)
+  txt_data_metric <- text_metric(txt_data, text_fp)
+
+  # rbind txt sizes and img sizes
+  sizes <- rbind(txt_data_metric, img_sizes)
+  sizes <- agg_sizes(sizes = sizes)
+
+  sizes$col_key <- factor(sizes$col_key, levels = x$col_keys)
+  sizes <- sizes[order(sizes$col_key, sizes$id ), ]
+
+  widths <- as_wide_matrix_(data = sizes[, c("col_key", "width", "id")])
+  dimnames(widths)[[2]] <- gsub("^width\\.", "", dimnames(widths)[[2]])
+  heights <- as_wide_matrix_(data = sizes[, c("col_key", "height", "id")])
+  dimnames(heights)[[2]] <- gsub("^height\\.", "", dimnames(heights)[[2]])
+
+  par_dim <- dim_paragraphs(x)
+  widths <- widths + par_dim$widths
+  heights <- heights + par_dim$heights
+
+  widths[x$spans$rows<1] <- 0
+  widths[x$spans$columns<1] <- 0
+  heights[x$spans$rows<1] <- 0
+  heights[x$spans$columns<1] <- 0
+
+  cell_dim <- dim_cells(x)
+  widths <- widths + cell_dim$widths
+  heights <- heights + cell_dim$heights
+
+  list(widths = apply(widths, 2, max), heights = apply(heights, 1, max) )
+}
+
+optimal_sizes.simple_tabpart <- function( x ){
+
+  txt_data <- get_text_data(x)
+  txt_data$type_out <- rep("text", nrow(txt_data))
+  txt_data$pos <- rep(1, nrow(txt_data))
+  text_fp <- x$styles$text$get_fp()
+
+  sizes <- text_metric(data = txt_data, all_fp = text_fp)
+
+  sizes$col_key <- factor(sizes$col_key, levels = x$col_keys)
+  sizes <- sizes[order(sizes$col_key, sizes$id ), ]
+  widths <- as_wide_matrix_(as.data.frame(sizes[, c("col_key", "width", "id")]))
+  heights <- as_wide_matrix_(as.data.frame(sizes[, c("col_key", "height", "id")]))
+
+  par_dim <- dim_paragraphs(x)
+  widths <- widths + par_dim$widths
+  heights <- heights + par_dim$heights
+
+  widths[x$spans$rows<1] <- 0
+  widths[x$spans$columns<1] <- 0
+  heights[x$spans$rows<1] <- 0
+  heights[x$spans$columns<1] <- 0
+
+  cell_dim <- dim_cells(x)
+  widths <- widths + cell_dim$widths
+  heights <- heights + cell_dim$heights
+
+  list(widths = apply(widths, 2, max),
+       heights = apply(heights, 1, max)
+  )
+}
+
+
+
+# utils ----
+as_wide_matrix_ <- function(data, idvar = "id", timevar = "col_key"){
+  x <- reshape(data = data, idvar = idvar, timevar = timevar, direction = "wide")
+  x$id <- NULL
+  as.matrix(x)
+}
+
+
+dim_paragraphs <- function(x){
+
+  par_fp <- x$styles$pars$get_fp()
+  par_dim <- map_df(par_fp, function(x)
+    as.data.frame( as.list(dim(x))), .id = "pr_id" )
+
+  par_dim <- merge(x$styles$pars$get_map(),
+                   par_dim, by = "pr_id",
+                   all.x = FALSE, all.y = FALSE, sort = FALSE)
+
+  par_dim$col_key <- factor(par_dim$col_key, levels = x$col_keys)
+  par_dim <- as.data.frame(par_dim)
+
+  list( widths = as_wide_matrix_( par_dim[,c("col_key", "width", "id")] ),
+        heights = as_wide_matrix_( par_dim[,c("col_key", "height", "id")] )
+  )
+}
+
+dim_cells <- function(x){
+
+  cell_fp <- x$styles$cells$get_fp()
+  cell_dim <- data.frame( pr_id = names(cell_fp),
+                          width = (map_dbl( cell_fp, "margin.left" ) + map_dbl( cell_fp, "margin.right" ) )* (4/3),
+                          height = (map_dbl( cell_fp, "margin.top" ) + map_dbl( cell_fp, "margin.bottom" )) * (4/3),
+                          stringsAsFactors = FALSE )
+  cell_dim <- merge(x$styles$cells$get_map(), cell_dim, by = "pr_id",
+                    all.x = FALSE, all.y = FALSE, sort = FALSE)
+
+  cell_dim$col_key <- factor(cell_dim$col_key, levels = x$col_keys)
+  cell_dim <- as.data.frame(cell_dim)
+
+  cellwidths <- as_wide_matrix_( cell_dim[,c("col_key", "width", "id")] )
+  cellheights <- as_wide_matrix_( cell_dim[,c("col_key", "height", "id")] )
+
+  list( widths = cellwidths, heights = cellheights )
+
+}
+
+
+text_metric <- function(data, all_fp ){
+
+  fp_props <- data.frame(
+    pr_id = names(all_fp),
+    size = map_int(all_fp, "font.size"),
+    bold = map_lgl(all_fp, "bold"),
+    italic = map_lgl(all_fp, "italic"),
+    fontname = map_chr(all_fp, "font.family"), stringsAsFactors = FALSE )
+
+
+  selection_ <- c("col_key", "id", "pos", "width", "height")
+  data$width <- NULL
+  data$height <- NULL
+
+  data <- as.data.frame( data[data$type_out %in% "text", ] )
+  sizes_ <- merge(data, as.data.frame( fp_props ), by = "pr_id",
+                  all.x = TRUE, all.y = FALSE, sort = FALSE)
+  str_extents_ <- m_str_extents(sizes_$str, fontname = sizes_$fontname,
+                          fontsize = sizes_$size, bold = sizes_$bold,
+                          italic = sizes_$italic) / 72
+
+  dimnames(str_extents_) <- list(NULL, c("width", "height"))
+  sizes_ <- cbind( sizes_, str_extents_ )
+  sizes_ <- sizes_[, selection_]
+  sizes_
+}
+
+images_metric <- function(data){
+
+  selection_ <- c("col_key", "id", "pos", "width", "height")
+
+  img_sizes <- as.data.frame(data[data$type_out %in% "image", ])
+  if( nrow(img_sizes) < 1 ) {
+    img_sizes$width <- numeric(nrow(img_sizes))
+    img_sizes$height <- numeric(nrow(img_sizes))
+  }
+  img_sizes <- img_sizes[, selection_]
+  img_sizes
+}
+
+agg_sizes <- function(sizes){
+
+  group_ref_ <- group_ref(sizes, c("id", "col_key"))
+
+  width_ <- tapply(sizes$width, group_index(sizes, c("id", "col_key")), sum)
+  height_ <- tapply(sizes$height, group_index(sizes, c("id", "col_key")), max)
+
+  sizes_ <- data.frame(index_ = names(width_), width = width_, height = height_, stringsAsFactors = FALSE )
+  sizes_ <- merge( group_ref_, sizes_, by = "index_", all.x = TRUE, all.y = TRUE, sort = FALSE)
+  sizes_$index_ <- NULL
+  sizes_
+}
 

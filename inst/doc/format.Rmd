@@ -17,7 +17,8 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 
-dir.create("assets/format", recursive = TRUE, showWarnings = FALSE)
+dir.create("assets/docx", recursive = TRUE, showWarnings = FALSE)
+dir.create("assets/pptx", recursive = TRUE, showWarnings = FALSE)
 office_doc_link <- function(url){
   stopifnot(requireNamespace("htmltools", quietly = TRUE))
   htmltools::tags$p(  htmltools::tags$span("Download file "),
@@ -34,7 +35,7 @@ office_doc_link <- function(url){
 
 ```{r warning=FALSE, echo=FALSE, message=FALSE}
 library(flextable)
-library(dplyr)
+library(magrittr)
 ```
 
 A flextable is made of two parts, an header and a body. **To specify which part formatting instructions should affect, use argument `part`.** Possible values are:
@@ -49,14 +50,14 @@ A flextable is made of two parts, an header and a body. **To specify which part 
 There are simple functions to modify formatting properties of flextable objects: `bg`, `bold`, `border`, `color`, `padding`, `fontsize`, `italic`, `align`.
 
 ```{r}
-myft <- flextable(head(iris))
+myft <- regulartable(head(iris))
 tabwid(myft)
 ```
 
 ### bold
 
 ```{r}
-myft <- flextable(head(iris)) %>% 
+myft <- regulartable(head(iris)) %>% 
   # bold header
   bold(part = "header") 
 tabwid(myft)
@@ -134,7 +135,7 @@ Argument `rotation` is mandatory and expects one of these values:
 Argument `align` is used for cell content vertical alignment, it should be one of these values: "top", "bottom" or "center".
 
 ```{r}
-ft <- flextable(head(iris)) %>% 
+ft <- regulartable(head(iris)) %>% 
   rotate(rotation = "tbrl", align = "top", part = "header") %>% 
   theme_vanilla() %>% 
   autofit() %>% 
@@ -143,17 +144,35 @@ ft <- flextable(head(iris)) %>%
   height(height = 1, part = "header")
 ```
 
+The following example is producing a Word document:
+
 ```{r}
 library(officer)
 read_docx() %>% 
   body_add_flextable(ft) %>% 
-  print(target = "assets/format/rotate.docx") %>% 
+  print(target = "assets/docx/rotate.docx") %>% 
   invisible()
 ```
 
 
 ```{r echo=FALSE}
-office_doc_link( url = paste0( "https://davidgohel.github.io/flextable/articles/", "assets/format/rotate.docx" ) )
+office_doc_link( url = paste0( "https://davidgohel.github.io/flextable/articles/", "assets/docx/rotate.docx" ) )
+```
+
+The following example is producing a PowerPoint document:
+
+```{r}
+library(officer)
+read_pptx() %>% 
+  add_slide(layout = "Title and Content", master = "Office Theme") %>% 
+  ph_with_flextable(ft) %>% 
+  print(target = "assets/pptx/rotate.pptx") %>% 
+  invisible()
+```
+
+
+```{r echo=FALSE}
+office_doc_link( url = paste0( "https://davidgohel.github.io/flextable/articles/", "assets/pptx/rotate.pptx" ) )
 ```
 
 ## Conditional formatting
@@ -202,7 +221,7 @@ def_par <- fp_par(text.align = "center")
 def_text <- fp_text(color="#999999", italic = TRUE)
 def_text_header <- update(color="black", def_text, bold = TRUE)
 
-ft <- flextable(head(mtcars, n = 10 )) %>% 
+ft <- regulartable(head(mtcars, n = 10 )) %>% 
   style( pr_c = def_cell, pr_p = def_par, pr_t = def_text, part = "all")  
 tabwid(ft)
 
@@ -212,7 +231,30 @@ tabwid(ft)
 ```
 
 
+## set_formatter function
+
+When working with `regulartable`, it is possible to define the functions that will be used to format the data.frame values into strings. `set_formatter` set column formatter functions.
+
+> Note `set_formatter` only works with `regulartable` objects, use `display` for `flextable` objects.
+
+```{r}
+ft <- regulartable(head(mtcars, n = 10 ), 
+                   col_keys = c("gear", "mpg", "qsec")) %>% 
+  set_formatter(
+    mpg = function(x) sprintf("%.04f", x),
+    gear = function(x) sprintf("%.0f gears", x)
+  ) %>% 
+  theme_booktabs() %>% 
+  autofit()
+tabwid(ft)
+```
+
+
 ## display function
+
+`flextable` content is defined with `display` function. 
+
+> Note `display` only works with `flextable` objects, use `set_formatter` for `regulartable` objects.
 
 Below the starting point of next illustrations:
 
@@ -230,7 +272,8 @@ myft <- flextable( head(mtcars),
 tabwid(myft)
 ```
 
-Flextable content is defined with `display` function. The function requires argument `pattern` which is a string template inspired by *[mustaches](http://mustache.github.com/)*. The string will be expanded with tags using values provided in `formatters` argument; tags can eventually be formatted with `fprops` argument. 
+
+The function requires argument `pattern` which is a string template inspired by *[mustaches](http://mustache.github.com/)*. The string will be expanded with tags using values provided in `formatters` argument; tags can eventually be formatted with `fprops` argument. 
 
 The following example shows how to control the format of displayed values and how to associate them with specific text formatting properties (bold red text):
 

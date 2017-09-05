@@ -55,10 +55,10 @@ pml_flextable <- function(value){
 #'                  master = "Office Theme")
 #' doc <- ph_with_flextable(doc, value = ft, type = "body")
 #' doc <- ph_with_flextable_at(doc, value = ft, left = 4, top = 5)
-#' print(doc, target = "test.pptx" )
+#' \donttest{print(doc, target = "test.pptx" )}
 #' }
 #' @importFrom officer ph_from_xml
-ph_with_flextable <- function( x, value, type, index = 1 ){
+ph_with_flextable <- function( x, value, type = "body", index = 1 ){
   stopifnot(inherits(x, "rpptx"))
   graphic_frame <- pml_flextable(value)
   ph_from_xml(x = x, value = graphic_frame, type = type, index = index )
