@@ -37,7 +37,6 @@ merge_v <- function(x, j = NULL, part = "body" ){
 #' ft_merge <- merge_h(x = ft_merge)
 #' ft_merge
 #' @export
-#' @importFrom lazyeval lazy_eval
 merge_h <- function(x, i = NULL, part = "body" ){
 
   part <- match.arg(part, c("body", "header"), several.ok = FALSE )
@@ -56,7 +55,6 @@ merge_h <- function(x, i = NULL, part = "body" ){
 #'
 #' @param x \code{flextable} object
 #' @param part partname of the table where merge has to be done.
-#' @importFrom lazyeval lazy_eval
 #' @export
 #' @examples
 #' typology <- data.frame(
@@ -99,12 +97,8 @@ merge_none <- function(x, part = "all" ){
 #' @param i,j columns and rows to merge
 #' @param part partname of the table where merge has to be done.
 #' @examples
-#' library(officer)
-#' library(magrittr)
-#'
-#' ft_merge <- head( mtcars ) %>%
-#'   flextable( cwidth = .5 ) %>%
-#'   merge_at( i = 1:2, j = 1:3)
+#' ft_merge <- flextable( head( mtcars ), cwidth = .5 )
+#' ft_merge <- merge_at( ft_merge, i = 1:2, j = 1:3 )
 #' ft_merge
 #' @export
 merge_at <- function(x, i = NULL, j = NULL, part = "body" ){

@@ -8,9 +8,9 @@
 #' @param pr_p object(s) of class \code{fp_par}
 #' @param pr_c object(s) of class \code{fp_cell}
 #' @param part partname of the table (one of 'all', 'body', 'header')
-#' @importFrom lazyeval lazy_eval
 #' @importFrom stats terms update
 #' @examples
+#' library(officer)
 #' def_cell <- fp_cell(border = fp_border(color="#00FFFF"))
 #'
 #' def_par <- fp_par(text.align = "center")
@@ -42,10 +42,7 @@ style <- function(x, i = NULL, j = NULL,
     return(x)
   }
 
-  if( inherits(i, "formula") && "header" %in% part ){
-    stop("formula in argument i cannot adress part 'header'.")
-  }
-
+  check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
 
@@ -81,18 +78,15 @@ bg <- function(x, i = NULL, j = NULL, bg, part = "body" ){
     return(x)
   }
 
-  if( inherits(i, "formula") && "header" %in% part ){
-    stop("formula in argument i cannot adress part 'header'.")
-  }
-
+  check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
 
   pr_id <- x[[part]]$styles$cells$get_pr_id_at(i, x$col_keys[j])
   pr <- x[[part]]$styles$cells$get_fp()[unique(pr_id)]
   old_name <- names(pr)
-  pr <- map(pr, function(x, bg ) update(x, background.color = bg ), bg = bg )
-  new_name <- map_chr(pr, fp_sign )
+  pr <- lapply(pr, function(x, bg ) update(x, background.color = bg ), bg = bg )
+  new_name <- sapply(pr, fp_sign )
   names(pr) <- new_name
 
   x[[part]]$styles$cells$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
@@ -123,18 +117,15 @@ bold <- function(x, i = NULL, j = NULL, bold = TRUE, part = "body" ){
     return(x)
   }
 
-  if( inherits(i, "formula") && "header" %in% part ){
-    stop("formula in argument i cannot adress part 'header'.")
-  }
-
+  check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
 
   pr_id <- x[[part]]$styles$text$get_pr_id_at(i, x$col_keys[j])
   pr <- x[[part]]$styles$text$get_fp()[unique(pr_id)]
   old_name <- names(pr)
-  pr <- map(pr, function(x, bold ) update(x, bold = bold ), bold = bold )
-  new_name <- map_chr(pr, fp_sign )
+  pr <- lapply(pr, function(x, bold ) update(x, bold = bold ), bold = bold )
+  new_name <- sapply(pr, fp_sign )
   names(pr) <- new_name
   x[[part]]$styles$text$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
 
@@ -163,18 +154,15 @@ fontsize <- function(x, i = NULL, j = NULL, size = 11, part = "body" ){
     return(x)
   }
 
-  if( inherits(i, "formula") && "header" %in% part ){
-    stop("formula in argument i cannot adress part 'header'.")
-  }
-
+  check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
 
   pr_id <- x[[part]]$styles$text$get_pr_id_at(i, x$col_keys[j])
   pr <- x[[part]]$styles$text$get_fp()[unique(pr_id)]
   old_name <- names(pr)
-  pr <- map(pr, function(x, size ) update(x, font.size = size ), size = size )
-  new_name <- map_chr(pr, fp_sign )
+  pr <- lapply(pr, function(x, size ) update(x, font.size = size ), size = size )
+  new_name <- sapply(pr, fp_sign )
   names(pr) <- new_name
   x[[part]]$styles$text$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
 
@@ -203,18 +191,15 @@ italic <- function(x, i = NULL, j = NULL, italic = TRUE, part = "body" ){
     return(x)
   }
 
-  if( inherits(i, "formula") && "header" %in% part ){
-    stop("formula in argument i cannot adress part 'header'.")
-  }
-
+  check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
 
   pr_id <- x[[part]]$styles$text$get_pr_id_at(i, x$col_keys[j])
   pr <- x[[part]]$styles$text$get_fp()[unique(pr_id)]
   old_name <- names(pr)
-  pr <- map(pr, function(x, italic ) update(x, italic = italic ), italic = italic )
-  new_name <- map_chr(pr, fp_sign )
+  pr <- lapply(pr, function(x, italic ) update(x, italic = italic ), italic = italic )
+  new_name <- sapply(pr, fp_sign )
   names(pr) <- new_name
   x[[part]]$styles$text$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
 
@@ -242,18 +227,15 @@ color <- function(x, i = NULL, j = NULL, color, part = "body" ){
     return(x)
   }
 
-  if( inherits(i, "formula") && "header" %in% part ){
-    stop("formula in argument i cannot adress part 'header'.")
-  }
-
+  check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
 
   pr_id <- x[[part]]$styles$text$get_pr_id_at(i, x$col_keys[j])
   pr <- x[[part]]$styles$text$get_fp()[unique(pr_id)]
   old_name <- names(pr)
-  pr <- map(pr, function(x, color ) update(x, color = color ), color = color )
-  new_name <- map_chr(pr, fp_sign )
+  pr <- lapply(pr, function(x, color ) update(x, color = color ), color = color )
+  new_name <- sapply(pr, fp_sign )
   names(pr) <- new_name
   x[[part]]$styles$text$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
 
@@ -300,10 +282,7 @@ padding <- function(x, i = NULL, j = NULL, padding = NULL,
     return(x)
   }
 
-  if( inherits(i, "formula") && any( "header" %in% part ) ){
-    stop("formula in argument i cannot adress part 'header'.")
-  }
-
+  check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
 
@@ -311,14 +290,14 @@ padding <- function(x, i = NULL, j = NULL, padding = NULL,
   pr <- x[[part]]$styles$pars$get_fp()[unique(pr_id)]
   old_name <- names(pr)
   if(!is.null(padding.top))
-    pr <- map(pr, function(x, padding.top ) update(x, padding.top = padding.top ), padding.top = padding.top )
+    pr <- lapply(pr, function(x, padding.top ) update(x, padding.top = padding.top ), padding.top = padding.top )
   if(!is.null(padding.bottom))
-    pr <- map(pr, function(x, padding.bottom ) update(x, padding.bottom = padding.bottom ), padding.bottom = padding.bottom )
+    pr <- lapply(pr, function(x, padding.bottom ) update(x, padding.bottom = padding.bottom ), padding.bottom = padding.bottom )
   if(!is.null(padding.left))
-    pr <- map(pr, function(x, padding.left ) update(x, padding.left = padding.left ), padding.left = padding.left )
+    pr <- lapply(pr, function(x, padding.left ) update(x, padding.left = padding.left ), padding.left = padding.left )
   if(!is.null(padding.right))
-    pr <- map(pr, function(x, padding.right ) update(x, padding.right = padding.right ), padding.right = padding.right )
-  new_name <- map_chr(pr, fp_sign )
+    pr <- lapply(pr, function(x, padding.right ) update(x, padding.right = padding.right ), padding.right = padding.right )
+  new_name <- sapply(pr, fp_sign )
   names(pr) <- new_name
 
   x[[part]]$styles$pars$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
@@ -351,18 +330,15 @@ align <- function(x, i = NULL, j = NULL, align = "left",
     return(x)
   }
 
-  if( inherits(i, "formula") && any( "header" %in% part ) ){
-    stop("formula in argument i cannot adress part 'header'.")
-  }
-
+  check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
 
   pr_id <- x[[part]]$styles$pars$get_pr_id_at(i, x$col_keys[j])
   pr <- x[[part]]$styles$pars$get_fp()[unique(pr_id)]
   old_name <- names(pr)
-  pr <- map(pr, function(x, align ) update(x, text.align = align ), align = align )
-  new_name <- map_chr(pr, fp_sign )
+  pr <- lapply(pr, function(x, align ) update(x, text.align = align ), align = align )
+  new_name <- sapply(pr, fp_sign )
   names(pr) <- new_name
 
   x[[part]]$styles$pars$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
@@ -372,7 +348,6 @@ align <- function(x, i = NULL, j = NULL, align = "left",
 
 
 
-#' @importFrom purrr map map_chr
 #' @export
 #' @title Set cell borders
 #' @description change borders of selected rows and columns of a flextable.
@@ -386,6 +361,7 @@ align <- function(x, i = NULL, j = NULL, align = "left",
 #' @param border.left border left
 #' @param border.right border right
 #' @examples
+#' library(officer)
 #' ft <- flextable(mtcars)
 #' ft <- border(ft, border.top = fp_border(color = "orange") )
 border <- function(x, i = NULL, j = NULL, border = NULL,
@@ -412,10 +388,7 @@ border <- function(x, i = NULL, j = NULL, border = NULL,
     return(x)
   }
 
-  if( inherits(i, "formula") && any( "header" %in% part ) ){
-    stop("formula in argument i cannot adress part 'header'.")
-  }
-
+  check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
 
@@ -423,14 +396,14 @@ border <- function(x, i = NULL, j = NULL, border = NULL,
   pr <- x[[part]]$styles$cells$get_fp()[unique(pr_id)]
   old_name <- names(pr)
   if(!is.null(border.top))
-    pr <- map(pr, function(x, border.top ) update(x, border.top = border.top ), border.top = border.top )
+    pr <- lapply(pr, function(x, border.top ) update(x, border.top = border.top ), border.top = border.top )
   if(!is.null(border.bottom))
-    pr <- map(pr, function(x, border.bottom ) update(x, border.bottom = border.bottom ), border.bottom = border.bottom )
+    pr <- lapply(pr, function(x, border.bottom ) update(x, border.bottom = border.bottom ), border.bottom = border.bottom )
   if(!is.null(border.left))
-    pr <- map(pr, function(x, border.left ) update(x, border.left = border.left ), border.left = border.left )
+    pr <- lapply(pr, function(x, border.left ) update(x, border.left = border.left ), border.left = border.left )
   if(!is.null(border.right))
-    pr <- map(pr, function(x, border.right ) update(x, border.right = border.right ), border.right = border.right )
-  new_name <- map_chr(pr, fp_sign )
+    pr <- lapply(pr, function(x, border.right ) update(x, border.right = border.right ), border.right = border.right )
+  new_name <- sapply(pr, fp_sign )
   names(pr) <- new_name
 
   x[[part]]$styles$cells$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
@@ -461,19 +434,16 @@ rotate <- function(x, i = NULL, j = NULL, rotation, align = "center", part = "bo
     return(x)
   }
 
-  if( inherits(i, "formula") && "header" %in% part ){
-    stop("formula in argument i cannot adress part 'header'.")
-  }
-
+  check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
 
   pr_id <- x[[part]]$styles$cells$get_pr_id_at(i, x$col_keys[j])
   pr <- x[[part]]$styles$cells$get_fp()[unique(pr_id)]
   old_name <- names(pr)
-  pr <- map(pr, function(x, rotation ) update(x, text.direction = rotation ), rotation = rotation )
-  pr <- map(pr, function(x, align ) update(x, vertical.align = align ), align = align )
-  new_name <- map_chr(pr, fp_sign )
+  pr <- lapply(pr, function(x, rotation ) update(x, text.direction = rotation ), rotation = rotation )
+  pr <- lapply(pr, function(x, align ) update(x, vertical.align = align ), align = align )
+  new_name <- sapply(pr, fp_sign )
   names(pr) <- new_name
 
   x[[part]]$styles$cells$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
@@ -489,8 +459,6 @@ rotate <- function(x, i = NULL, j = NULL, rotation, align = "center", part = "bo
 #' transparent and display empty content.
 #' @param x a flextable object
 #' @examples
-#' library(magrittr)
-#'
 #' typology <- data.frame(
 #'   col_keys = c( "Sepal.Length", "Sepal.Width", "Petal.Length",
 #'                 "Petal.Width", "Species" ),
@@ -499,16 +467,15 @@ rotate <- function(x, i = NULL, j = NULL, rotation, align = "center", part = "bo
 #'   stringsAsFactors = FALSE )
 #' typology
 #'
-#' head(iris) %>%
-#'   flextable(
-#'     col_keys = c("Species",
-#'                  "break1", "Sepal.Length", "Sepal.Width",
-#'                  "break2", "Petal.Length", "Petal.Width") ) %>%
-#'   set_header_df(mapping = typology, key = "col_keys" ) %>%
-#'   merge_h(part = "header") %>%
-#'   theme_vanilla() %>%
-#'   empty_blanks() %>%
-#'   width(j = c(2, 5), width = .1 )
+#' ft <- flextable(head(iris), col_keys = c("Species",
+#'   "break1", "Sepal.Length", "Sepal.Width",
+#'   "break2", "Petal.Length", "Petal.Width") )
+#' ft <- set_header_df(ft, mapping = typology, key = "col_keys" )
+#' ft <- merge_h(ft, part = "header")
+#' ft <- theme_vanilla(ft)
+#' ft <- empty_blanks(ft)
+#' ft <- width(ft, j = c(2, 5), width = .1 )
+#' ft
 #' @export
 empty_blanks <- function(x){
   if( length(x$blanks) < 1 ) return(x)

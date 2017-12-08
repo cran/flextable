@@ -34,81 +34,80 @@ typology <- data.frame(
   measure = c("Length", "Width", "Length", "Width", "Species"),
   stringsAsFactors = FALSE )
 
-ft <- regulartable(data, 
-          col_keys = c("Species", "sep_1", "Sepal.Length", "Sepal.Width", "sep_2",  "Petal.Length", "Petal.Width" ) ) %>% 
-  set_header_df(mapping = typology, key = "col_keys" ) %>% 
-  merge_h(part = "header") %>% 
-  merge_v(j = "Species", part = "body") %>% 
-  merge_v(j = "Species", part = "header") %>% 
-  theme_vanilla() %>% empty_blanks() %>% autofit() 
+ft <- regulartable(
+  data, 
+  col_keys = c("Species", "sep_1", "Sepal.Length", "Sepal.Width", 
+               "sep_2",  "Petal.Length", "Petal.Width" ) )
 
-tabwid(ft)
+ft <- set_header_df(ft, mapping = typology, key = "col_keys" )
+ft <- merge_h(ft, part = "header")
+ft <- merge_v(ft, j = "Species", part = "body")
+ft <- merge_v(ft, j = "Species", part = "header")
+ft <- theme_vanilla(ft)
+ft <- empty_blanks(ft)
+autofit(ft) 
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
 library(flextable)
 library(officer)
 
-myft <- regulartable(head(mtcars), 
-                  col_keys = c("am", "carb", "gear", "mpg", "drat" ))
-tabwid(myft)
+myft <- regulartable(
+  head(mtcars), 
+  col_keys = c("am", "carb", "gear", "mpg", "drat" ))
+myft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
-myft <- myft %>% theme_vanilla()
-tabwid(myft)
+myft <- theme_vanilla(myft)
+myft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
-myft <- myft %>%
-  merge_v(j = c("am", "carb") )
-tabwid(myft)
+myft <- merge_v(myft, j = c("am", "carb") )
+myft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
-myft <- myft %>%
-  set_header_labels( carb = "# carb." ) %>% 
-  width(width = .75) # set width of all columns to .75 in
-tabwid(myft)
+myft <- set_header_labels( myft, carb = "# carb." )
+myft <- width(myft, width = .75) # set width of all columns to .75 in
+myft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
-myft <- myft %>% autofit()
-
-tabwid(myft)
+myft <- autofit(myft)
+myft
 
 ## ------------------------------------------------------------------------
-myft <- myft %>% italic(j = 1) %>% 
-  bg(bg = "#C90000", part = "header") %>% 
-  color(color = "white", part = "header") %>% 
-  border(border = fp_border(color = "orange"), part = "all")
-  
-tabwid(myft)
+myft <- italic(myft, j = 1)
+myft <- bg(myft, bg = "#C90000", part = "header")
+myft <- color(myft, color = "white", part = "header")
+myft <- border(myft, border = fp_border(color = "orange"), part = "all")
+myft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
-myft <- myft %>% 
-  color(~ drat > 3.5, ~ drat, color = "red") %>% 
-  bold(~ drat > 3.5, ~ drat, bold = TRUE) %>% 
-  autofit()
+myft <- color(myft, ~ drat > 3.5, ~ drat, color = "red")
+myft <- bold(myft, ~ drat > 3.5, ~ drat, bold = TRUE)
+myft <- autofit(myft)
 
-tabwid(myft)
+myft
 
 ## ------------------------------------------------------------------------
 library(officer)
 
-## ------------------------------------------------------------------------
-ft <- regulartable(head(mtcars)) %>% 
-  theme_booktabs() %>% 
-  autofit()
+## ----results='hide'------------------------------------------------------
+ft <- regulartable(head(mtcars))
+ft <- theme_booktabs(ft)
+ft <- autofit(ft)
 
-ppt <- read_pptx() %>% 
-  add_slide(layout = "Title and Content", master = "Office Theme") %>% 
-  ph_with_flextable(value = ft, type = "body") 
+ppt <- read_pptx()
+ppt <- add_slide(ppt, layout = "Title and Content", master = "Office Theme")
+ppt <- ph_with_flextable(ppt, value = ft, type = "body") 
 
-print(ppt, target = "assets/pptx/example.pptx") %>% invisible()
+print(ppt, target = "assets/pptx/example.pptx")
 
 ## ----echo=FALSE----------------------------------------------------------
 office_doc_link( url = paste0( "https://davidgohel.github.io/flextable/articles/", "assets/pptx/example.pptx" ) )
 
-## ------------------------------------------------------------------------
-doc <- read_docx() %>% 
-  body_add_flextable(value = ft)
-print(doc, target = "assets/docx/example.docx") %>% invisible()
+## ----results='hide'------------------------------------------------------
+doc <- read_docx()
+doc <- body_add_flextable(doc, value = ft)
+print(doc, target = "assets/docx/example.docx")
 
 ## ----echo=FALSE----------------------------------------------------------
 office_doc_link( url = paste0( "https://davidgohel.github.io/flextable/articles/", "assets/docx/example.docx" ) )

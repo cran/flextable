@@ -1,5 +1,5 @@
 default_printers <- function(x){
-  map(x$dataset[x$col_keys], function( x ) {
+  lapply(x$dataset[x$col_keys], function( x ) {
     if( is.character(x) ) function(x) x
     else if( is.factor(x) ) function(x) as.character(x)
     else function(x) gsub("(^ | $)+", "", format(x))
@@ -79,7 +79,9 @@ add_rows.simple_tabpart <- function( x, rows, first = FALSE ){
 #' @importFrom stats reshape
 get_text_data <- function(x){
   mapped_data <- x$styles$text$get_map()
-  txt_data <- map2_df(x$dataset[x$col_keys], x$printers, function(x, f) f(x))
+  txt_data <- mapply(function(x, f) f(x), x$dataset[x$col_keys], x$printers, SIMPLIFY = FALSE)
+  txt_data <- do.call(cbind, txt_data)
+  txt_data <- as.data.frame(txt_data, stringsAsFactors = FALSE )
   txt_data$id <- seq_len(nrow(txt_data))
   txt_data <- reshape(data = as.data.frame(txt_data, stringsAsFactors = FALSE),
           idvar = "id", new.row.names = NULL, timevar = "col_key",
@@ -99,10 +101,7 @@ format.simple_tabpart <- function( x, type = "wml", header = FALSE, ... ){
   stopifnot( type %in% c("wml", "pml", "html") )
 
   text_fp <- x$styles$text$get_fp()
-  pr_str_df <- map_df(text_fp, function(x){
-    tibble( format = format(x, type = type))
-  }, .id = "pr_id")
-
+  pr_str_format <- sapply(text_fp, format, type = type)
   txt_data <- get_text_data(x)
 
   run_as_str <- list(
@@ -110,7 +109,7 @@ format.simple_tabpart <- function( x, type = "wml", header = FALSE, ... ){
     pml = function(format, str) paste0("<a:r>", format, "<a:t>", htmlEscape(str), "</a:t></a:r>"),
     html = function(format, str) paste0("<span style=\"", format, "\">", htmlEscape(str), "</span>")
   )
-  txt_data$str <- run_as_str[[type]](format = pr_str_df$format[match(txt_data$pr_id, pr_str_df$pr_id)],
+  txt_data$str <- run_as_str[[type]](format = pr_str_format[match(txt_data$pr_id, names(text_fp))],
                                      str = txt_data$str )
   txt_data$pr_id <- NULL
 

@@ -20,95 +20,87 @@ office_doc_link <- function(url){
 }
 
 ## ----warning=FALSE, echo=FALSE, message=FALSE----------------------------
+library(officer)
 library(flextable)
-library(magrittr)
 
 ## ------------------------------------------------------------------------
 myft <- regulartable(head(iris))
-tabwid(myft)
+myft
 
 ## ------------------------------------------------------------------------
-myft <- regulartable(head(iris)) %>% 
-  # bold header
-  bold(part = "header") 
-tabwid(myft)
+myft <- regulartable(head(iris)) 
+myft <- bold(myft, part = "header") # bold header
+myft
 
 ## ------------------------------------------------------------------------
-myft <- myft %>% fontsize(part = "header", size = 12) 
-tabwid(myft)
+myft <- fontsize(myft, part = "header", size = 12) 
+myft
 
 ## ------------------------------------------------------------------------
-myft <- myft %>% color(color = "#E4C994")
-tabwid(myft)
+myft <- color(myft, color = "#E4C994")
+myft
 
 ## ------------------------------------------------------------------------
-myft <- myft %>% 
-  italic(i = ~ Sepal.Length > 5, 
+myft <- italic(myft, i = ~ Sepal.Length > 5, 
          j = ~ Sepal.Length + Sepal.Width, italic = TRUE)
-tabwid(myft)
+myft
 
 ## ------------------------------------------------------------------------
-myft <- myft %>% 
-  # light gray as background color for header
-  bg(bg = "#E4C994", part = "header") %>% 
-  # dark gray as background color for body
-  bg(bg = "#333333", part = "body")
-
-tabwid(myft)
+# light gray as background color for header
+myft <-  bg(myft, bg = "#E4C994", part = "header")
+# dark gray as background color for body
+myft <-  bg(myft, bg = "#333333", part = "body")
+myft
 
 ## ------------------------------------------------------------------------
-myft <- myft %>% align( align = "center", part = "all" )
-tabwid(myft)
+myft <- align( myft, align = "center", part = "all" )
+myft
 
 ## ------------------------------------------------------------------------
-myft <- myft %>% padding( padding = 3, part = "all" )
-tabwid(myft)
+myft <- padding( myft, padding = 3, part = "all" )
+myft
 
 ## ------------------------------------------------------------------------
-myft <- myft %>% 
-  border( border = fp_border(color="white"), part = "all" )
-  
-tabwid(myft)
+myft <- border( myft, border = fp_border(color="white"), part = "all" )
+myft
 
 ## ------------------------------------------------------------------------
-ft <- regulartable(head(iris)) %>% 
-  rotate(rotation = "tbrl", align = "top", part = "header") %>% 
-  theme_vanilla() %>% 
-  autofit() %>% 
-  # as autofit do not handle rotation, you will have
-  # to change manually header cells'height.
-  height(height = 1, part = "header")
+ft <- regulartable(head(iris))
+ft <- rotate(ft, rotation = "tbrl", align = "top", part = "header")
+ft <- theme_vanilla(ft)
+ft <- autofit(ft)
 
-## ------------------------------------------------------------------------
+# as autofit do not handle rotation, you will have
+# to change manually header cells'height.
+ft <- height(ft, height = 1, part = "header")
+
+## ----results='hide'------------------------------------------------------
 library(officer)
-read_docx() %>% 
-  body_add_flextable(ft) %>% 
-  print(target = "assets/docx/rotate.docx") %>% 
-  invisible()
+doc <- read_docx()
+doc <- body_add_flextable(doc, ft)
+print(doc, target = "assets/docx/rotate.docx")
 
 ## ----echo=FALSE----------------------------------------------------------
 office_doc_link( url = paste0( "https://davidgohel.github.io/flextable/articles/", "assets/docx/rotate.docx" ) )
 
-## ------------------------------------------------------------------------
+## ----results='hide'------------------------------------------------------
 library(officer)
-read_pptx() %>% 
-  add_slide(layout = "Title and Content", master = "Office Theme") %>% 
-  ph_with_flextable(ft) %>% 
-  print(target = "assets/pptx/rotate.pptx") %>% 
-  invisible()
+doc <- read_pptx()
+doc <- add_slide(doc, layout = "Title and Content", master = "Office Theme")
+doc <- ph_with_flextable(doc, ft)
+print(doc, target = "assets/pptx/rotate.pptx")
 
 ## ----echo=FALSE----------------------------------------------------------
 office_doc_link( url = paste0( "https://davidgohel.github.io/flextable/articles/", "assets/pptx/rotate.pptx" ) )
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
-myft <- myft %>% 
-  color(i = ~ Sepal.Length < 5 & Petal.Length > 1.3, 
+myft <- color(myft, i = ~ Sepal.Length < 5 & Petal.Length > 1.3, 
         j = ~ Petal.Width + Species, 
-        color="red") %>% 
-  bg(j = 1, bg = "#D3C994", part = "header") %>% 
-  italic(i = ~ Sepal.Length > 5) %>% 
-  bold( i = 4, j = "Sepal.Length")
-tabwid(myft)
+        color="red")
+myft <- bg(myft, j = 1, bg = "#D3C994", part = "header")
+myft <- italic(myft, i = ~ Sepal.Length > 5)
+myft <- bold(myft, i = 4, j = "Sepal.Length")
+myft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
 row_id <- with(head(iris), Sepal.Length < 5 & Petal.Length > 1.3 )
@@ -116,7 +108,7 @@ col_id <- c("Petal.Width", "Species")
 
 myft <- color(myft, i = row_id, j = col_id, color="red") 
 
-tabwid(myft)
+myft
 
 ## ------------------------------------------------------------------------
 library(officer)
@@ -125,81 +117,78 @@ def_par <- fp_par(text.align = "center")
 def_text <- fp_text(color="#999999", italic = TRUE)
 def_text_header <- update(color="black", def_text, bold = TRUE)
 
-ft <- regulartable(head(mtcars, n = 10 )) %>% 
-  style( pr_c = def_cell, pr_p = def_par, pr_t = def_text, part = "all")  
-tabwid(ft)
+ft <- regulartable(head(mtcars, n = 10 ))
+ft <- style( ft, pr_c = def_cell, pr_p = def_par, pr_t = def_text, part = "all")  
+ft
 
-ft <- ft %>% 
-  style( pr_t = def_text_header, part = "header")  
-tabwid(ft)
+ft <- style( ft, pr_t = def_text_header, part = "header")  
+ft
 
 ## ------------------------------------------------------------------------
 ft <- regulartable(head(mtcars, n = 10 ), 
-                   col_keys = c("gear", "mpg", "qsec")) %>% 
-  set_formatter(
+                   col_keys = c("gear", "mpg", "qsec"))
+ft <- set_formatter(ft, 
     mpg = function(x) sprintf("%.04f", x),
     gear = function(x) sprintf("%.0f gears", x)
-  ) %>% 
-  theme_booktabs() %>% 
-  autofit()
-tabwid(ft)
+  )
+ft <- theme_booktabs(ft)
+ft <- autofit(ft)
+ft
 
 ## ------------------------------------------------------------------------
 myft <- flextable( head(mtcars), 
-  col_keys = c("am", "separator", "gear", "mpg", "drat", "qsec" )) %>% 
-  bold(part = "header") %>% 
-  border(border = fp_border( width = 0), 
-         border.top = fp_border(), border.bottom = fp_border(), 
-         part = "all") %>% 
-  align(align = "right", part = "all" ) %>%
-  border(j = ~ separator, border = fp_border(width=0), part = "all") %>% 
-  width(j = ~ separator, width = .1)
-
-tabwid(myft)
+  col_keys = c("am", "separator", "gear", "mpg", "drat", "qsec" ))
+myft <- bold(myft, part = "header")
+myft <- border(myft, border = fp_border( width = 0), 
+  border.top = fp_border(), border.bottom = fp_border(), 
+  part = "all")
+myft <- align(myft, align = "right", part = "all" )
+myft <- border(myft, j = ~ separator, border = fp_border(width=0), part = "all")
+myft <- width(myft, j = ~ separator, width = .1)
+myft
 
 ## ------------------------------------------------------------------------
-myft <- myft %>%
-  display( col_key = "mpg", pattern = "{{mpg}}", 
-           formatters = list(mpg ~ sprintf("%.01f", mpg) ), 
-              fprops = list(mpg = fp_text(color = "red", italic = TRUE) )
+myft <- display( myft, col_key = "mpg", pattern = "{{mpg}}", 
+    formatters = list(mpg ~ sprintf("%.01f", mpg) ), 
+    fprops = list(mpg = fp_text(color = "red", italic = TRUE) )
   )
 
-tabwid(myft)
+myft
 
 ## ------------------------------------------------------------------------
-myft <- myft %>%
-  display( i = ~ drat > 3.6, 
+myft <- display( myft, i = ~ drat > 3.6, 
            col_key = "mpg", pattern = "{{mpg}} with {{carb}}", 
            formatters = list(mpg ~ sprintf("%.01f", mpg), 
                              carb ~ sprintf("# %.0f carb.", carb) ), 
               fprops = list(mpg = fp_text(color = "#CC55CC", bold = TRUE) )
-  ) %>% autofit()
-
-tabwid(myft)
-
-## ------------------------------------------------------------------------
-myft <- myft %>%
-  display( col_key = "mpg", pattern = "{{mpg}} {{my_message}}", part = "header",
-           formatters = list(mpg ~ "Miles/(US) gallon", 
-                             my_message ~ sprintf("* with num of carb.") ), 
-              fprops = list(my_message = fp_text(color = "gray", vertical.align = "superscript")
-                            )
-  ) %>% autofit()
-
-tabwid(myft)
+  )
+myft <- autofit(myft)
+myft
 
 ## ------------------------------------------------------------------------
-img.file <- file.path( Sys.getenv("R_HOME"), "doc", "html", "logo.jpg" )
+myft <- display( myft, col_key = "mpg", 
+   part = "header",
+   pattern = "Miles/(US) gallon {{my_message}}", 
+   formatters = list(
+     my_message ~ sprintf("* with num of carb.") 
+     ), 
+   fprops = list(
+     my_message = fp_text(color = "gray", vertical.align = "superscript")
+     ) 
+   )
+myft <- autofit(myft)
+myft
 
-myft <- myft %>%
-  display( i = ~ qsec > 18, col_key = "qsec", 
+## ------------------------------------------------------------------------
+img.file <- file.path( R.home("doc"), "html", "logo.jpg" )
+
+myft <- display( myft, i = ~ qsec > 18, col_key = "qsec", 
            pattern = "blah blah {{r_logo}} {{qsec}}",
            formatters = list(
              r_logo ~ as_image(qsec, src = img.file, width = .20, height = .15), 
              qsec ~ sprintf("qsec: %.1f", qsec) ), 
            fprops = list(qsec = fp_text(color = "orange", vertical.align = "superscript"))
-           ) %>% 
-  autofit()
-
-tabwid(myft)
+           )
+myft <- autofit(myft)
+myft
 

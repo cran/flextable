@@ -8,72 +8,73 @@ knitr::opts_chunk$set(
 ## ----warning=FALSE, message=FALSE----------------------------------------
 library(flextable)
 library(officer)
-library(magrittr)
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
 select_columns <- c("Species", "Petal.Length", "Petal.Width")
-myft <- regulartable(iris[46:55,], col_keys = select_columns) %>% 
-  merge_v(~ Species + Petal.Width )
-
-tabwid(myft) 
-
-## ----warning=FALSE, message=FALSE----------------------------------------
-select_columns <- c("Species", "Petal.Length", "Petal.Width")
-myft <- regulartable(head(mtcars, n = 10 ) ) %>% 
-  merge_h( ) %>%
-  border(border = fp_border(), part = "all") # and add borders
-
-tabwid(myft)
+myft <- regulartable(iris[46:55,], col_keys = select_columns)
+myft <- merge_v(myft, ~ Species + Petal.Width )
+myft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
 select_columns <- c("Species", "Petal.Length", "Petal.Width")
-myft <- regulartable(head(mtcars, n = 6 ) ) %>% 
-  merge_at( i = 1:3, j = 1:3) %>%
-  border(border = fp_border(), part = "all") # and add borders
+myft <- regulartable(head(mtcars, n = 10 ) )
+myft <- merge_h(myft)
+# and add borders
+myft <- border(myft, border = fp_border(), part = "all") 
+myft
 
-tabwid(myft)
+## ----warning=FALSE, message=FALSE----------------------------------------
+select_columns <- c("Species", "Petal.Length", "Petal.Width")
+myft <- regulartable(head(mtcars, n = 6 ) )
+myft <- merge_at( myft, i = 1:3, j = 1:3)
+myft <- border(myft, border = fp_border(), part = "all")
+myft
 
 ## ------------------------------------------------------------------------
-tabwid(myft %>% merge_none())
+merge_none(myft)
 
 ## ------------------------------------------------------------------------
 data <- iris[c(1:3, 51:53, 101:104),]
 
-regulartable(data, col_keys = c("Species", "Sepal.Length", "Petal.Length") ) %>%
-  theme_booktabs() %>% 
-  tabwid()
-
+myft <- regulartable(data, col_keys = c("Species", "Sepal.Length", "Petal.Length") )
+theme_booktabs(myft) 
 
 ## ------------------------------------------------------------------------
-regulartable(data = data, col_keys = c("Species", "col_1", "Sepal.Length", "Petal.Length") ) %>%
-  theme_vanilla() %>% autofit() %>% 
-  border(j=2, border = fp_border(width=0), part = "all") %>% 
-  tabwid()
-
+myft <- regulartable(
+  data = data, 
+  col_keys = c("Species", "col_1", "Sepal.Length", "Petal.Length") )
+myft <- theme_vanilla(myft)
+myft <- autofit(myft)
+myft <- border(myft, j = 2, 
+               border = fp_border(width=0), part = "all") 
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
-ft <- regulartable( head( iris ) ) %>% 
-  set_header_labels(Sepal.Length = "Sepal", 
+ft <- regulartable( head( iris ) ) 
+ft <- set_header_labels(ft, Sepal.Length = "Sepal", 
     Sepal.Width = "Sepal", Petal.Length = "Petal",
     Petal.Width = "Petal", Species = "Species" )
-  
-ft %>% theme_vanilla() %>% autofit() %>% tabwid()
+ft <- theme_vanilla(ft)
+ft <- autofit(ft)
+ft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
-ft <- ft %>% 
-  add_header(Sepal.Length = "length",
+ft <- add_header(ft, Sepal.Length = "length",
     Sepal.Width = "width", Petal.Length = "length",
     Petal.Width = "width", Species = "Species", top = FALSE ) 
-ft %>% theme_vanilla() %>% autofit() %>% tabwid()
-ft <- ft %>% 
-  add_header(Sepal.Length = "Inches",
+ft <- theme_vanilla(ft)
+ft <- autofit(ft)
+ft
+ft <- add_header(ft, Sepal.Length = "Inches",
     Sepal.Width = "Inches", Petal.Length = "Inches",
     Petal.Width = "Inches", Species = "Species", top = TRUE )
 
 # merge identical cells
-ft <- ft %>% merge_h(part = "header") %>% merge_v(part = "header")
+ft <- merge_h(ft, part = "header")
+ft <- merge_v(ft, part = "header")
 
-ft %>% theme_vanilla() %>% autofit() %>% tabwid()
+ft <- theme_vanilla(ft)
+ft <- autofit(ft)
+ft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
 typology <- data.frame(
@@ -83,33 +84,37 @@ typology <- data.frame(
   what = c("Sepal", "Sepal", "Petal", "Petal", "Species"),
   measure = c("Length", "Width", "Length", "Width", "Species"),
   stringsAsFactors = FALSE )
-typology %>% flextable() %>% theme_vanilla() %>% autofit() %>% tabwid()
+autofit( theme_vanilla(flextable(typology)) )
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
-regulartable( head( iris ) ) %>% 
-  set_header_df( mapping = typology, key = "col_keys" ) %>% 
-  merge_h(part = "header") %>% merge_v(part = "header") %>% 
-  theme_vanilla() %>% autofit() %>% tabwid()
+ft <- regulartable( head( iris ) )
+ft <- set_header_df( ft, mapping = typology, key = "col_keys" )
+
+ft <- merge_h(ft, part = "header")
+ft <- merge_v(ft, part = "header")
+
+ft <- theme_vanilla(ft)
+ft <- autofit(ft)
+ft
 
 ## ------------------------------------------------------------------------
-ft_base <- regulartable(head(iris)) %>% 
-  theme_tron_legacy()
-tabwid(ft_base)
+ft_base <- regulartable(head(iris))
+ft_base <- theme_tron_legacy(ft_base)
+ft_base
 dim(ft_base)
 
 ## ------------------------------------------------------------------------
 dim_pretty(ft_base)
 
 ## ------------------------------------------------------------------------
-ft <- ft_base %>% 
-  autofit(add_w = 0, add_h = 0)
+ft <- autofit(ft_base, add_w = 0, add_h = 0)
 
 dim(ft)
-tabwid(ft)
+ft
 
 ## ------------------------------------------------------------------------
-ft <- ft_base %>% autofit() %>% 
-  width(j = ~ Species, width = 2) %>% 
-  height( height = .4, part = "all" )
-tabwid(ft)
+ft <- autofit(ft_base)
+ft <- width(ft, j = ~ Species, width = 2)
+ft <- height( ft, height = .4, part = "all" )
+ft
 
