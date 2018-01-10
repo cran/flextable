@@ -30,14 +30,43 @@ office_doc_link <- function(url){
 knitr::opts_chunk$set(
   message = FALSE,
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>", 
+  eval = !is.null(knitr::opts_knit$get("rmarkdown.pandoc.to"))
 )
+```
+
+```{r echo=FALSE, eval=FALSE}
+str <- "flextable: 8
+regulartable: 8
+add_header: 4
+set_header_labels: 4
+set_header_df: 4
+merge_v: 2
+merge_h: 2
+merge_at: 2
+width: 2
+autofit: 3
+style: 3
+align: 2
+bg: 2
+fontsize: 2
+italic: 2
+bold: 2
+color: 2
+padding: 2
+border: 2
+rotate: 2
+display: 2
+void: 2
+knit_print.flextable: 3
+body_add_flextable: 3
+ph_with_flextable: 3"
 ```
 
 ## Introduction 
 
 `flextable` can easily create reporting table from `data.frame`. You 
-can merge cells, add header rows, change any format and specify how 
+can merge cells, add header rows, add footer rows, change any format and specify how 
 data should be displayed in cells. `flextable` objects can be rendered 
 in HTML format but also in Microsoft Word and PowerPoint documents.
 
@@ -50,9 +79,13 @@ several chunks of text with their own set of formatting properties
 
 
 `regulartable` function has been written because the first one is ressource 
-consumming. The only difference is that it is producing tables where cells 
+consumming. The main difference is that it is producing tables where cells 
 can contain only one chunk of text with its own set of formatting properties.
-Function `set_formatter` is customizing text of cells.
+Function `set_formatter` is customizing text of cells. 
+
+*Note also that `regulartable` supports strange variable names (with 
+percent symbols, with spaces, etc.) and `flextable` does not support 
+them.*
 
 > The following table is made with `regulartable` and dataset data:
 
@@ -144,7 +177,7 @@ myft
 
 > To learn more, see article about [layouts](./layout.html).
 
-Table layout can be modified. One can add or change header rows, change cells height and width and merge cells. Also, there is an important function named `autofit` (it adjusts widths and heights regarding to text widths and heights).
+Table layout can be modified. One can add or change header/footer rows, change cells height and width and merge cells. Also, there is an important function named `autofit` (it adjusts widths and heights regarding to text widths and heights).
 
 We will use `merge_v()` to merge identical consecutive cells of 
 columns "carb" and "am".
@@ -208,8 +241,8 @@ When working in RStudio, flextable will be printed in the rstudio viewer pane.
 Word output are managed with method `knitr::knit_print`. 
 
 Print the `flextable` object in the rmarkdown's \code{render} chunk 
-as demonstrated in this document generated from an R Markdown 
-document.
+as demonstrated in this document (...generated from an R Markdown 
+document).
 
 **Note that [pandoc](https://pandoc.org/installing.html) 2.0 
 required for flextable rendering in docx with `rmarkdown`**

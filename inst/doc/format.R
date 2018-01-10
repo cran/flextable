@@ -2,7 +2,8 @@
 knitr::opts_chunk$set(
   message = FALSE,
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>", 
+  eval = !is.null(knitr::opts_knit$get("rmarkdown.pandoc.to"))
 )
 
 dir.create("assets/docx", recursive = TRUE, showWarnings = FALSE)
@@ -73,6 +74,7 @@ ft <- autofit(ft)
 # as autofit do not handle rotation, you will have
 # to change manually header cells'height.
 ft <- height(ft, height = 1, part = "header")
+ft
 
 ## ----results='hide'------------------------------------------------------
 library(officer)

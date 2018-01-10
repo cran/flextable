@@ -17,8 +17,36 @@ office_doc_link <- function(url){
 knitr::opts_chunk$set(
   message = FALSE,
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>", 
+  eval = !is.null(knitr::opts_knit$get("rmarkdown.pandoc.to"))
 )
+
+## ----echo=FALSE, eval=FALSE----------------------------------------------
+#  str <- "flextable: 8
+#  regulartable: 8
+#  add_header: 4
+#  set_header_labels: 4
+#  set_header_df: 4
+#  merge_v: 2
+#  merge_h: 2
+#  merge_at: 2
+#  width: 2
+#  autofit: 3
+#  style: 3
+#  align: 2
+#  bg: 2
+#  fontsize: 2
+#  italic: 2
+#  bold: 2
+#  color: 2
+#  padding: 2
+#  border: 2
+#  rotate: 2
+#  display: 2
+#  void: 2
+#  knit_print.flextable: 3
+#  body_add_flextable: 3
+#  ph_with_flextable: 3"
 
 ## ------------------------------------------------------------------------
 data <- iris[c(1:3, 51:53, 101:104),]

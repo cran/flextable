@@ -48,7 +48,10 @@ flextable <- function( data, col_keys = names(data), cwidth = .75, cheight = .25
 
   header <- complex_tabpart( data = header_data, col_keys = col_keys, cwidth = cwidth, cheight = cheight )
 
-  out <- list( header = header, body = body, col_keys = col_keys,
+  footer_data <- header_data[FALSE, , drop = FALSE]
+  footer <- complex_tabpart( data = footer_data, col_keys = col_keys, cwidth = cwidth, cheight = cheight )
+
+  out <- list( header = header, body = body, footer = footer, col_keys = col_keys,
                blanks = blanks )
   class(out) <- c("flextable", "complextable")
 
@@ -68,6 +71,8 @@ tabwid_htmldep <- function(){
 
 }
 
+#' @export
+#' @rdname knit_print.flextable
 htmltools_value <- function(x){
   codes <- html_str(x)
   html_o <- div( class='tabwid',
@@ -117,11 +122,14 @@ print.flextable <- function(x, preview = "html", ...){
 
 #' @title Render flextable in rmarkdown (including Word output)
 #' @description Function used to render flextable in knitr/rmarkdown documents.
-#' HTML and Word outputs are supported.
+#' HTML and Word outputs are supported. Function \code{htmltools_value} return
+#' an HTML version of the flextable, this function can to be used within Shiny
+#' applications for example.
 #' @note
-#' For Word (docx) output, if pandoc vesion >= 2.0 is used, a raw XML block
-#' with the table code will be inserted. If pandoc vesion < 2.0 is used, an
-#' error will be raised.
+#' For Word (docx) output, if pandoc version >= 2.0 is used, a raw XML block
+#' with the table code will be inserted. If pandoc version < 2.0 is used, an
+#' error will be raised. Note also that insertion of images is not supported
+#' with rmarkdow for Word documents.
 #'
 #' @param x a \code{flextable} object
 #' @param ... further arguments, not used.

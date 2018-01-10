@@ -1,12 +1,8 @@
 #' @export
-#' @title Add a row of labels in headers
+#' @title Add a row of labels in header or footer part
 #'
-#' @description Add a single row of labels in the flextable's header part. It can
-#' be inserted at the top or the bottom of header part.
-#'
-#' @details
-#' An horizontal and a vertical merge are performed automatically.
-#' Use \code{\link{merge_none}} to drop theses merging instructions.
+#' @description Add a single row of labels in the flextable's header
+#' or footer part. It can be inserted at the top or the bottom of the part.
 #'
 #' @param x a \code{flextable} object
 #' @param top should the row be inserted at the top or the bottom.
@@ -22,6 +18,8 @@
 #'   Sepal.Width = "Inches", Petal.Length = "Inches",
 #'   Petal.Width = "Inches", Species = "Species", top = TRUE )
 #' ft <- merge_h(ft, part = "header")
+#' ft <- add_footer(ft, Species = "This is a footnote" )
+#' ft <- merge_at(ft, j = 1:5, part = "footer")
 #' ft
 add_header <- function(x, top = TRUE, ...){
 
@@ -31,6 +29,40 @@ add_header <- function(x, top = TRUE, ...){
   args_[names(args)] <- lapply(args, format)
   header_data <- data.frame(as.list(args_), check.names = FALSE, stringsAsFactors = FALSE )
   x$header <- add_rows( x$header, header_data, first = top )
+
+  x
+}
+
+#' @export
+#' @title delete flextable part
+#'
+#' @description indicate to not print a part of
+#' the flextable, i.e. an header, footer or the body.
+#'
+#' @param x a \code{flextable} object
+#' @param part partname of the table to delete (one of 'body', 'header' or 'footer').
+#' @examples
+#' ft <- flextable( head( iris ) )
+#' ft <- delete_part(x = ft, part = "header")
+#' ft
+delete_part <- function(x, part = "header"){
+  part <- match.arg(part, c("body", "header", "footer"), several.ok = FALSE )
+  nrow_ <- nrow(x[[part]]$dataset)
+  x[[part]]$dataset <- x[[part]]$dataset[-seq_len(nrow_),]
+  x
+}
+
+#' @export
+#' @rdname add_header
+add_footer <- function(x, top = TRUE, ...){
+
+  args <- list(...)
+  args_ <- lapply(x$col_keys, function(x) "" )
+  names(args_) <- x$col_keys
+  args_[names(args)] <- lapply(args, format)
+  footer_data <- data.frame(as.list(args_), check.names = FALSE, stringsAsFactors = FALSE )
+
+  x$footer <- add_rows( x$footer, footer_data, first = top )
 
   x
 }

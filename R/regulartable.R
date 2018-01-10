@@ -24,7 +24,10 @@ regulartable <- function( data, col_keys = names(data), cwidth = .75, cheight = 
 
   header <- simple_tabpart( data = header_data, col_keys = col_keys, cwidth = cwidth, cheight = cheight )
 
-  out <- list( header = header, body = body, col_keys = col_keys,
+  footer_data <- header_data[FALSE, , drop = FALSE]
+  footer <- simple_tabpart( data = footer_data, col_keys = col_keys, cwidth = cwidth, cheight = cheight )
+
+  out <- list( header = header, body = body, footer = footer, col_keys = col_keys,
                blanks = blanks )
   class(out) <- c("flextable", "regulartable")
 
@@ -43,7 +46,7 @@ regulartable <- function( data, col_keys = names(data), cwidth = .75, cheight = 
 #' values as a character vector.
 #' @param x a regulartable object
 #' @param ... Name-value pairs of functions, names should be existing col_key values
-#' @param part partname of the table (one of 'body' or 'header')
+#' @param part partname of the table (one of 'body' or 'header' or 'footer')
 #' @examples
 #' ft <- regulartable( head( iris ) )
 #' ft <- set_formatter( x = ft,
@@ -57,7 +60,7 @@ set_formatter <- function(x, ..., part = "body"){
 
   stopifnot(inherits(x, "regulartable"))
 
-  part <- match.arg(part, c("body", "header"), several.ok = FALSE )
+  part <- match.arg(part, c("body", "header", "footer"), several.ok = FALSE )
   formatters <- list(...)
   col_keys <- names(formatters)
   col_keys <- intersect(col_keys, x[[part]]$col_keys)

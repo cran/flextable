@@ -2,7 +2,8 @@
 knitr::opts_chunk$set(
   message = FALSE,
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>", 
+  eval = !is.null(knitr::opts_knit$get("rmarkdown.pandoc.to"))
 )
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
@@ -115,6 +116,7 @@ ft
 ## ------------------------------------------------------------------------
 ft <- autofit(ft_base)
 ft <- width(ft, j = ~ Species, width = 2)
-ft <- height( ft, height = .4, part = "all" )
+ft <- height_all( ft, height = .4 )
+ft <- height( ft, i = 3, height = 1 )
 ft
 
