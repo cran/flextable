@@ -62,7 +62,8 @@ myft <- padding( myft, padding = 3, part = "all" )
 myft
 
 ## ------------------------------------------------------------------------
-myft <- border( myft, border = fp_border(color="white"), part = "all" )
+myft <- font(myft, j = "Species", fontname = "Times")
+myft <- fontsize(myft, j = "Species", size = 14)
 myft
 
 ## ------------------------------------------------------------------------
@@ -76,24 +77,31 @@ ft <- autofit(ft)
 ft <- height(ft, height = 1, part = "header")
 ft
 
-## ----results='hide'------------------------------------------------------
-library(officer)
-doc <- read_docx()
-doc <- body_add_flextable(doc, ft)
-print(doc, target = "assets/docx/rotate.docx")
+## ------------------------------------------------------------------------
+# remove all defined borders
+myft <- border_remove( myft )
 
-## ----echo=FALSE----------------------------------------------------------
-office_doc_link( url = paste0( "https://davidgohel.github.io/flextable/articles/", "assets/docx/rotate.docx" ) )
+big_b <- fp_border(color="gray70", width = 2)
+std_b <- fp_border(color="white")
 
-## ----results='hide'------------------------------------------------------
-library(officer)
-doc <- read_pptx()
-doc <- add_slide(doc, layout = "Title and Content", master = "Office Theme")
-doc <- ph_with_flextable(doc, ft)
-print(doc, target = "assets/pptx/rotate.pptx")
+myft <- vline( myft, border = std_b, part = "all" )
+myft <- vline_left( myft, border = big_b, part = "all" )
+myft <- vline_right( myft, border = big_b, part = "all" )
+myft <- hline( myft, border = std_b )
+myft <- hline_bottom( myft, border = big_b )
+myft <- hline_top( myft, border = big_b, part = "all" )
+myft
 
-## ----echo=FALSE----------------------------------------------------------
-office_doc_link( url = paste0( "https://davidgohel.github.io/flextable/articles/", "assets/pptx/rotate.pptx" ) )
+## ------------------------------------------------------------------------
+std_b2 <- fp_border(color="white", style = "dashed")
+
+# remove all defined borders
+myft <- border_remove( myft )
+
+myft <- border_outer( myft, border = big_b, part = "all" )
+myft <- border_inner_h( myft, border = std_b, part = "all" )
+myft <- border_inner_v( myft, border = std_b2, part = "all" )
+myft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
 myft <- color(myft, i = ~ Sepal.Length < 5 & Petal.Length > 1.3, 

@@ -24,6 +24,9 @@
 #' left-hand side is a name (matching a name enclosed by double braces in
 #' \code{pattern}) and the right-hand side is an R expression to be evaluated (that
 #' will produce the corresponding strings).
+#'
+#' The function is designed to work with columns in the dataset provided to
+#' \code{flextable} (the col_keys).
 #' @section fprops:
 #' A named list of \link[officer]{fp_text}. It defines the formatting properties
 #' associated to a compound in \code{formatters}. If not defined for an element
@@ -42,7 +45,7 @@ display <- function(x, i = NULL, col_key,
                     pattern, formatters = list(), fprops = list(),
                     part = "body"){
 
-  part <- match.arg(part, c("body", "header"), several.ok = FALSE )
+  part <- match.arg(part, c("body", "header", "footer"), several.ok = FALSE )
 
   stopifnot(is.character(pattern), length(pattern)==1)
 

@@ -38,7 +38,7 @@ merge_none(myft)
 data <- iris[c(1:3, 51:53, 101:104),]
 
 myft <- regulartable(data, col_keys = c("Species", "Sepal.Length", "Petal.Length") )
-theme_booktabs(myft) 
+myft
 
 ## ------------------------------------------------------------------------
 myft <- regulartable(
@@ -46,8 +46,8 @@ myft <- regulartable(
   col_keys = c("Species", "col_1", "Sepal.Length", "Petal.Length") )
 myft <- theme_vanilla(myft)
 myft <- autofit(myft)
-myft <- border(myft, j = 2, 
-               border = fp_border(width=0), part = "all") 
+myft <- empty_blanks(myft)
+myft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
 ft <- regulartable( head( iris ) ) 
@@ -69,12 +69,15 @@ ft <- add_header(ft, Sepal.Length = "Inches",
     Sepal.Width = "Inches", Petal.Length = "Inches",
     Petal.Width = "Inches", Species = "Species", top = TRUE )
 
+ft <- add_footer(ft, Sepal.Length = "* This is a note" )
+ft <- color(ft, color = "orange", part = "footer" )
+
 # merge identical cells
 ft <- merge_h(ft, part = "header")
 ft <- merge_v(ft, part = "header")
+ft <- merge_at(ft, i = 1, j = 1:5, part = "footer")
 
-ft <- theme_vanilla(ft)
-ft <- autofit(ft)
+ft <- theme_booktabs(ft)
 ft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------

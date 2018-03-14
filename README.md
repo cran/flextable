@@ -14,7 +14,7 @@ status](https://ci.appveyor.com/api/projects/status/github/davidgohel/flextable?
 state and is being actively
 developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
 
-## flextable
+<img src="http://www.ardata.fr/images/flextablelogo.svg" width = "15%"/>
 
 The flextable package provides a framework for easily create tables for
 reporting. Tables can be embedded within:

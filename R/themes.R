@@ -7,11 +7,11 @@
 #' ft <- flextable(iris)
 #' ft <- theme_vanilla(ft)
 theme_vanilla <- function(x){
-  x <- border(x = x, border.bottom = fp_border(width = 1, color = "#333333"),
-              border.top = fp_border(width = 1, color = "#333333"),
-              border.left = fp_border(width = 0),
-              border.right = fp_border(width = 0),
-              part = "all")
+  std_b <- fp_border(width = 1, color = "#333333")
+  x <- border_remove(x)
+
+  x <- hline( x, border = std_b, part = "all")
+  x <- hline_top( x, border = std_b, part = "header" )
   x <- style( x = x, pr_p = fp_par(text.align = "right", padding = 2), part = "all")
   x <- bg(x = x, bg = "transparent", part = "all")
   x <- bold(x = x, bold = TRUE, part = "header")
@@ -27,10 +27,18 @@ theme_vanilla <- function(x){
 #' ft <- flextable(iris)
 #' ft <- theme_box(ft)
 theme_box <- function(x){
-  x <- border(x = x, border = fp_border(width = 1, color = "black"), part = "all")
+  x <- border_remove(x)
+
+  std_border <- fp_border(width = 1, color = "black")
+
+  x <- border_outer(x, part="all", border = std_border )
+  x <- border_inner_h(x, border = std_border, part="all")
+  x <- border_inner_v(x, border = std_border, part="all")
+
   x <- style( x = x, pr_p = fp_par(text.align = "center", padding = 2), part = "all")
   x <- bg(x = x, bg = "transparent", part = "all")
   x <- bold(x = x, bold = TRUE, part = "header")
+  x <- italic(x = x, italic = TRUE, part = "footer")
   x
 }
 
@@ -48,7 +56,7 @@ theme_zebra <- function(x, odd_header = "#CFCFCF", odd_body = "#EFEFEF",
   f_nrow <- nrow_part(x, "footer")
   b_nrow <- nrow_part(x, "body")
 
-  x <- border(x = x, border = fp_border(width = 0), part = "all")
+  x <- border_remove(x)
   x <- padding(x = x, padding = 2, part = "all")
   x <- align(x = x, align = "right", part = "all")
 
@@ -156,31 +164,26 @@ theme_tron <- function(x){
 #' ft <- flextable(iris)
 #' ft <- theme_booktabs(ft)
 theme_booktabs <- function(x){
-  null_border <- fp_border(width = 0)
   big_border <- fp_border(width = 2)
   std_border <- fp_border(width = 1)
   h_nrow <- nrow_part(x, "header")
   f_nrow <- nrow_part(x, "footer")
   b_nrow <- nrow_part(x, "body")
 
+  x <- border_remove(x)
+
   if(h_nrow > 0 ){
-    x <- border(x = x, border = null_border, part = "header")
-    x <- border(x = x, i = 1, border.top = big_border, part = "header")
-    x <- border(x = x, i = h_nrow, border.bottom = big_border, part = "header")
-    x <- bold(x = x, bold = TRUE, part = "header")
+    x <- hline_top(x, border = big_border, part = "header")
+    x <- hline(x, border = std_border, part = "header")
+    x <- hline_bottom(x, border = big_border, part = "header")
   }
   if(f_nrow > 0 ){
-    x <- border(x = x, border = null_border, part = "footer")
-    x <- border(x = x, i = 1, border.top = big_border, part = "footer")
-    x <- border(x = x, i = f_nrow, border.bottom = big_border, part = "footer")
+    x <- hline(x, border = std_border, part = "footer")
+    x <- hline_bottom(x, border = big_border, part = "footer")
   }
   if(b_nrow > 0 ){
-    x <- border(x = x, border.bottom = fp_border(width = 1, color = "black"),
-                border.top = fp_border(width = 1, color = "black"),
-                border.left = fp_border(width = 0),
-                border.right = fp_border(width = 0),
-                part = "body")
-    x <- border(x = x, i = b_nrow, border.bottom = big_border, part = "body")
+    x <- hline(x, border = std_border, part = "body")
+    x <- hline_bottom(x, border = big_border, part = "body")
   }
 
   x <- style( x = x, pr_p = fp_par(text.align = "right", padding = 2), part = "all")

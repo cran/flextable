@@ -21,6 +21,7 @@ width <- function(x, j = NULL, width){
   if( length(width) == 1 ) width <- rep(width, length(j))
 
   x$header$colwidths[j] <- width
+  x$footer$colwidths[j] <- width
   x$body$colwidths[j] <- width
 
   x
@@ -207,7 +208,8 @@ optimal_sizes.complex_tabpart <- function( x ){
   widths <- widths + cell_dim$widths
   heights <- heights + cell_dim$heights
 
-  list(widths = apply(widths, 2, max), heights = apply(heights, 1, max) )
+  list(widths = apply(widths, 2, max, na.rm = TRUE),
+       heights = apply(heights, 1, max, na.rm = TRUE) )
 }
 
 optimal_sizes.simple_tabpart <- function( x ){
@@ -235,9 +237,8 @@ optimal_sizes.simple_tabpart <- function( x ){
   cell_dim <- dim_cells(x)
   widths <- widths + cell_dim$widths
   heights <- heights + cell_dim$heights
-
-  list(widths = apply(widths, 2, max),
-       heights = apply(heights, 1, max)
+  list(widths = apply(widths, 2, max, na.rm = TRUE),
+       heights = apply(heights, 1, max, na.rm = TRUE)
   )
 }
 
@@ -303,8 +304,7 @@ text_metric <- function(data, all_fp ){
   selection_ <- c("col_key", "id", "pos", "width", "height")
   data$width <- NULL
   data$height <- NULL
-
-  data <- as.data.frame( data[data$type_out %in% "text", ] )
+  data <- as.data.frame( data[data$type_out %in% c("text", "htext"), ] )
   sizes_ <- merge(data, as.data.frame( fp_props ), by = "pr_id",
                   all.x = TRUE, all.y = FALSE, sort = FALSE)
   str_extents_ <- m_str_extents(sizes_$str, fontname = sizes_$fontname,
