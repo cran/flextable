@@ -1,3 +1,16 @@
+# flextable 0.4.4
+
+## new features
+
+* Soft return `\n` is now supported. Function `autofit` and `dim_pretty` do not
+  support soft returns and may return wrong results (\n will be considered as "").
+* format function for flextable objects.
+
+## Issues
+
+* fix border rendering with `border_outer()`
+
+
 # flextable 0.4.3
 
 ## new features

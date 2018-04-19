@@ -37,6 +37,7 @@ docx_str.regulartable <- function(x, align = "center", doc = NULL, ...){
 
   if( nrow_part(x, "header") > 0 ){
     x$header <- correct_h_border(x$header)
+    x$header <- correct_v_border(x$header)
     xml_content <- format(x$header, header = TRUE, type = "wml")
     imgs <- append( imgs, attr(xml_content, "imgs")$image_src )
     hlinks <- append( hlinks, attr(xml_content, "htxt")$href )
@@ -44,6 +45,7 @@ docx_str.regulartable <- function(x, align = "center", doc = NULL, ...){
   }
   if( nrow_part(x, "body") > 0 ){
     x$body <- correct_h_border(x$body)
+    x$body <- correct_v_border(x$body)
     xml_content <- format(x$body, header = FALSE, type = "wml")
     imgs <- append( imgs, attr(xml_content, "imgs")$image_src )
     hlinks <- append( hlinks, attr(xml_content, "htxt")$href )
@@ -51,6 +53,7 @@ docx_str.regulartable <- function(x, align = "center", doc = NULL, ...){
   }
   if( nrow_part(x, "footer") > 0 ){
     x$footer <- correct_h_border(x$footer)
+    x$footer <- correct_v_border(x$footer)
     xml_content <- format(x$footer, header = FALSE, type = "wml")
     imgs <- append( imgs, attr(xml_content, "imgs")$image_src )
     hlinks <- append( hlinks, attr(xml_content, "htxt")$href )
@@ -62,20 +65,19 @@ docx_str.regulartable <- function(x, align = "center", doc = NULL, ...){
   out <- paste0(out,  "</w:tbl>" )
 
   if( length(imgs) > 0 ) {
-
     if (!is.null(doc)) {
       stopifnot(inherits(doc, "rdocx"))
       doc <- docx_reference_img( doc, imgs )
       out <- wml_link_images( doc, out )
-    } else
-      warning("Images are not supported yet for docx-rmarkdwon generation",
-          call. = FALSE)
+    }
   }
   if( length(hlinks) > 0 ){
-
-    for( hl in hlinks ){
-      rel <- doc$doc_obj$relationship()
-      out <- process_url(rel, url = hl, str = out, pattern = "w:hyperlink", double_esc = FALSE)
+    if (!is.null(doc)) {
+      stopifnot(inherits(doc, "rdocx"))
+      for( hl in hlinks ){
+        rel <- doc$doc_obj$relationship()
+        out <- process_url(rel, url = hl, str = out, pattern = "w:hyperlink", double_esc = FALSE)
+      }
     }
   }
 

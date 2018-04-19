@@ -3,19 +3,6 @@ flextable R package
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-[![Build
-Status](https://travis-ci.org/davidgohel/flextable.svg?branch=master)](https://travis-ci.org/davidgohel/flextable)
-[![Build
-status](https://ci.appveyor.com/api/projects/status/github/davidgohel/flextable?branch=master)](https://ci.appveyor.com/project/davidgohel/flextable/branch/master)
-[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/flextable)](https://cran.r-project.org/package=flextable)
-![cranlogs](http://cranlogs.r-pkg.org./badges/flextable)
-[![codecov](https://codecov.io/gh/davidgohel/flextable/branch/master/graph/badge.svg)](https://codecov.io/gh/davidgohel/flextable)
-[![Project Status: Active – The project has reached a stable, usable
-state and is being actively
-developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
-
-<img src="http://www.ardata.fr/images/flextablelogo.svg" width = "15%"/>
-
 The flextable package provides a framework for easily create tables for
 reporting. Tables can be embedded within:
 
@@ -64,10 +51,9 @@ The help pages are located at <https://davidgohel.github.io/flextable/>.
 
 ### Getting help
 
-This project is developped and maintained on my own time. In order to
-help me to maintain the package, do not send me private emails if you
-only have questions about how to use the package. Instead, visit
-Stackoverflow and use tags `flextable` and `r` [Stackoverflow
+This project is developped and maintained on my own time. If you have
+questions about how to use the package, visit Stackoverflow and use tags
+`flextable` and `r` [Stackoverflow
 link](https://stackoverflow.com/questions/tagged/flextable+r)\! I
 usually read them and answer when possible.
 
@@ -97,7 +83,7 @@ please provide:
   - the new function(s) with code and roxygen tags (with examples)
   - a new section in the appropriate vignette that describes how to use
     the new function
-  - add corresponding tests in directory `tests/testthat`.
+  - corresponding tests in directory `tests/testthat`.
 
 By using rhub (run `rhub::check_for_cran()`), you will see if everything
 is ok. When submitted, the PR will be evaluated automatically on travis
