@@ -129,6 +129,7 @@ create_display <- function(data, col_keys){
     else if( is.integer(x) ) paste0(varname, " ~ sprintf(", shQuote(set_formatter_type_formals$fmt_integer), ", `", varname ,"`)")
     else if( is.factor(x) ) paste0(varname, " ~ as.character(`", varname ,"`)")
     else if( is.character(x) ) paste0(varname, " ~ as.character(`", varname ,"`)")
+    else if( is.logical(x) ) paste0(varname, " ~ as.character(`", varname ,"`)")
     else if( inherits(x, "Date") ) paste0(varname, " ~ format(`", varname ,"`, ", shQuote(set_formatter_type_formals$fmt_date), ")")
     else if( inherits(x, "POSIXt") ) paste0(varname, " ~ format(`", varname ,"`, ", shQuote(set_formatter_type_formals$fmt_datetime), ")")
     else paste0(varname, " ~ ", set_formatter_type_formals$fun_any, "(`", varname ,"`)")
@@ -142,26 +143,39 @@ create_display <- function(data, col_keys){
 }
 
 
-replace.na <- function(x, by = ""){
-  x[is.na(x)] <- by
-  x
-}
-dbl_fun <- function(x, fmt_double) {
-  replace.na(sprintf(fmt_double, x), by = "")
-}
-int_fun <- function(x, fmt_integer) {
-  replace.na(sprintf(fmt_integer, x), by = "")
-}
-str_fun <- function(x) {
-  replace.na(as.character(x), by = "")
-}
-date_fun <- function(x, fmt_date){
-  replace.na(format(x, fmt_date), by = "")
-}
-datetime_fun <- function(x, fmt_datetime){
-  replace.na(format(x, fmt_datetime), by = "")
-}
-any_fun <- function(x){
-  replace.na(format(x), by = "")
+
+format_fun <- function( x, na_string = "", ... ){
+  UseMethod("format_fun")
 }
 
+format_fun.default <- function( x, na_string = "", ... ){
+  ifelse( is.na(x), na_string, format(x) )
+}
+
+format_fun.character <- function( x, na_string = "", ... ){
+  ifelse( is.na(x), na_string, x )
+}
+
+format_fun.factor <- function( x, na_string = "", ... ){
+  ifelse( is.na(x), na_string, as.character(x) )
+}
+
+format_fun.logical <- function( x, na_string = "", true = "true", false = "false" ){
+  ifelse( is.na(x), na_string, ifelse(x, true, false) )
+}
+
+format_fun.double <- function( x, na_string = "", fmt_double, ... ){
+  ifelse( is.na(x), na_string, sprintf(fmt_double, x) )
+}
+
+format_fun.integer <- function( x, na_string = "", fmt_integer, ... ){
+  ifelse( is.na(x), na_string, sprintf(fmt_integer, x) )
+}
+
+format_fun.Date <- function( x, na_string = "", fmt_date, ... ){
+  ifelse( is.na(x), na_string, format(x, fmt_date) )
+}
+
+format_fun.POSIXt <- function( x, na_string = "", fmt_datetime, ... ){
+  ifelse( is.na(x), na_string, format(x, fmt_datetime) )
+}

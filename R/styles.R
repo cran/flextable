@@ -25,6 +25,7 @@
 style <- function(x, i = NULL, j = NULL,
                   pr_t = NULL, pr_p = NULL, pr_c = NULL, part = "body" ){
 
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -75,6 +76,7 @@ style <- function(x, i = NULL, j = NULL,
 #' ft <- bold(ft, bold = TRUE, part = "header")
 bold <- function(x, i = NULL, j = NULL, bold = TRUE, part = "body" ){
 
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -115,6 +117,7 @@ bold <- function(x, i = NULL, j = NULL, bold = TRUE, part = "body" ){
 #' ft <- fontsize(ft, size = 14, part = "header")
 fontsize <- function(x, i = NULL, j = NULL, size = 11, part = "body" ){
 
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -155,6 +158,7 @@ fontsize <- function(x, i = NULL, j = NULL, size = 11, part = "body" ){
 #' ft <- italic(ft, italic = TRUE, part = "header")
 italic <- function(x, i = NULL, j = NULL, italic = TRUE, part = "body" ){
 
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -195,6 +199,7 @@ italic <- function(x, i = NULL, j = NULL, italic = TRUE, part = "body" ){
 #' ft <- color(ft, color = "orange", part = "header")
 color <- function(x, i = NULL, j = NULL, color, part = "body" ){
 
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -244,6 +249,7 @@ color <- function(x, i = NULL, j = NULL, color, part = "body" ){
 #' ft <- font(ft, fontname = fontname, part = "header")
 font <- function(x, i = NULL, j = NULL, fontname, part = "body" ){
 
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -293,6 +299,7 @@ padding <- function(x, i = NULL, j = NULL, padding = NULL,
                     padding.left = NULL, padding.right = NULL,
                     part = "body" ){
 
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( !is.null(padding) ){
@@ -353,6 +360,7 @@ padding <- function(x, i = NULL, j = NULL, padding = NULL,
 align <- function(x, i = NULL, j = NULL, align = "left",
                     part = "body" ){
 
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -396,6 +404,7 @@ align <- function(x, i = NULL, j = NULL, align = "left",
 #' ft <- bg(ft, bg = "#DDDDDD", part = "header")
 bg <- function(x, i = NULL, j = NULL, bg, part = "body" ){
 
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -434,8 +443,14 @@ bg <- function(x, i = NULL, j = NULL, bg, part = "body" ){
 #' @param j columns selection
 #' @param part partname of the table (one of 'all', 'body', 'header', 'footer')
 #' @param rotation one of "lrtb", "tbrl", "btlr"
-#' @param align one of "center" or "top" or "bottom"
+#' @param align vertical alignment of paragraph within cell,
+#' one of "center" or "top" or "bottom".
 #' @details
+#' One common case is to rotate text to minimise column space. When rotating,
+#' paragraph alignments will remain the same and often right aligned (
+#' with an effect of top aligned when rotated). Use
+#' \code{align(..., align = "center")} to center rotated text.
+#'
 #' When function \code{autofit} is used, the rotation will be
 #' ignored.
 #' @examples
@@ -446,6 +461,7 @@ bg <- function(x, i = NULL, j = NULL, bg, part = "body" ){
 #' ft <- height(ft, height = max(dim_pretty(ft, part = "header")$widths), part = "header")
 rotate <- function(x, i = NULL, j = NULL, rotation, align = "center", part = "body" ){
 
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -502,6 +518,7 @@ border <- function(x, i = NULL, j = NULL, border = NULL,
                    border.left = NULL, border.right = NULL,
                    part = "body" ){
 
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( !is.null(border) ){
@@ -643,6 +660,7 @@ NULL
 #' @export
 #' @rdname borders
 border_remove <- function(x){
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   x <- border(x = x, border = fp_border(width = 0), part = "all")
   x
 }
@@ -665,6 +683,7 @@ border_remove <- function(x){
 #' ft
 border_outer <- function(x, border = NULL, part = "all"){
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
 
   if( part == "all" ){
     for( p in c("header", "body", "footer") ){
@@ -693,6 +712,7 @@ border_outer <- function(x, border = NULL, part = "all"){
 #' ft <- border_inner_h(ft, border = std_border )
 #' ft
 border_inner_h <- function(x, border = NULL, part = "body"){
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -720,6 +740,7 @@ border_inner_h <- function(x, border = NULL, part = "body"){
 #' ft <- border_inner_v(ft, border = std_border )
 #' ft
 border_inner_v <- function(x, border = NULL, part = "all"){
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -758,6 +779,7 @@ border_inner_v <- function(x, border = NULL, part = "all"){
 #' ft
 #' @rdname borders
 hline <- function(x, i = NULL, j = NULL, border = NULL, part = "body"){
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -796,6 +818,7 @@ hline <- function(x, i = NULL, j = NULL, border = NULL, part = "body"){
 #' ft <- hline_top(ft, part="all", border = big_border )
 #' ft
 hline_top <- function(x, j = NULL, border = NULL, part = "body"){
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -825,6 +848,7 @@ hline_top <- function(x, j = NULL, border = NULL, part = "body"){
 #' ft <- hline_bottom(ft, part="body", border = big_border )
 #' ft
 hline_bottom <- function(x, j = NULL, border = NULL, part = "body"){
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -854,6 +878,7 @@ hline_bottom <- function(x, j = NULL, border = NULL, part = "body"){
 #' ft <- vline(ft, border = std_border )
 #' ft
 vline <- function(x, i = NULL, j = NULL, border = NULL, part = "all"){
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -871,9 +896,9 @@ vline <- function(x, i = NULL, j = NULL, border = NULL, part = "all"){
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
   x <- border(x, i = i, j = j, border.right = border, part = part )
-  j <- setdiff(j, 1 )
+  j <- setdiff(j, length(x$col_keys) )
   if( length(j) > 0 )
-    x <- border(x, i = i, j = j, border.left = border, part = part )
+    x <- border(x, i = i, j = j + 1, border.left = border, part = part )
   x
 }
 
@@ -889,6 +914,7 @@ vline <- function(x, i = NULL, j = NULL, border = NULL, part = "all"){
 #' ft <- vline_left(ft, border = big_border )
 #' ft
 vline_left <- function(x, i = NULL, border = NULL, part = "all"){
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -917,6 +943,7 @@ vline_left <- function(x, i = NULL, border = NULL, part = "all"){
 #' ft <- vline_right(ft, border = big_border )
 #' ft
 vline_right <- function(x, i = NULL, border = NULL, part = "all"){
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -963,6 +990,7 @@ vline_right <- function(x, i = NULL, border = NULL, part = "all"){
 #' ft
 #' @export
 empty_blanks <- function(x){
+  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
   if( length(x$blanks) < 1 ) return(x)
 
   x <- border( x, j = x$blanks,
