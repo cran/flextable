@@ -82,12 +82,18 @@ print.flextable <- function(x, preview = "html", ...){
 #' error will be raised. Note also that insertion of images is not supported
 #' with rmarkdow for Word documents.
 #'
+#' Result can be aligned with chunk option \code{ft.align} that
+#' accepts values 'left', 'center' and 'right'.
+#' Word option 'Allow row to break across pages' can be
+#' activated with chunk option \code{ft.split} set to TRUE.
+#'
+#'
 #' @param x a \code{flextable} object
 #' @param ... further arguments, not used.
 #' @export
 #' @author Maxim Nazarov
 #' @importFrom htmltools HTML div
-#' @importFrom knitr knit_print asis_output opts_knit
+#' @importFrom knitr knit_print asis_output opts_knit opts_current
 #' @importFrom rmarkdown pandoc_version
 knit_print.flextable <- function(x, ...){
 
@@ -101,8 +107,15 @@ knit_print.flextable <- function(x, ...){
 
     if (pandoc_version() >= 2) {
       # insert rawBlock with Open XML
+      if( is.null(align <- opts_current$get("ft.align")) )
+        align <- "center"
+      if( is.null(split <- opts_current$get("ft.split")) )
+        split <- FALSE
+
+      str <- docx_str(x, align = align, split = TRUE %in% split)
+
       knit_print( asis_output(
-        paste("```{=openxml}", docx_str(x), "```", sep = "\n")
+        paste("```{=openxml}", str, "```", sep = "\n")
       ) )
     } else {
       stop("pandoc version >= 2.0 required for flextable rendering in docx")
@@ -114,13 +127,29 @@ knit_print.flextable <- function(x, ...){
 }
 
 #' @export
+#' @title Encode flextable in a document format.
+#'
+#' @description Encode flextable in a document format, \code{html}, \code{docx},
+#' \code{pptx}.
+#'
+#' This function is exported so that users can create their own custom
+#' component.
+#' @param x flextable object
+#' @param type one of pptx, docx or html.
+#' @param ... unused
+#' @examples
+#' ft <- flextable(head(iris, n = 2))
+#' format(ft, type = "html")
 format.flextable <- function(x, type, ...){
 
   stopifnot( length(type) == 1,
-             type %in% c("wml", "pml", "html") )
+             type %in% c("wml", "pml", "html", "pptx", "docx") )
+
+  if( type %in% "pptx") type <- "pml"
+  if( type %in% "docx") type <- "wml"
 
   if( type == "wml" ){
-    out <- docx_str(x)
+    out <- docx_str(x, ...)
   } else if( type == "pml" ){
     out <- pml_flextable(x)
   } else if( type == "html" ){

@@ -135,6 +135,19 @@ ft <- style( ft, pr_t = def_text_header, part = "header")
 ft
 
 ## ------------------------------------------------------------------------
+dat <- head(mtcars, n = 10)
+dat[3:7, 1] <- NA
+dat[, 2] <- dat[, 6] * 1000000
+
+ft <- regulartable(dat)
+num_keys <- c("mpg", "disp", "drat", "wt", "qsec")
+int_keys <- c("cyl", "hp", "vs", "am", "gear", "carb")
+
+ft <- colformat_num(x = ft, col_keys = num_keys, big.mark = ",", digits = 2, na_str = "missing")
+ft <- colformat_int(x = ft, col_keys = int_keys, big.mark = ",")
+autofit(ft)
+
+## ------------------------------------------------------------------------
 ft <- regulartable(head(mtcars, n = 10 ), 
                    col_keys = c("gear", "mpg", "qsec"))
 ft <- set_formatter(ft, 
