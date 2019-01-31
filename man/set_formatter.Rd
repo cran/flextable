@@ -5,16 +5,19 @@
 \alias{set_formatter_type}
 \title{set column formatter functions}
 \usage{
-set_formatter(x, ..., part = "body")
+set_formatter(x, ..., values = NULL, part = "body")
 
 set_formatter_type(x, fmt_double = "\%.03f", fmt_integer = "\%.0f",
   fmt_date = "\%Y-\%m-\%d", fmt_datetime = "\%Y-\%m-\%d \%H:\%M:\%S",
-  na_str = "")
+  true = "true", false = "false", na_str = "")
 }
 \arguments{
-\item{x}{a regulartable object}
+\item{x}{a flextable object}
 
 \item{...}{Name-value pairs of functions, names should be existing col_key values}
+
+\item{values}{a list of name-value pairs of functions, names should be existing col_key values.
+If values is supplied argument \code{...} is ignored.}
 
 \item{part}{partname of the table (one of 'body' or 'header' or 'footer')}
 
@@ -23,6 +26,8 @@ format double and integer columns.}
 
 \item{fmt_date, fmt_datetime}{arguments used by \code{format} to
 format date and date time columns.}
+
+\item{false, true}{string to be used for logical columns}
 
 \item{na_str}{string for NA values}
 }
@@ -38,7 +43,7 @@ formatter functions regarding to column types.
 }
 
 \examples{
-ft <- regulartable( head( iris ) )
+ft <- flextable( head( iris ) )
 ft <- set_formatter( x = ft,
         Sepal.Length = function(x) sprintf("\%.02f", x),
         Sepal.Width = function(x) sprintf("\%.04f", x)

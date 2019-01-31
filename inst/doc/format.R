@@ -25,11 +25,11 @@ library(officer)
 library(flextable)
 
 ## ------------------------------------------------------------------------
-myft <- regulartable(head(iris))
+myft <- flextable(head(iris))
 myft
 
 ## ------------------------------------------------------------------------
-myft <- regulartable(head(iris)) 
+myft <- flextable(head(iris)) 
 myft <- bold(myft, part = "header") # bold header
 myft
 
@@ -67,7 +67,7 @@ myft <- fontsize(myft, j = "Species", size = 14)
 myft
 
 ## ------------------------------------------------------------------------
-ft <- regulartable(head(iris))
+ft <- flextable(head(iris))
 ft <- rotate(ft, rotation = "tbrl", align = "top", part = "header")
 ft <- theme_vanilla(ft)
 ft <- autofit(ft)
@@ -127,7 +127,7 @@ def_par <- fp_par(text.align = "center")
 def_text <- fp_text(color="#999999", italic = TRUE)
 def_text_header <- update(color="black", def_text, bold = TRUE)
 
-ft <- regulartable(head(mtcars, n = 10 ))
+ft <- flextable(head(mtcars, n = 10 ))
 ft <- style( ft, pr_c = def_cell, pr_p = def_par, pr_t = def_text, part = "all")  
 ft
 
@@ -139,7 +139,7 @@ dat <- head(mtcars, n = 10)
 dat[3:7, 1] <- NA
 dat[, 2] <- dat[, 6] * 1000000
 
-ft <- regulartable(dat)
+ft <- flextable(dat)
 num_keys <- c("mpg", "disp", "drat", "wt", "qsec")
 int_keys <- c("cyl", "hp", "vs", "am", "gear", "carb")
 
@@ -148,7 +148,7 @@ ft <- colformat_int(x = ft, col_keys = int_keys, big.mark = ",")
 autofit(ft)
 
 ## ------------------------------------------------------------------------
-ft <- regulartable(head(mtcars, n = 10 ), 
+ft <- flextable(head(mtcars, n = 10 ), 
                    col_keys = c("gear", "mpg", "qsec"))
 ft <- set_formatter(ft, 
     mpg = function(x) sprintf("%.04f", x),
@@ -171,47 +171,58 @@ myft <- width(myft, j = ~ separator, width = .1)
 myft
 
 ## ------------------------------------------------------------------------
-myft <- display( myft, col_key = "mpg", pattern = "{{mpg}}", 
-    formatters = list(mpg ~ sprintf("%.01f", mpg) ), 
-    fprops = list(mpg = fp_text(color = "red", italic = TRUE) )
-  )
-
-myft
-
-## ------------------------------------------------------------------------
-myft <- display( myft, i = ~ drat > 3.6, 
-           col_key = "mpg", pattern = "{{mpg}} with {{carb}}", 
-           formatters = list(mpg ~ sprintf("%.01f", mpg), 
-                             carb ~ sprintf("# %.0f carb.", carb) ), 
-              fprops = list(mpg = fp_text(color = "#CC55CC", bold = TRUE) )
+myft <- compose( 
+  myft, j = "mpg", 
+  value = as_paragraph(
+    "mpg value is ", 
+    as_chunk(sprintf("%.01f", mpg), props = fp_text(color = "red", bold = TRUE) ) )
   )
 myft <- autofit(myft)
 myft
 
 ## ------------------------------------------------------------------------
-myft <- display( myft, col_key = "mpg", 
-   part = "header",
-   pattern = "Miles/(US) gallon {{my_message}}", 
-   formatters = list(
-     my_message ~ sprintf("* with num of carb.") 
-     ), 
-   fprops = list(
-     my_message = fp_text(color = "gray", vertical.align = "superscript")
-     ) 
-   )
+myft <- compose( 
+  myft, j = "mpg", 
+  value = as_paragraph(
+    "mpg value is ", 
+    as_chunk(sprintf("%.01f", mpg), props = fp_text(color = "red", bold = TRUE) ), 
+    " with ",
+    as_chunk(sprintf("# %.0f", carb), props = fp_text(color = "gray", italic = TRUE) )
+    )
+  )
+
+myft <- autofit(myft)
+myft
+
+## ------------------------------------------------------------------------
+myft <- compose( 
+  myft, j = "mpg", part = "header",
+  value = as_paragraph(
+    "Miles/(US) gallon ", 
+    as_chunk("* with num of carb.", props = fp_text(color = "gray", vertical.align = "superscript") )
+    )
+  )
+
 myft <- autofit(myft)
 myft
 
 ## ------------------------------------------------------------------------
 img.file <- file.path( R.home("doc"), "html", "logo.jpg" )
 
-myft <- display( myft, i = ~ qsec > 18, col_key = "qsec", 
-           pattern = "blah blah {{r_logo}} {{qsec}}",
-           formatters = list(
-             r_logo ~ as_image(qsec, src = img.file, width = .20, height = .15), 
-             qsec ~ sprintf("qsec: %.1f", qsec) ), 
-           fprops = list(qsec = fp_text(color = "orange", vertical.align = "superscript"))
-           )
+myft <- compose( myft, i = ~ qsec > 18, j = "qsec", 
+  value = as_paragraph(as_image( src = img.file, width = .20, height = .15))
+)
 myft <- autofit(myft)
 myft
+
+## ------------------------------------------------------------------------
+myft <- flextable( head(iris, n = 10 ))
+
+myft <- compose( myft, j = 1,
+  value = as_paragraph(
+    minibar(value = Sepal.Length, max = max(Sepal.Length))
+  ),
+  part = "body")
+
+autofit(myft)
 

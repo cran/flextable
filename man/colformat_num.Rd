@@ -2,13 +2,18 @@
 % Please edit documentation in R/formatters.R
 \name{colformat_num}
 \alias{colformat_num}
+\alias{colformat_num.flextable}
 \title{format numeric columns}
 \usage{
-colformat_num(x, col_keys, big.mark = ",", digits = 2, na_str = "",
-  prefix = "", suffix = "")
+colformat_num(x, ...)
+
+\method{colformat_num}{flextable}(x, col_keys, big.mark = ",",
+  digits = 2, na_str = "", prefix = "", suffix = "", ...)
 }
 \arguments{
-\item{x}{a regulartable object}
+\item{x}{a flextable object}
+
+\item{...}{additional arguments, unused}
 
 \item{col_keys}{names of the colkeys}
 
@@ -21,20 +26,12 @@ colformat_num(x, col_keys, big.mark = ",", digits = 2, na_str = "",
 \item{suffix}{string to be used as prefix or suffix}
 }
 \description{
-Format numeric columns in a flextable or regulartable.
+Format numeric columns in a flextable.
 }
 \examples{
 dat <- iris
 dat[1:4, 1] <- NA
 dat[, 2] <- dat[, 2] * 1000000
-
-ft <- regulartable(dat)
-colkeys = c("Sepal.Length", "Sepal.Width",
-            "Petal.Length", "Petal.Width")
-ft <- colformat_num(
-  x = ft, col_keys = colkeys,
-  big.mark=",", digits = 2, na_str = "N/A")
-autofit(ft)
 
 ft <- flextable(dat)
 colkeys = c("Sepal.Length", "Sepal.Width",
@@ -46,6 +43,6 @@ autofit(ft)
 }
 \seealso{
 Other columns formatters: \code{\link{colformat_char}},
-  \code{\link{colformat_int}}
+  \code{\link{colformat_int}}, \code{\link{colformat_lgl}}
 }
 \concept{columns formatters}

@@ -1,72 +1,17 @@
 
-globalVariables(c("str", ".", "str_is_run"))
+rbind.match.columns <- function(list_df) {
+  col <- unique(unlist(sapply(list_df, names)))
 
-image_entry <- function(src, width, height){
-  x <- data.frame(image_src = src, width = width, height = height, stringsAsFactors = FALSE)
-  class(x) <- c( "image_entry", class(x) )
-  x
-}
-
-format.image_entry = function (x, type = "console", ...){
-  stopifnot( length(type) == 1)
-  stopifnot( type %in% c("wml", "pml", "html", "console") )
-
-  if( type == "pml" ){
-    out <- rep("", nrow(x))
-  } else if( type == "console" ){
-    out <- rep("{image_entry:{...}}", nrow(x))
-  } else {
-    out <- mapply( function(image_src, width, height){
-      format( external_img(src = image_src, width = width, height = height), type = type )
-    }, x$image_src, x$width, x$height, SIMPLIFY = FALSE)
-    out <- setNames(unlist(out), NULL)
-  }
-  out
+  list_df <- lapply(list_df, function(x, col) {
+    x[, setdiff(col, names(x))] <- NA
+    x
+  }, col = col)
+  list_df <- do.call(rbind, list_df)
+  row.names(list_df) <- NULL
+  list_df
 }
 
 
-
-drop_column <- function(x, cols){
-  x[, !(colnames(x) %in% cols), drop = FALSE]
-}
-
-
-
-
-
-as_grp_index <- function(x){
-  sprintf( "gp_%09.0f", x )
-}
-
-group_index <- function(x, by, varname = "grp"){
-  order_ <- do.call( order, x[ by ] )
-  x$ids_ <- seq_along(order_)
-  x <- x[order_, ,drop = FALSE]
-  gprs <- cumsum(!duplicated(x[, by ]) )
-  gprs <- gprs[order(x$ids_)]
-  as_grp_index(gprs)
-}
-
-group_ref <- function(x, by, varname = "grp"){
-  order_ <- do.call( order, x[ by ] )
-  x$ids_ <- seq_along(order_)
-  x <- x[order_, ,drop = FALSE]
-  ref <- x[!duplicated(x[, by ]), by]
-  ref$index_ <- as_grp_index( seq_len( nrow(ref) ) )
-  row.names(ref) <- NULL
-  ref
-}
-
-drop_useless_blank <- function( x ){
-  grp <- group_index(x, by = c("col_key", "idrow") )
-  x <- split( x, grp)
-  x <- lapply( x, function(x){
-    non_empty <- which( !x$str %in% c("", NA) | x$type_out %in% "image_entry" )
-    if(length(non_empty)) x[non_empty,]
-    else x[1,]
-  })
-  do.call(rbind, x)
-}
 
 get_i_from_formula <- function( f, data ){
   if( length(f) > 2 )
@@ -105,77 +50,28 @@ nrow_part <- function(x, part){
   else nrow(x[[part]]$dataset)
 }
 
+#' @importFrom xml2 xml_attr<-
 process_url <- function(rel, url, str, pattern, double_esc = TRUE){
-  new_rid <- sprintf("rId%.0f", rel$get_next_id())
 
   if(double_esc)
     escape <- function(x) htmlEscape(htmlEscape(x))
   else escape <- function(x) htmlEscape(x)# it seems that word does not behave as powerpoint
 
-  rel$add(
-    id = new_rid, type = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
-    target = escape(url), target_mode = "External" )
 
-  str_replace_all( string = str,
-    fixed( sprintf("<%s r:id=\"%s\"", pattern, url ) ),
-    sprintf("<%s r:id=\"%s\"", pattern, new_rid )
-  )
-}
+  doc <- as_xml_document(str)
+  for(url_ in url){
+    new_rid <- sprintf("rId%.0f", rel$get_next_id())
+    rel$add(
+      id = new_rid, type = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
+      target = escape(url_), target_mode = "External" )
 
-create_display <- function(data, col_keys){
-  set_formatter_type_formals <- formals(set_formatter_type)
-  formatters <- mapply(function(x, varname){
-    if( is.double(x) ) paste0(varname, " ~ sprintf(", shQuote(set_formatter_type_formals$fmt_double), ", `", varname ,"`)")
-    else if( is.integer(x) ) paste0(varname, " ~ sprintf(", shQuote(set_formatter_type_formals$fmt_integer), ", `", varname ,"`)")
-    else if( is.factor(x) ) paste0(varname, " ~ as.character(`", varname ,"`)")
-    else if( is.character(x) ) paste0(varname, " ~ as.character(`", varname ,"`)")
-    else if( is.logical(x) ) paste0(varname, " ~ as.character(`", varname ,"`)")
-    else if( inherits(x, "Date") ) paste0(varname, " ~ format(`", varname ,"`, ", shQuote(set_formatter_type_formals$fmt_date), ")")
-    else if( inherits(x, "POSIXt") ) paste0(varname, " ~ format(`", varname ,"`, ", shQuote(set_formatter_type_formals$fmt_datetime), ")")
-    else paste0(varname, " ~ ", set_formatter_type_formals$fun_any, "(`", varname ,"`)")
-  }, data[col_keys], col_keys, SIMPLIFY = FALSE)
-  formatters <- mapply(function(f, varname){
-    display_parser$new(x = paste0("{{", varname, "}}"),
-                       formatters = list( as.formula( f ) ),
-                       fprops = list() )
-  }, formatters, col_keys )
-  display_structure$new(nrow(data), col_keys, formatters )
+    linknodes <- xml_find_all(doc, paste0("//", pattern, "[@r:id=", shQuote(url_), "]"))
+    xml_attr(linknodes, "r:id") <- new_rid
+  }
+
+  as.character(doc)
 }
 
 
 
-format_fun <- function( x, na_string = "", ... ){
-  UseMethod("format_fun")
-}
 
-format_fun.default <- function( x, na_string = "", ... ){
-  ifelse( is.na(x), na_string, format(x) )
-}
-
-format_fun.character <- function( x, na_string = "", ... ){
-  ifelse( is.na(x), na_string, x )
-}
-
-format_fun.factor <- function( x, na_string = "", ... ){
-  ifelse( is.na(x), na_string, as.character(x) )
-}
-
-format_fun.logical <- function( x, na_string = "", true = "true", false = "false" ){
-  ifelse( is.na(x), na_string, ifelse(x, true, false) )
-}
-
-format_fun.double <- function( x, na_string = "", fmt_double, ... ){
-  ifelse( is.na(x), na_string, sprintf(fmt_double, x) )
-}
-
-format_fun.integer <- function( x, na_string = "", fmt_integer, ... ){
-  ifelse( is.na(x), na_string, sprintf(fmt_integer, x) )
-}
-
-format_fun.Date <- function( x, na_string = "", fmt_date, ... ){
-  ifelse( is.na(x), na_string, format(x, fmt_date) )
-}
-
-format_fun.POSIXt <- function( x, na_string = "", fmt_datetime, ... ){
-  ifelse( is.na(x), na_string, format(x, fmt_datetime) )
-}

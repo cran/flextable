@@ -1,4 +1,4 @@
-pml_flextable <- function(value){
+pml_flextable <- function(value, uid = 99999L, offx = 0, offy = 0, cx = 0, cy = 0){
   out <- "<a:tbl>"
   dims <- dim(value)
   widths <- dims$widths
@@ -30,7 +30,6 @@ pml_flextable <- function(value){
     out = paste0(out, xml_content )
     hlinks <- append( hlinks, attr(xml_content, "htxt")$href )
   }
-
   out = paste0(out,  "</a:tbl>" )
 
   graphic_frame <- paste0(
@@ -39,13 +38,13 @@ pml_flextable <- function(value){
     "xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\" ",
     "xmlns:p=\"http://schemas.openxmlformats.org/presentationml/2006/main\">",
     "<p:nvGraphicFramePr>",
-    "<p:cNvPr id=\"\" name=\"\"/>",
+    sprintf("<p:cNvPr id=\"%.0f\" name=\"\"/>", uid ),
     "<p:cNvGraphicFramePr><a:graphicFrameLocks noGrp=\"true\"/></p:cNvGraphicFramePr>",
     "<p:nvPr/>",
     "</p:nvGraphicFramePr>",
     "<p:xfrm rot=\"0\">",
-    "<a:off x=\"0\" y=\"0\"/>",
-    "<a:ext cx=\"0\" cy=\"0\"/>",
+    sprintf("<a:off x=\"%.0f\" y=\"%.0f\"/>", offx*914400, offy*914400),
+    sprintf("<a:ext cx=\"%.0f\" cy=\"%.0f\"/>", cx*914400, cy*914400),
     "</p:xfrm>",
     "<a:graphic>",
     "<a:graphicData uri=\"http://schemas.openxmlformats.org/drawingml/2006/table\">",
@@ -83,18 +82,15 @@ pml_flextable <- function(value){
 #' \donttest{print(doc, target = "test.pptx" )}
 #' }
 #' @importFrom officer ph_from_xml
-#' @importFrom stringr fixed
 ph_with_flextable <- function( x, value, type = "body", index = 1 ){
   stopifnot(inherits(x, "rpptx"))
   graphic_frame <- pml_flextable(value)
 
   hlinks <- attr(graphic_frame, "hlinks")
   if( length(hlinks) > 0 ){
-    for( hl in hlinks ){
-      slide <- x$slide$get_slide(x$cursor)
-      rel <- slide$relationship()
-      graphic_frame <- process_url(rel, url=hl, str = graphic_frame, pattern = "a:hlinkClick")
-    }
+    slide <- x$slide$get_slide(x$cursor)
+    rel <- slide$relationship()
+    graphic_frame <- process_url(rel, url = hlinks, str = graphic_frame, pattern = "a:hlinkClick")
   }
   ph_from_xml(x = x, value = graphic_frame, type = type, index = index )
 }
@@ -104,7 +100,6 @@ ph_with_flextable <- function( x, value, type = "body", index = 1 ){
 #' @rdname ph_with_flextable
 #' @importFrom officer ph_from_xml_at
 ph_with_flextable_at <- function( x, value, left, top ){
-  stopifnot(inherits(x, "rpptx"))
   stopifnot(inherits(x, "rpptx"))
   graphic_frame <- pml_flextable(value)
 

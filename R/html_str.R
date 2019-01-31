@@ -3,11 +3,14 @@ html_str <- function( x ){
 }
 
 
-html_str.regulartable <- function( x ){
+html_str.flextable <- function( x ){
 
   dims <- dim(x)
 
   out <- "<table>"
+  if(!is.null(x$caption$value)){
+    out <- paste0(out, "<caption>", htmlEscape(x$caption$value), "</caption>" )
+  }
 
   if( nrow_part(x, "header") > 0 ){
     x$header <- correct_h_border(x$header)
@@ -31,5 +34,4 @@ html_str.regulartable <- function( x ){
   out = paste0(out,  "</table>" )
   out
 }
-html_str.complextable <- html_str.regulartable
 

@@ -3,7 +3,7 @@ knitr::opts_chunk$set(
   message = FALSE,
   collapse = TRUE,
   comment = "#>", 
-  eval = !is.null(knitr::opts_knit$get("rmarkdown.pandoc.to"))
+  eval = TRUE
 )
 
 ## ----warning=FALSE, echo=FALSE, message=FALSE----------------------------
@@ -39,7 +39,7 @@ double_format <- function(x){
 percent_format <- function(x){
   sprintf("%.2f %%", x)
 }
-ft <- regulartable(
+ft <- flextable(
   x, col_keys = c("year", "premium", "latest_eval",
                   "sep_1", "cape_cod_u_l", "cape_cod_lr",
                   "sep_2", "chain_ladder_u_l", "chain_ladder_lr") )
@@ -71,11 +71,59 @@ ft <- autofit(ft)
 ft
 
 ## ------------------------------------------------------------------------
-ft <- regulartable(head(mtcars))
+library(htmltools)
+ft <- flextable(head(iris))
+tab_list <- list()
+for(i in 1:3){
+  tab_list[[i]] <- tagList(
+    tags$h6(paste0("iteration ", i)),
+    htmltools_value(ft)
+  )
+}
+tagList(tab_list)
+
+## ------------------------------------------------------------------------
+ft <- flextable(head(mtcars))
 ft <- color(ft, i = ~ drat > 3, j = ~ vs + am, color = "red")
 ft <- bg(ft, i = ~ wt < 3, j = ~ mpg, bg = "#EFEF99")
 ft <- bold(ft, i = 2:4, j = "cyl", bold = TRUE)
 ft
+
+## ------------------------------------------------------------------------
+library(flextable)
+library(magrittr)
+
+col_palette <- c("#D73027", "#F46D43", "#FDAE61", "#FEE08B", 
+  "#D9EF8B", "#A6D96A", "#66BD63", "#1A9850")
+
+cor_matrix <- cor(mtcars)
+
+mycut <- cut(
+  cor_matrix, 
+  breaks = c(-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1), 
+  include.lowest = TRUE, label = FALSE)
+
+mycolors <- col_palette[mycut]
+
+data.frame(rowname = row.names(cor_matrix), stringsAsFactors = FALSE) %>%
+  cbind(cor_matrix) %T>%
+  print() %>%
+  flextable() %>%
+  bg(j = colnames(cor_matrix), bg = mycolors) %>%
+  align(align = "center", part = "all") %>%
+  compose(i = 1, j = 1, value = as_paragraph(""), part = "header")
+
+data.frame(rowname = row.names(cor_matrix), stringsAsFactors = FALSE) %>%
+  cbind(cor_matrix) %T>%
+  print() %>%
+  flextable() %>%
+  theme_box() %>% 
+  compose(i = 1, j = 1, value = as_paragraph(""), part = "header") %>% 
+  compose(j = colnames(cor_matrix), value = as_paragraph(""), part = "body") %>% 
+  bg(j = colnames(cor_matrix), bg = mycolors) %>%
+  align(align = "center", part = "all") %>%
+  autofit() 
+  
 
 ## ------------------------------------------------------------------------
 if( require("xtable") ){
@@ -129,34 +177,18 @@ if( require("xtable") ){
 
 ## ------------------------------------------------------------------------
 if( require("xtable") ){
-  temp.ts <- ts(cumsum(1 + round(rnorm(100), 0)),
-    start = c(1954, 7), frequency = 12)
-  ft <- xtable_to_flextable(x = xtable(temp.ts, digits = 0),
-    NA.string = "-")
-  ft
-}
-
-## ------------------------------------------------------------------------
-if( require("xtable") ){
   mat <- round(matrix(c(0.9, 0.89, 200, 0.045, 2.0), c(1, 5)), 4)
   mat <- xtable(mat)
   ft <- xtable_to_flextable(x = mat, NA.string = "-")
   print(ft$col_keys)
-  ft <- flextable::display(ft, i = 1, col_key = "X1", 
-    pattern = "{{val}}{{pow}}", part = "header",
-    formatters = list(val ~ as.character("R"), pow ~ as.character("2") ),
-    fprops = list(pow = fp_text(vertical.align = "superscript", font.size = 8))
-    )
-  ft <- flextable::display(ft, i = 1, col_key = "X2", 
-    pattern = "{{val}}{{pow}}", part = "header",
-    formatters = list(val ~ as.character("\u03BC"), pow ~ as.character("x") ),
-    fprops = list(pow = fp_text(vertical.align = "superscript", font.size = 8))
-    )
-  ft <- flextable::display(ft, i = 1, col_key = "rowname", 
-    pattern = "{{val}}{{pow}}", part = "body",
-    formatters = list(val ~ as.character("y"), pow ~ as.character("t-1") ),
-    fprops = list(pow = fp_text(vertical.align = "subscript", font.size = 8))
-    )
+  superfp <- fp_text(vertical.align = "superscript", font.size = 8)
+  
+  ft <- compose(ft, i = 1, j = "X1", part = "header", 
+                    value = as_paragraph("R", as_chunk("2", props = superfp)) )
+  ft <- compose(ft, i = 1, j = "X2", part = "header", 
+                    value = as_paragraph("\u03BC", as_chunk("x", props = superfp)))
+  ft <- compose(ft, i = 1, j = "rowname", part = "header", 
+                    value = as_paragraph("y", as_chunk("t-1", props = superfp)))
   ft <- set_header_labels(ft, X3 = "F-stat", X4 = "S.E.E", X5 = "DW", rowname = "")
   ft <- autofit(ft)
   ft
@@ -194,7 +226,7 @@ if( require("xtable") ){
 #        mutate(car = rownames(.)) %>%
 #        select(car, everything()) %>%
 #        filter(mpg <= input$mpg) %>%
-#        regulartable() %>%
+#        flextable() %>%
 #        theme_booktabs() %>%
 #        htmltools_value()
 #    })

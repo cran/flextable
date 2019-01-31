@@ -3,7 +3,7 @@ knitr::opts_chunk$set(
   message = FALSE,
   collapse = TRUE,
   comment = "#>", 
-  eval = !is.null(knitr::opts_knit$get("rmarkdown.pandoc.to"))
+  eval = TRUE
 )
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
@@ -12,13 +12,13 @@ library(officer)
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
 select_columns <- c("Species", "Petal.Length", "Petal.Width")
-myft <- regulartable(iris[46:55,], col_keys = select_columns)
+myft <- flextable(iris[46:55,], col_keys = select_columns)
 myft <- merge_v(myft, ~ Species + Petal.Width )
 myft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
 select_columns <- c("Species", "Petal.Length", "Petal.Width")
-myft <- regulartable(head(mtcars, n = 10 ) )
+myft <- flextable(head(mtcars, n = 10 ) )
 myft <- merge_h(myft)
 # and add borders
 myft <- border(myft, border = fp_border(), part = "all") 
@@ -26,7 +26,7 @@ myft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
 select_columns <- c("Species", "Petal.Length", "Petal.Width")
-myft <- regulartable(head(mtcars, n = 6 ) )
+myft <- flextable(head(mtcars, n = 6 ) )
 myft <- merge_at( myft, i = 1:3, j = 1:3)
 myft <- border(myft, border = fp_border(), part = "all")
 myft
@@ -37,11 +37,11 @@ merge_none(myft)
 ## ------------------------------------------------------------------------
 data <- iris[c(1:3, 51:53, 101:104),]
 
-myft <- regulartable(data, col_keys = c("Species", "Sepal.Length", "Petal.Length") )
+myft <- flextable(data, col_keys = c("Species", "Sepal.Length", "Petal.Length") )
 myft
 
 ## ------------------------------------------------------------------------
-myft <- regulartable(
+myft <- flextable(
   data = data, 
   col_keys = c("Species", "col_1", "Sepal.Length", "Petal.Length") )
 myft <- theme_vanilla(myft)
@@ -50,7 +50,7 @@ myft <- empty_blanks(myft)
 myft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
-ft <- regulartable( head( iris ) ) 
+ft <- flextable( head( iris ) ) 
 ft <- set_header_labels(ft, Sepal.Length = "Sepal", 
     Sepal.Width = "Sepal", Petal.Length = "Petal",
     Petal.Width = "Petal", Species = "Species" )
@@ -91,7 +91,7 @@ typology <- data.frame(
 autofit( theme_vanilla(flextable(typology)) )
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
-ft <- regulartable( head( iris ) )
+ft <- flextable( head( iris ) )
 ft <- set_header_df( ft, mapping = typology, key = "col_keys" )
 
 ft <- merge_h(ft, part = "header")
@@ -102,7 +102,7 @@ ft <- autofit(ft)
 ft
 
 ## ------------------------------------------------------------------------
-ft_base <- regulartable(head(iris))
+ft_base <- flextable(head(iris))
 ft_base <- theme_tron_legacy(ft_base)
 ft_base
 dim(ft_base)

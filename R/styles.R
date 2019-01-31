@@ -8,7 +8,7 @@
 #' @param pr_p object(s) of class \code{fp_par}
 #' @param pr_c object(s) of class \code{fp_cell}
 #' @param part partname of the table (one of 'all', 'body', 'header' or 'footer')
-#' @importFrom stats terms update
+#' @importFrom stats terms
 #' @examples
 #' library(officer)
 #' def_cell <- fp_cell(border = fp_border(color="#00FFFF"))
@@ -25,7 +25,7 @@
 style <- function(x, i = NULL, j = NULL,
                   pr_t = NULL, pr_p = NULL, pr_c = NULL, part = "body" ){
 
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("style supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -50,12 +50,17 @@ style <- function(x, i = NULL, j = NULL,
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
 
-  if( !is.null(pr_t) )
-    x[[part]] <- set_formatting_properties(x[[part]], i = i, j = j, pr_t )
-  if( !is.null(pr_p) )
-    x[[part]] <- set_formatting_properties(x[[part]], i = i, j = j, pr_p )
-  if( !is.null(pr_c) )
-    x[[part]] <- set_formatting_properties(x[[part]], i = i, j = j, pr_c )
+  if( !is.null(pr_t) ){
+    x[[part]]$styles$text[i, j] <- pr_t
+  }
+
+  if( !is.null(pr_p) ){
+    x[[part]]$styles$pars[i, j] <- pr_p
+  }
+
+  if( !is.null(pr_c) ){
+    x[[part]]$styles$cells[i, j] <- pr_c
+  }
 
   x
 }
@@ -76,7 +81,7 @@ style <- function(x, i = NULL, j = NULL,
 #' ft <- bold(ft, bold = TRUE, part = "header")
 bold <- function(x, i = NULL, j = NULL, bold = TRUE, part = "body" ){
 
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("bold supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -92,14 +97,7 @@ bold <- function(x, i = NULL, j = NULL, bold = TRUE, part = "body" ){
   check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
-
-  pr_id <- x[[part]]$styles$text$get_pr_id_at(i, x$col_keys[j])
-  pr <- x[[part]]$styles$text$get_fp()[unique(pr_id)]
-
-  pr <- lapply(pr, function(x, bold ) update(x, bold = bold ), bold = bold )
-  new_name <- sapply(pr, fp_sign )
-  names(pr) <- new_name
-  x[[part]]$styles$text$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
+  x[[part]]$styles$text[i, j, "bold"] <- bold
 
   x
 }
@@ -117,7 +115,7 @@ bold <- function(x, i = NULL, j = NULL, bold = TRUE, part = "body" ){
 #' ft <- fontsize(ft, size = 14, part = "header")
 fontsize <- function(x, i = NULL, j = NULL, size = 11, part = "body" ){
 
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("fontsize supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -133,14 +131,7 @@ fontsize <- function(x, i = NULL, j = NULL, size = 11, part = "body" ){
   check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
-
-  pr_id <- x[[part]]$styles$text$get_pr_id_at(i, x$col_keys[j])
-  pr <- x[[part]]$styles$text$get_fp()[unique(pr_id)]
-
-  pr <- lapply(pr, function(x, size ) update(x, font.size = size ), size = size )
-  new_name <- sapply(pr, fp_sign )
-  names(pr) <- new_name
-  x[[part]]$styles$text$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
+  x[[part]]$styles$text[i, j, "font.size"] <- size
 
   x
 }
@@ -158,7 +149,7 @@ fontsize <- function(x, i = NULL, j = NULL, size = 11, part = "body" ){
 #' ft <- italic(ft, italic = TRUE, part = "header")
 italic <- function(x, i = NULL, j = NULL, italic = TRUE, part = "body" ){
 
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("italic supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -174,14 +165,7 @@ italic <- function(x, i = NULL, j = NULL, italic = TRUE, part = "body" ){
   check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
-
-  pr_id <- x[[part]]$styles$text$get_pr_id_at(i, x$col_keys[j])
-  pr <- x[[part]]$styles$text$get_fp()[unique(pr_id)]
-
-  pr <- lapply(pr, function(x, italic ) update(x, italic = italic ), italic = italic )
-  new_name <- sapply(pr, fp_sign )
-  names(pr) <- new_name
-  x[[part]]$styles$text$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
+  x[[part]]$styles$text[i, j, "italic"] <- italic
 
   x
 }
@@ -199,7 +183,7 @@ italic <- function(x, i = NULL, j = NULL, italic = TRUE, part = "body" ){
 #' ft <- color(ft, color = "orange", part = "header")
 color <- function(x, i = NULL, j = NULL, color, part = "body" ){
 
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("color supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -215,14 +199,7 @@ color <- function(x, i = NULL, j = NULL, color, part = "body" ){
   check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
-
-  pr_id <- x[[part]]$styles$text$get_pr_id_at(i, x$col_keys[j])
-  pr <- x[[part]]$styles$text$get_fp()[unique(pr_id)]
-
-  pr <- lapply(pr, function(x, color ) update(x, color = color ), color = color )
-  new_name <- sapply(pr, fp_sign )
-  names(pr) <- new_name
-  x[[part]]$styles$text$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
+  x[[part]]$styles$text[i, j, "color"] <- color
 
   x
 }
@@ -245,11 +222,11 @@ color <- function(x, i = NULL, j = NULL, color, part = "body" ){
 #'   fontname <- as.character(font_list$family[1])
 #' }
 #'
-#' ft <- regulartable(head(iris))
+#' ft <- flextable(head(iris))
 #' ft <- font(ft, fontname = fontname, part = "header")
 font <- function(x, i = NULL, j = NULL, fontname, part = "body" ){
 
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("font supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -266,14 +243,7 @@ font <- function(x, i = NULL, j = NULL, fontname, part = "body" ){
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
 
-  pr_id <- x[[part]]$styles$text$get_pr_id_at(i, x$col_keys[j])
-  pr <- x[[part]]$styles$text$get_fp()[unique(pr_id)]
-
-  pr <- lapply(pr, function(x, fontname ) update(x, font.family = fontname ), fontname = fontname )
-  new_name <- sapply(pr, fp_sign )
-  names(pr) <- new_name
-  x[[part]]$styles$text$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
-
+  x[[part]]$styles$text[i, j, "font.family"] <- fontname
   x
 }
 
@@ -299,7 +269,7 @@ padding <- function(x, i = NULL, j = NULL, padding = NULL,
                     padding.left = NULL, padding.right = NULL,
                     part = "body" ){
 
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("padding supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( !is.null(padding) ){
@@ -325,21 +295,19 @@ padding <- function(x, i = NULL, j = NULL, padding = NULL,
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
 
-  pr_id <- x[[part]]$styles$pars$get_pr_id_at(i, x$col_keys[j])
-  pr <- x[[part]]$styles$pars$get_fp()[unique(pr_id)]
 
-  if(!is.null(padding.top))
-    pr <- lapply(pr, function(x, padding.top ) update(x, padding.top = padding.top ), padding.top = padding.top )
-  if(!is.null(padding.bottom))
-    pr <- lapply(pr, function(x, padding.bottom ) update(x, padding.bottom = padding.bottom ), padding.bottom = padding.bottom )
-  if(!is.null(padding.left))
-    pr <- lapply(pr, function(x, padding.left ) update(x, padding.left = padding.left ), padding.left = padding.left )
-  if(!is.null(padding.right))
-    pr <- lapply(pr, function(x, padding.right ) update(x, padding.right = padding.right ), padding.right = padding.right )
-  new_name <- sapply(pr, fp_sign )
-  names(pr) <- new_name
-
-  x[[part]]$styles$pars$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
+  if(!is.null(padding.top)){
+    x[[part]]$styles$pars[i, j, "padding.top"] <- padding.top
+  }
+  if(!is.null(padding.bottom)){
+    x[[part]]$styles$pars[i, j, "padding.bottom"] <- padding.bottom
+  }
+  if(!is.null(padding.left)){
+    x[[part]]$styles$pars[i, j, "padding.left"] <- padding.left
+  }
+  if(!is.null(padding.right)){
+    x[[part]]$styles$pars[i, j, "padding.right"] <- padding.right
+  }
 
   x
 }
@@ -358,9 +326,9 @@ padding <- function(x, i = NULL, j = NULL, padding = NULL,
 #' ft <- flextable(mtcars)
 #' ft <- align(ft, align = "center")
 align <- function(x, i = NULL, j = NULL, align = "left",
-                    part = "body" ){
+                  part = "body" ){
 
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("align supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -376,15 +344,7 @@ align <- function(x, i = NULL, j = NULL, align = "left",
   check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
-
-  pr_id <- x[[part]]$styles$pars$get_pr_id_at(i, x$col_keys[j])
-  pr <- x[[part]]$styles$pars$get_fp()[unique(pr_id)]
-
-  pr <- lapply(pr, function(x, align ) update(x, text.align = align ), align = align )
-  new_name <- sapply(pr, fp_sign )
-  names(pr) <- new_name
-
-  x[[part]]$styles$pars$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
+  x[[part]]$styles$pars[i, j, "text.align"] <- align
 
   x
 }
@@ -404,7 +364,7 @@ align <- function(x, i = NULL, j = NULL, align = "left",
 #' ft <- bg(ft, bg = "#DDDDDD", part = "header")
 bg <- function(x, i = NULL, j = NULL, bg, part = "body" ){
 
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("bg supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -421,18 +381,10 @@ bg <- function(x, i = NULL, j = NULL, bg, part = "body" ){
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
 
-  pr_id <- x[[part]]$styles$cells$get_pr_id_at(i, x$col_keys[j])
-  pr <- x[[part]]$styles$cells$get_fp()[unique(pr_id)]
-
-  pr <- lapply(pr, function(x, bg ) update(x, background.color = bg ), bg = bg )
-  new_name <- sapply(pr, fp_sign )
-  names(pr) <- new_name
-
-  x[[part]]$styles$cells$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
+  x[[part]]$styles$cells[i, j, "background.color"] <- bg
 
   x
 }
-
 
 
 #' @export
@@ -461,7 +413,7 @@ bg <- function(x, i = NULL, j = NULL, bg, part = "body" ){
 #' ft <- height(ft, height = max(dim_pretty(ft, part = "header")$widths), part = "header")
 rotate <- function(x, i = NULL, j = NULL, rotation, align = "center", part = "body" ){
 
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("rotate supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -478,15 +430,8 @@ rotate <- function(x, i = NULL, j = NULL, rotation, align = "center", part = "bo
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
 
-  pr_id <- x[[part]]$styles$cells$get_pr_id_at(i, x$col_keys[j])
-  pr <- x[[part]]$styles$cells$get_fp()[unique(pr_id)]
-
-  pr <- lapply(pr, function(x, rotation ) update(x, text.direction = rotation ), rotation = rotation )
-  pr <- lapply(pr, function(x, align ) update(x, vertical.align = align ), align = align )
-  new_name <- sapply(pr, fp_sign )
-  names(pr) <- new_name
-
-  x[[part]]$styles$cells$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
+  x[[part]]$styles$cells[i, j, "text.direction"] <- rotation
+  x[[part]]$styles$cells[i, j, "vertical.align"] <- align
 
   x
 }
@@ -518,7 +463,7 @@ border <- function(x, i = NULL, j = NULL, border = NULL,
                    border.left = NULL, border.right = NULL,
                    part = "body" ){
 
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("border supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( !is.null(border) ){
@@ -545,21 +490,26 @@ border <- function(x, i = NULL, j = NULL, border = NULL,
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
 
-  pr_id <- x[[part]]$styles$cells$get_pr_id_at(i, x$col_keys[j])
-  pr <- x[[part]]$styles$cells$get_fp()[unique(pr_id)]
-
-  if(!is.null(border.top))
-    pr <- lapply(pr, function(x, border.top ) update(x, border.top = border.top ), border.top = border.top )
-  if(!is.null(border.bottom))
-    pr <- lapply(pr, function(x, border.bottom ) update(x, border.bottom = border.bottom ), border.bottom = border.bottom )
-  if(!is.null(border.left))
-    pr <- lapply(pr, function(x, border.left ) update(x, border.left = border.left ), border.left = border.left )
-  if(!is.null(border.right))
-    pr <- lapply(pr, function(x, border.right ) update(x, border.right = border.right ), border.right = border.right )
-  new_name <- sapply(pr, fp_sign )
-  names(pr) <- new_name
-
-  x[[part]]$styles$cells$set_pr_id_at(i, x$col_keys[j], pr_id = as.character(new_name[pr_id]), fp_list = pr)
+  if(!is.null(border.top)){
+    x[[part]]$styles$cells[i, j, "border.style.top"] <- border.top$style
+    x[[part]]$styles$cells[i, j, "border.color.top"] <- border.top$color
+    x[[part]]$styles$cells[i, j, "border.width.top"] <- border.top$width
+  }
+  if(!is.null(border.bottom)){
+    x[[part]]$styles$cells[i, j, "border.style.bottom"] <- border.bottom$style
+    x[[part]]$styles$cells[i, j, "border.color.bottom"] <- border.bottom$color
+    x[[part]]$styles$cells[i, j, "border.width.bottom"] <- border.bottom$width
+  }
+  if(!is.null(border.left)){
+    x[[part]]$styles$cells[i, j, "border.style.left"] <- border.left$style
+    x[[part]]$styles$cells[i, j, "border.color.left"] <- border.left$color
+    x[[part]]$styles$cells[i, j, "border.width.left"] <- border.left$width
+  }
+  if(!is.null(border.right)){
+    x[[part]]$styles$cells[i, j, "border.style.right"] <- border.right$style
+    x[[part]]$styles$cells[i, j, "border.color.right"] <- border.right$color
+    x[[part]]$styles$cells[i, j, "border.width.right"] <- border.right$width
+  }
 
   x
 }
@@ -583,14 +533,12 @@ correct_h_border <- function(x){
     if( apply_bottom_border$dont ) next
 
     for( i in seq_along(apply_bottom_border$from) ){
-      pr_id_from <- x$styles$cells$get_pr_id_at(apply_bottom_border$from[i], x$col_keys[j])
-      pr_id_to <- x$styles$cells$get_pr_id_at(apply_bottom_border$to[i], x$col_keys[j])
-      pr_from <- x$styles$cells$get_fp()[[pr_id_from]]
-      pr_to <- x$styles$cells$get_fp()[[pr_id_to]]
-      pr_to <- update(pr_to, border.bottom = pr_from$border.bottom )
-      new_pr <- list( pr_to )
-      names(new_pr) <- fp_sign(pr_to)
-      x$styles$cells$set_pr_id_at(apply_bottom_border$to[i], x$col_keys[j], pr_id = names(new_pr), fp_list = new_pr)
+      i_from <- apply_bottom_border$from[i]
+      i_to <- apply_bottom_border$to[i]
+
+      x$styles$cells$border.color.bottom[i_to, x$col_keys[j]] <- x$styles$cells$border.color.bottom[i_from, x$col_keys[j]]
+      x$styles$cells$border.width.bottom[i_to, x$col_keys[j]] <- x$styles$cells$border.width.bottom[i_from, x$col_keys[j]]
+      x$styles$cells$border.style.bottom[i_to, x$col_keys[j]] <- x$styles$cells$border.style.bottom[i_from, x$col_keys[j]]
     }
 
   }
@@ -618,15 +566,10 @@ correct_v_border <- function(x){
 
       colkeyto <- x$col_keys[apply_right_border$to[j]]
       colkeyfrom <- x$col_keys[apply_right_border$from[j]]
+      x$styles$cells$border.color.right[i, colkeyto] <- x$styles$cells$border.color.right[i, colkeyfrom]
+      x$styles$cells$border.width.right[i, colkeyto] <- x$styles$cells$border.width.right[i, colkeyfrom]
+      x$styles$cells$border.style.right[i, colkeyto] <- x$styles$cells$border.style.right[i, colkeyfrom]
 
-      pr_id_from <- x$styles$cells$get_pr_id_at(i, colkeyfrom)
-      pr_id_to <- x$styles$cells$get_pr_id_at(i, colkeyto)
-      pr_from <- x$styles$cells$get_fp()[[pr_id_from]]
-      pr_to <- x$styles$cells$get_fp()[[pr_id_to]]
-      pr_to <- update(pr_to, border.right = pr_from$border.right )
-      new_pr <- list( pr_to )
-      names(new_pr) <- fp_sign(pr_to)
-      x$styles$cells$set_pr_id_at(i, colkeyto, pr_id = names(new_pr), fp_list = new_pr)
     }
 
   }
@@ -660,7 +603,7 @@ NULL
 #' @export
 #' @rdname borders
 border_remove <- function(x){
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("border_remove supports only flextable objects.")
   x <- border(x = x, border = fp_border(width = 0), part = "all")
   x
 }
@@ -672,8 +615,8 @@ border_remove <- function(x){
 #' or all parts of a flextable.
 #' @examples
 #'
-#' # use of regulartable() to create a table
-#' ft <- regulartable(dat)
+#' # use of flextable() to create a table
+#' ft <- flextable(dat)
 #'
 #' # remove all borders
 #' ft <- border_remove(x = ft)
@@ -683,7 +626,7 @@ border_remove <- function(x){
 #' ft
 border_outer <- function(x, border = NULL, part = "all"){
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("border_outer supports only flextable objects.")
 
   if( part == "all" ){
     for( p in c("header", "body", "footer") ){
@@ -712,7 +655,7 @@ border_outer <- function(x, border = NULL, part = "all"){
 #' ft <- border_inner_h(ft, border = std_border )
 #' ft
 border_inner_h <- function(x, border = NULL, part = "body"){
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("border_inner_h supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -740,7 +683,7 @@ border_inner_h <- function(x, border = NULL, part = "body"){
 #' ft <- border_inner_v(ft, border = std_border )
 #' ft
 border_inner_v <- function(x, border = NULL, part = "all"){
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("border_inner_v supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -770,7 +713,7 @@ border_inner_v <- function(x, border = NULL, part = "all"){
 #' @examples
 #'
 #' # new example
-#' ft <- regulartable(dat, col_keys = c("Species", "Sepal.Length",
+#' ft <- flextable(dat, col_keys = c("Species", "Sepal.Length",
 #'   "Sepal.Width", "Petal.Length", "Petal.Width" ))
 #' ft <- border_remove(x = ft)
 #'
@@ -779,7 +722,7 @@ border_inner_v <- function(x, border = NULL, part = "all"){
 #' ft
 #' @rdname borders
 hline <- function(x, i = NULL, j = NULL, border = NULL, part = "body"){
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("hline supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -818,7 +761,7 @@ hline <- function(x, i = NULL, j = NULL, border = NULL, part = "body"){
 #' ft <- hline_top(ft, part="all", border = big_border )
 #' ft
 hline_top <- function(x, j = NULL, border = NULL, part = "body"){
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("hline_top supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -848,7 +791,7 @@ hline_top <- function(x, j = NULL, border = NULL, part = "body"){
 #' ft <- hline_bottom(ft, part="body", border = big_border )
 #' ft
 hline_bottom <- function(x, j = NULL, border = NULL, part = "body"){
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("hline_bottom supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -878,7 +821,7 @@ hline_bottom <- function(x, j = NULL, border = NULL, part = "body"){
 #' ft <- vline(ft, border = std_border )
 #' ft
 vline <- function(x, i = NULL, j = NULL, border = NULL, part = "all"){
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("vline supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -914,7 +857,7 @@ vline <- function(x, i = NULL, j = NULL, border = NULL, part = "all"){
 #' ft <- vline_left(ft, border = big_border )
 #' ft
 vline_left <- function(x, i = NULL, border = NULL, part = "all"){
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("vline_left supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -943,7 +886,7 @@ vline_left <- function(x, i = NULL, border = NULL, part = "all"){
 #' ft <- vline_right(ft, border = big_border )
 #' ft
 vline_right <- function(x, i = NULL, border = NULL, part = "all"){
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("vline_right supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
@@ -990,11 +933,11 @@ vline_right <- function(x, i = NULL, border = NULL, part = "all"){
 #' ft
 #' @export
 empty_blanks <- function(x){
-  if( !inherits(x, "flextable") ) stop("set_header_labels supports only flextable objects.")
+  if( !inherits(x, "flextable") ) stop("empty_blanks supports only flextable objects.")
   if( length(x$blanks) < 1 ) return(x)
 
   x <- border( x, j = x$blanks,
-          border.top = shortcuts$b_null(), border.bottom = shortcuts$b_null(), part = "all" )
+               border.top = shortcuts$b_null(), border.bottom = shortcuts$b_null(), part = "all" )
   x <- bg(x, j = x$blanks, bg = "transparent", part = "all")
   x <- void(x, j = x$blanks, part = "all")
   x
