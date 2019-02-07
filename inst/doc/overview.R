@@ -48,6 +48,7 @@ ft <- merge_v(ft, j = "Species", part = "body")
 ft <- merge_v(ft, j = "Species", part = "header")
 ft <- theme_booktabs(ft)
 ft <- empty_blanks(ft)
+ft <- fix_border_issues(ft)
 autofit(ft) 
 
 ## ----eval=FALSE----------------------------------------------------------
@@ -125,7 +126,7 @@ data_model <- merge_v(data_model, part = "footer", j = 1)
 data_model <- merge_v(data_model, part = "body", j = 1)
 data_model <- merge_v(data_model, part = "header", j = 1)
 data_model <- theme_box(data_model)
-data_model <- align(data_model, align = "center", part = "all")
+data_model <- flextable::align(data_model, align = "center", part = "all")
 data_model <- bg(data_model, bg = "#eb5555", part = "header")
 data_model <- bg(data_model, bg = "#475F77", part = "body")
 data_model <- bg(data_model, bg = "#2BBBD8", part = "footer")
@@ -178,11 +179,25 @@ myft <- autofit(myft)
 myft
 
 ## ------------------------------------------------------------------------
-if( require("xtable") ){
-  temp.ts <- ts(cumsum(1 + round(rnorm(100), 0)),
-    start = c(1954, 7), frequency = 12)
-  ft <- xtable_to_flextable(x = xtable(temp.ts, digits = 0),
-    NA.string = "-")
-  ft
-}
+ft <- flextable(head(iris, n = 10))
+ft <- color(ft, i = ~ Sepal.Length < 5, j = ~ Sepal.Length + Sepal.Width, color = "orange")
+ft
+
+## ------------------------------------------------------------------------
+ft <- flextable(head(iris, n = 10))
+ft <- color(ft, i = 1:3, j = 1:3, color = "orange")
+ft
+
+## ------------------------------------------------------------------------
+dat <- head(iris, n = 10)
+ft <- flextable(dat)
+
+ft <- color(ft, i = dat$Sepal.Length < 5, color = "orange")
+ft
+
+## ------------------------------------------------------------------------
+dat <- head(iris, n = 10)
+ft <- flextable(dat)
+ft <- color(ft, j = "Sepal.Length", color = "orange", part = "all")
+ft
 

@@ -68,57 +68,64 @@ myft
 
 ## ------------------------------------------------------------------------
 ft <- flextable(head(iris))
-ft <- rotate(ft, rotation = "tbrl", align = "top", part = "header")
-ft <- theme_vanilla(ft)
+# ft <- theme_box(ft)
+ft <- rotate(ft, rotation = "tbrl", align = "center", part = "header")
+ft <- align(ft, align = "right", part = "header")
+ft <- align(ft, align = "center", part = "body")
 ft <- autofit(ft)
 
 # as autofit do not handle rotation, you will have
 # to change manually header cells'height.
-ft <- height(ft, height = 1, part = "header")
+ft <- height(ft, height = 1.1, part = "header")
+
+## ------------------------------------------------------------------------
+library(officer)
+big_border = fp_border(color="orange", width = 2)
+border_v = fp_border(color="gray")
+border_h = fp_border(color="gray")
+
+dat <- iris[c(1:2, 51:52, 101:102),]
+ft <- flextable(dat)
+ft <- border_remove(x = ft)
+ft <- border_outer(ft, part="all", border = big_border )
+ft <- border_inner_h(ft, part="all", border = border_h )
+ft <- border_inner_v(ft, part="all", border = border_v )
 ft
 
 ## ------------------------------------------------------------------------
-# remove all defined borders
-myft <- border_remove( myft )
+dat <- iris[c(1:2, 51:52, 101:102),]
+ft <- flextable(dat)
+ft <- border_remove( ft )
 
-big_b <- fp_border(color="gray70", width = 2)
-std_b <- fp_border(color="white")
+big_b <- fp_border(color="gray70", width = 3)
+std_b <- fp_border(color="orange", style = "dashed")
 
-myft <- vline( myft, border = std_b, part = "all" )
-myft <- vline_left( myft, border = big_b, part = "all" )
-myft <- vline_right( myft, border = big_b, part = "all" )
-myft <- hline( myft, border = std_b )
-myft <- hline_bottom( myft, border = big_b )
-myft <- hline_top( myft, border = big_b, part = "all" )
-myft
-
-## ------------------------------------------------------------------------
-std_b2 <- fp_border(color="white", style = "dashed")
-
-# remove all defined borders
-myft <- border_remove( myft )
-
-myft <- border_outer( myft, border = big_b, part = "all" )
-myft <- border_inner_h( myft, border = std_b, part = "all" )
-myft <- border_inner_v( myft, border = std_b2, part = "all" )
-myft
+ft <- vline( ft, border = std_b, part = "all" )
+ft <- vline_left( ft, border = big_b, part = "all" )
+ft <- vline_right( ft, border = big_b, part = "all" )
+ft <- hline( ft, border = std_b )
+ft <- hline_bottom( ft, border = big_b )
+ft <- hline_top( ft, border = big_b, part = "all" )
+ft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
-myft <- color(myft, i = ~ Sepal.Length < 5 & Petal.Length > 1.3, 
+dat <- iris[c(1:2, 51:52, 101:102),]
+ft <- flextable(dat)
+ft <- fontsize(ft, size = 14, part = "all")
+ft <- color(ft, i = ~ Sepal.Length < 5 & Petal.Length > 1.3, 
         j = ~ Petal.Width + Species, 
         color="red")
-myft <- bg(myft, j = 1, bg = "#D3C994", part = "header")
-myft <- italic(myft, i = ~ Sepal.Length > 5)
-myft <- bold(myft, i = 4, j = "Sepal.Length")
-myft
+ft <- italic(ft, i = ~ Sepal.Length > 5)
+ft <- bold(ft, i = 4, j = "Sepal.Length")
+ft
 
 ## ----warning=FALSE, message=FALSE----------------------------------------
-row_id <- with(head(iris), Sepal.Length < 5 & Petal.Length > 1.3 )
+row_id <- with(dat, Sepal.Length < 5 & Petal.Length > 1.3 )
 col_id <- c("Petal.Width", "Species")
 
-myft <- color(myft, i = row_id, j = col_id, color="red") 
+ft <- color(ft, i = row_id, j = col_id, color="red") 
 
-myft
+ft
 
 ## ------------------------------------------------------------------------
 library(officer)

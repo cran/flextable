@@ -22,12 +22,16 @@
 #' ft
 #' @export
 #' @importFrom stats setNames
+#' @importFrom gdtools font_family_exists
 flextable <- function( data, col_keys = names(data), cwidth = .75, cheight = .25 ){
+
 
   stopifnot(is.data.frame(data), ncol(data) > 0 )
   if( any( duplicated(col_keys) ) ){
     stop("duplicated col_keys")
   }
+  if( inherits(data, "data.table") || inherits(data, "tbl_df") || inherits(data, "tbl") )
+    data <- as.data.frame(data, stringsAsFactors = FALSE)
 
   blanks <- setdiff( col_keys, names(data))
   if( length( blanks ) > 0 ){
@@ -55,7 +59,12 @@ flextable <- function( data, col_keys = names(data), cwidth = .75, cheight = .25
   class(out) <- c("flextable")
 
   out <- style( x = out,
-                pr_p = fp_par(text.align = "right", padding = 2),
+                pr_t = fp_text(
+                  font.family = ifelse( font_family_exists(font_family = "Roboto"), "Roboto", "Arial" ),
+                  font.size = 11, color = "#111111"
+                ),
+                pr_p = fp_par(text.align = "right", padding.left = 5, padding.right = 5,
+                              padding.bottom = 2, padding.top = 2),
                 pr_c = fp_cell(border = fp_border(color = "transparent")), part = "all")
 
   theme_booktabs(out)
@@ -73,6 +82,8 @@ flextable <- function( data, col_keys = names(data), cwidth = .75, cheight = .25
 #' ft <- set_caption(ft, "my caption")
 #' ft
 set_caption <- function(x, caption){
+
+  if( !inherits(x, "flextable") ) stop("set_caption supports only flextable objects.")
 
   if( !is.character(caption) && length(caption) != 1 ){
     stop("caption should be a single character value")

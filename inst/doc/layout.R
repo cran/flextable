@@ -1,42 +1,25 @@
-## ----echo = FALSE--------------------------------------------------------
+## ----echo = FALSE, message=FALSE-----------------------------------------
 knitr::opts_chunk$set(
   message = FALSE,
   collapse = TRUE,
   comment = "#>", 
   eval = TRUE
 )
+library(htmltools)
+library(magrittr)
+library(data.table)
 
-## ----warning=FALSE, message=FALSE----------------------------------------
+as_ul <- function( names ) {
+  do.call( tags$ul, lapply(names, tags$li) )
+}
+
+
+## ------------------------------------------------------------------------
 library(flextable)
 library(officer)
 
-## ----warning=FALSE, message=FALSE----------------------------------------
-select_columns <- c("Species", "Petal.Length", "Petal.Width")
-myft <- flextable(iris[46:55,], col_keys = select_columns)
-myft <- merge_v(myft, ~ Species + Petal.Width )
-myft
-
-## ----warning=FALSE, message=FALSE----------------------------------------
-select_columns <- c("Species", "Petal.Length", "Petal.Width")
-myft <- flextable(head(mtcars, n = 10 ) )
-myft <- merge_h(myft)
-# and add borders
-myft <- border(myft, border = fp_border(), part = "all") 
-myft
-
-## ----warning=FALSE, message=FALSE----------------------------------------
-select_columns <- c("Species", "Petal.Length", "Petal.Width")
-myft <- flextable(head(mtcars, n = 6 ) )
-myft <- merge_at( myft, i = 1:3, j = 1:3)
-myft <- border(myft, border = fp_border(), part = "all")
-myft
-
-## ------------------------------------------------------------------------
-merge_none(myft)
-
 ## ------------------------------------------------------------------------
 data <- iris[c(1:3, 51:53, 101:104),]
-
 myft <- flextable(data, col_keys = c("Species", "Sepal.Length", "Petal.Length") )
 myft
 
@@ -49,61 +32,115 @@ myft <- autofit(myft)
 myft <- empty_blanks(myft)
 myft
 
-## ----warning=FALSE, message=FALSE----------------------------------------
+## ------------------------------------------------------------------------
+ft <- flextable( head( iris ) ) 
+ft <- set_header_labels(ft, Sepal.Length = "Sepal length", 
+    Sepal.Width = "Sepal width", Petal.Length = "Petal length",
+    Petal.Width = "Petal width" )
+ft
+
+## ------------------------------------------------------------------------
+
+dat <- data.frame(
+  letters1 = c("a", "b", "b", "c"), 
+  letters2 = c("d", "e", "b", "b"), 
+  number = 1:4, stringsAsFactors = FALSE )
+
+myft <- flextable(dat)
+myft <- theme_box(myft)
+myft
+
+## ------------------------------------------------------------------------
+merge_v(myft, j = ~ letters1 + letters2 )
+
+## ------------------------------------------------------------------------
+merge_h(myft)
+
+## ------------------------------------------------------------------------
+merge_h_range(myft, 
+  i =  ~ number < 3, 
+  j1 = "letters1", j2 = "letters2")
+
+## ------------------------------------------------------------------------
+myft %>% 
+  merge_at(
+    i = 1:2, j = 1:3)
+
+## ------------------------------------------------------------------------
+merge_none(myft)
+
+## ------------------------------------------------------------------------
+ft <- data.frame(a = 1:5, b = 6:10) %>%
+  flextable() %>% theme_box() %>%
+  merge_at(i = 4:5, j = 1, part = "body") %>%
+  hline(i = 5, part = "body",
+        border = fp_border(color = "orange", width = 3) )
+ft
+fix_border_issues(ft)
+
+## ----echo=FALSE----------------------------------------------------------
+as_ul(ls(envir = as.environment("package:flextable"), pattern = "^add_(header|footer)"))
+
+## ------------------------------------------------------------------------
 ft <- flextable( head( iris ) ) 
 ft <- set_header_labels(ft, Sepal.Length = "Sepal", 
     Sepal.Width = "Sepal", Petal.Length = "Petal",
-    Petal.Width = "Petal", Species = "Species" )
-ft <- theme_vanilla(ft)
-ft <- autofit(ft)
+    Petal.Width = "Petal" )
 ft
 
-## ----warning=FALSE, message=FALSE----------------------------------------
-ft <- add_header(ft, Sepal.Length = "length",
-    Sepal.Width = "width", Petal.Length = "length",
-    Petal.Width = "width", Species = "Species", top = FALSE ) 
-ft <- theme_vanilla(ft)
-ft <- autofit(ft)
-ft
-ft <- add_header(ft, Sepal.Length = "Inches",
-    Sepal.Width = "Inches", Petal.Length = "Inches",
-    Petal.Width = "Inches", Species = "Species", top = TRUE )
-
-ft <- add_footer(ft, Sepal.Length = "* This is a note" )
-ft <- color(ft, color = "orange", part = "footer" )
-
-# merge identical cells
-ft <- merge_h(ft, part = "header")
-ft <- merge_v(ft, part = "header")
-ft <- merge_at(ft, i = 1, j = 1:5, part = "footer")
-
+## ------------------------------------------------------------------------
+ft <- add_header(ft, 
+  Sepal.Length = "length", 
+  Sepal.Width = "width", 
+  Petal.Length = "length", 
+  Petal.Width = "width", 
+  top = FALSE )
 ft <- theme_booktabs(ft)
+
+## ----echo=FALSE----------------------------------------------------------
 ft
 
-## ----warning=FALSE, message=FALSE----------------------------------------
+## ------------------------------------------------------------------------
+ft <- add_header_lines(ft, 
+  values = c("this is a first line", 
+     "this is a second line") ) 
+ft <- theme_booktabs(ft)
+
+## ----echo=FALSE----------------------------------------------------------
+ft
+
+## ------------------------------------------------------------------------
 typology <- data.frame(
-  col_keys = c( "Sepal.Length", "Sepal.Width", "Petal.Length",
-                "Petal.Width", "Species" ),
-  type = c("double", "double", "double", "double", "factor"),
-  what = c("Sepal", "Sepal", "Petal", "Petal", "Species"),
-  measure = c("Length", "Width", "Length", "Width", "Species"),
+  col_keys = c( "Sepal.Length", 
+    "Sepal.Width", "Petal.Length",
+    "Petal.Width", "Species" ),
+  type = c("double", "double", "double", 
+    "double", "factor"),
+  what = c("Sepal", "Sepal", "Petal", 
+    "Petal", "Species"),
+  measure = c("Length", "Width", "Length", 
+    "Width", "Species"),
   stringsAsFactors = FALSE )
+
+## ----echo=FALSE----------------------------------------------------------
 autofit( theme_vanilla(flextable(typology)) )
 
-## ----warning=FALSE, message=FALSE----------------------------------------
+## ------------------------------------------------------------------------
 ft <- flextable( head( iris ) )
 ft <- set_header_df( ft, mapping = typology, key = "col_keys" )
 
 ft <- merge_h(ft, part = "header")
 ft <- merge_v(ft, part = "header")
 
-ft <- theme_vanilla(ft)
+ft <- theme_booktabs(ft)
 ft <- autofit(ft)
+
+## ----echo=FALSE----------------------------------------------------------
 ft
 
 ## ------------------------------------------------------------------------
-ft_base <- flextable(head(iris))
-ft_base <- theme_tron_legacy(ft_base)
+ft_base <- flextable(head(mtcars))
+ft_base <- theme_vader(ft_base, fontsize = 13)
 ft_base
 dim(ft_base)
 
@@ -118,8 +155,64 @@ ft
 
 ## ------------------------------------------------------------------------
 ft <- autofit(ft_base)
-ft <- width(ft, j = ~ Species, width = 2)
+ft <- width(ft, j = ~ mpg + cyl + disp, width = 2)
 ft <- height_all( ft, height = .4 )
 ft <- height( ft, i = 3, height = 1 )
 ft
+
+## ------------------------------------------------------------------------
+data_CO2 <- dcast(as.data.table(CO2), 
+  Treatment + conc ~ Type, value.var = "uptake", fun.aggregate = mean)
+head(data_CO2)
+
+## ------------------------------------------------------------------------
+data_CO2 <- as_grouped_data(x = data_CO2, groups = c("Treatment"))
+head(data_CO2)
+
+## ------------------------------------------------------------------------
+zz <- as_flextable( data_CO2 ) %>% 
+  bold(j = 1, i = ~ !is.na(Treatment), bold = TRUE, part = "body" ) %>% 
+  bold(part = "header", bold = TRUE ) %>% 
+  width(width = 1.5)
+zz
+
+## ------------------------------------------------------------------------
+zz <- zz %>% 
+  compose(i = ~ !is.na(conc), j = "conc", 
+          value = as_paragraph(
+            as_chunk(conc, formater = function(x) sprintf("%.0f", x))
+          )
+  )
+zz
+
+## ------------------------------------------------------------------------
+zz <- zz %>% 
+  compose(i = ~ is.na(Treatment), j = "Quebec", 
+          value = as_paragraph(
+            minibar(Quebec), 
+            " ", 
+            as_chunk(Quebec, formater = function(x) sprintf("%.01f", x))
+            )
+          ) %>% 
+  compose(i = ~ is.na(Treatment), j = "Mississippi", 
+          value = as_paragraph( minibar(Mississippi), 
+                                " ",
+                                as_chunk(Mississippi, 
+                                         formater = function(x) sprintf("%.01f", x) )
+                                )
+          ) %>% 
+  align(j = 2:3, align = "left")
+zz
+
+## ------------------------------------------------------------------------
+add_footer_lines(zz, "dataset CO2 has been used for this flextable") 
+
+## ------------------------------------------------------------------------
+if( require("xtable") ){
+  temp.ts <- ts(cumsum(1 + round(rnorm(100), 0)),
+    start = c(1954, 7), frequency = 12)
+  ft <- xtable_to_flextable(x = xtable(temp.ts, digits = 0),
+    NA.string = "-")
+  ft
+}
 

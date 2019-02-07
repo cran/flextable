@@ -4,10 +4,12 @@
 \alias{theme_booktabs}
 \title{Apply booktabs theme}
 \usage{
-theme_booktabs(x)
+theme_booktabs(x, fontsize = 11)
 }
 \arguments{
 \item{x}{a flextable object}
+
+\item{fontsize}{font size in pixel}
 }
 \description{
 Apply theme tron to a flextable
@@ -16,3 +18,10 @@ Apply theme tron to a flextable
 ft <- flextable(iris)
 ft <- theme_booktabs(ft)
 }
+\seealso{
+Other flextable theme: \code{\link{theme_alafoli}},
+  \code{\link{theme_box}}, \code{\link{theme_tron_legacy}},
+  \code{\link{theme_tron}}, \code{\link{theme_vader}},
+  \code{\link{theme_vanilla}}, \code{\link{theme_zebra}}
+}
+\concept{flextable theme}

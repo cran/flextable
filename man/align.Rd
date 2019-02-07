@@ -2,9 +2,15 @@
 % Please edit documentation in R/styles.R
 \name{align}
 \alias{align}
+\alias{align_text_col}
+\alias{align_nottext_col}
 \title{Set text alignment}
 \usage{
 align(x, i = NULL, j = NULL, align = "left", part = "body")
+
+align_text_col(x, align = "left", header = TRUE)
+
+align_nottext_col(x, align = "right", header = TRUE)
 }
 \arguments{
 \item{x}{a flextable object}
@@ -17,6 +23,8 @@ align(x, i = NULL, j = NULL, align = "left", part = "body")
 is one of 'left', 'right', 'center', 'justify'.}
 
 \item{part}{partname of the table (one of 'all', 'body', 'header', 'footer')}
+
+\item{header}{should the header be aligned with the body}
 }
 \description{
 change text alignment of selected rows and columns of a flextable.
@@ -24,4 +32,8 @@ change text alignment of selected rows and columns of a flextable.
 \examples{
 ft <- flextable(mtcars)
 ft <- align(ft, align = "center")
+ft <- flextable(mtcars)
+ft <- align_text_col(ft, align = "left")
+ft <- align_nottext_col(ft, align = "right")
+ft
 }
