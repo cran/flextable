@@ -64,7 +64,7 @@ merge_h_range(myft,
 ## ------------------------------------------------------------------------
 myft %>% 
   merge_at(
-    i = 1:2, j = 1:3)
+    i = 1:2, j = 1:2)
 
 ## ------------------------------------------------------------------------
 merge_none(myft)
@@ -134,6 +134,7 @@ ft <- merge_v(ft, part = "header")
 
 ft <- theme_booktabs(ft)
 ft <- autofit(ft)
+ft <- fix_border_issues(ft)
 
 ## ----echo=FALSE----------------------------------------------------------
 ft
@@ -161,6 +162,7 @@ ft <- height( ft, i = 3, height = 1 )
 ft
 
 ## ------------------------------------------------------------------------
+library(data.table)
 data_CO2 <- dcast(as.data.table(CO2), 
   Treatment + conc ~ Type, value.var = "uptake", fun.aggregate = mean)
 head(data_CO2)

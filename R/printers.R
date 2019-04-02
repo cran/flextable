@@ -8,7 +8,14 @@ tabwid_htmldep <- function(){
 }
 
 #' @export
-#' @rdname knit_print.flextable
+#' @title flextable a tag object from htmltools package
+#'
+#' @description get a \code{\link[htmltools]{div}} from a flextable object.
+#' This can be used in a shiny application.
+#' @param x a flextable object
+#' @family flextable print function
+#' @examples
+#' htmltools_value(flextable(iris[1:5,]))
 htmltools_value <- function(x){
   codes <- html_str(x)
   html_o <- div( class='tabwid',
@@ -42,6 +49,7 @@ htmltools_value <- function(x){
 #' @param preview preview type, one of c("html", "pptx", "docx", "log").
 #' When \code{"log"} is used, a description of the flextable is printed.
 #' @param ... unused argument
+#' @family flextable print function
 #' @importFrom utils browseURL
 #' @importFrom officer read_pptx add_slide read_docx
 print.flextable <- function(x, preview = "html", ...){
@@ -70,7 +78,7 @@ print.flextable <- function(x, preview = "html", ...){
   invisible(NULL)
 }
 
-#' @title Render flextable in rmarkdown (including Word and PowerPoint output)
+#' @title Render flextable in rmarkdown
 #' @description Function used to render flextable in knitr/rmarkdown documents.
 #' HTML, Word and PowerPoint outputs are supported.
 #'
@@ -104,6 +112,7 @@ print.flextable <- function(x, preview = "html", ...){
 #' @importFrom knitr knit_print asis_output opts_knit opts_current
 #' @importFrom rmarkdown pandoc_version
 #' @importFrom stats runif
+#' @family flextable print function
 knit_print.flextable <- function(x, ...){
 
   if (is.null(opts_knit$get("rmarkdown.pandoc.to")))
@@ -166,6 +175,7 @@ knit_print.flextable <- function(x, ...){
 #' @examples
 #' ft <- flextable(head(iris, n = 2))
 #' format(ft, type = "html")
+#' @family flextable print function
 format.flextable <- function(x, type, ...){
 
   stopifnot( length(type) == 1,
@@ -182,4 +192,32 @@ format.flextable <- function(x, type, ...){
     out <- html_str(x)
   } else stop("unimplemented")
   out
+}
+
+#' @export
+#' @title save a flextable in an HTML file
+#' @description save a flextable in an HTML file. This function
+#' has been implemented to help users that do not understand
+#' R Markdown. It is highly recommanded to use R Markdown
+#' instead.
+#' @param x a flextable object
+#' @param path HTML file to be created
+#' @examples
+#' ft <- flextable( head( mtcars ) )
+#' tf <- tempfile(fileext = ".html")
+#' save_as_html(ft, tf)
+#' @family flextable print function
+save_as_html <- function(x, path){
+
+  if( !inherits(x, "flextable"))
+    stop("x is not a flextable")
+
+  str <- paste('<!DOCTYPE htm><html><head>',
+  '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />',
+  '<meta name="viewport" content="width=device-width, initial-scale=1.0"/>',
+  '<title>', deparse(substitute(x)), '</title></head>',
+  '<body>', format(x, type = "html"),
+  '</body></html>')
+  cat(str, file = path)
+  invisible(path)
 }

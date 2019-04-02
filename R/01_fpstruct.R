@@ -488,10 +488,11 @@ cell_data <- function(x, par_data, type, span_rows, span_columns, colwidths, row
     )
 
     str <- dat$par_str
-    str[span_columns < 1] <- gsub("<w:r>.*</w:r>", "", str[span_columns < 1])
+
+    str[span_columns < 1] <- gsub("<w:r\\b[^<]*>[^<]*(?:<[^<]*)*</w:r>", "", str[span_columns < 1])
     str <- paste0("<w:tc>",
                   "<w:tcPr>", gridspan, vmerge, dat$style_str, "</w:tcPr>",
-                  dat$par_str,
+                  str,
                   "</w:tc>")
     str[span_rows < 1] <- ""
 
@@ -697,10 +698,18 @@ add_runstyle_column <- function(x, type = "html"){
 #' @import data.table
 add_raster_as_filecolumn <- function(x){
 
-  whichs_ <- which( !sapply(x$img_data, is.null) & !is.na(x$img_data)  )
+  whichs_ <- which( !sapply(x$img_data, is.null) & !is.na(x$img_data) )
   files <- mapply(function(x, width, height){
-    file <- tempfile(fileext = ".png")
-    raster_write(x, width = width*72, height = height*72, path = file)
+    if(inherits(x, "raster")){
+      file <- tempfile(fileext = ".png")
+      raster_write(x, width = width*72, height = height*72, path = file)
+    } else if(is.character(x)){
+      file <- x
+    } else {
+      stop("unknown image format")
+    }
+
+
     data.frame( file = file,
                 img_str = wml_image(file, width, height),
                 stringsAsFactors = FALSE)
@@ -716,11 +725,13 @@ add_raster_as_filecolumn <- function(x){
   x
 
 }
-
+#' @importFrom base64enc dataURI
 run_data <- function(x, type){
 
   is_hlink <- !is.na(x$url)
-  is_raster <- sapply(x$img_data, inherits, "raster")
+  is_raster <- sapply(x$img_data, function(x) {
+    inherits(x, "raster") || is.character(x)
+  })
   x <- add_runstyle_column(x, type)
   if( type %in% "wml" ){
     x <- add_raster_as_filecolumn(x)
@@ -754,8 +765,35 @@ run_data <- function(x, type){
     str[!is_raster] <- sprintf("<span %s>%s</span>", x$style_str[!is_raster], text_nodes_str[!is_raster])
 
     # manage images
+
     str_raster <- mapply(function(img_raster, width, height ){
-      paste0("<img style=\"vertical-align:middle;\" src=\"data:image/png;base64,", gdtools::raster_str(img_raster, width*72, height*72), "\" />")
+      if(inherits(img_raster, "raster")){
+        img_raster <- paste("data:image/png;base64,", gdtools::raster_str(img_raster, width*72, height*72))
+      } else if(is.character(img_raster)){
+
+        if( grepl("\\.png", ignore.case = TRUE, x = img_raster) ){
+          mime <- "image/png"
+        } else if( grepl("\\.gif", ignore.case = TRUE, x = img_raster) ){
+          mime <- "image/gif"
+        } else if( grepl("\\.jpg", ignore.case = TRUE, x = img_raster) ){
+          mime <- "image/jpeg"
+        } else if( grepl("\\.jpeg", ignore.case = TRUE, x = img_raster) ){
+          mime <- "image/jpeg"
+        } else if( grepl("\\.svg", ignore.case = TRUE, x = img_raster) ){
+          mime <- "image/svg+xml"
+        } else if( grepl("\\.tiff", ignore.case = TRUE, x = img_raster) ){
+          mime <- "image/tiff"
+        } else if( grepl("\\.webp", ignore.case = TRUE, x = img_raster) ){
+          mime <- "image/webp"
+        } else {
+          stop("this format is not implemented")
+        }
+        img_raster <- base64enc::dataURI(file = img_raster, mime = mime )
+
+      } else  {
+        stop("unknown image format")
+      }
+      sprintf("<img style=\"vertical-align:middle;width:%.0fpx;height:%.0fpx;\" src=\"%s\" />", width*72, height*72, img_raster)
     }, x$img_data[is_raster], x$width[is_raster], x$height[is_raster], SIMPLIFY = FALSE, USE.NAMES = FALSE)
     str_raster <- as.character(unlist(str_raster))
     str[is_raster] <- str_raster
