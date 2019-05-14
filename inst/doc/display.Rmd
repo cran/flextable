@@ -1,11 +1,11 @@
 ---
-title: "flextable display value"
+title: "Format content"
 output: 
   rmarkdown::html_vignette:
     toc: true 
     toc_depth: 3
 vignette: >
-  %\VignetteIndexEntry{Flextable display value}
+  %\VignetteIndexEntry{Format content}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -27,7 +27,7 @@ library(flextable)
 
 By default, the displayed content of each cell will be the 
 result of a simple formatting. The content can also be 
-*comoosed* as the result of a concatenation of several *chunks*.
+*composed* as the result of a concatenation of several *chunks*.
 
 There are `formatter` functions to define how columns content will be 
 display (e.g. to define the number of decimal). This is 
@@ -37,11 +37,11 @@ User can also have more control over displayed content by using function `compos
 The function enable to define the elements composing the paragraph and their respective formats.
 It can also be used to mix text chunks and images.
 
-## Column-wise functions
+## Simple functions for formatting content
 
 Theses are high level functions that should satisfy most 
 of the usual needs. They can be used to define the formatting 
-of one or more columns.
+of one or more columns and eventually on a subset of rows.
 
 Each accept a `prefix` and `suffix` argument that can be used 
 to add a currency symbol for example. Also they all have 
@@ -58,6 +58,7 @@ dat[3:7, 1] <- NA
 dat[, 2] <- dat[, 6] * 1000000
 
 ft <- flextable(dat)
+ft
 num_keys <- c("mpg", "disp", "drat", "wt", "qsec")
 int_keys <- c("cyl", "hp", "vs", "am", "gear", "carb")
 
@@ -65,6 +66,11 @@ ft <- colformat_num(x = ft, col_keys = num_keys, big.mark = ",", digits = 2, na_
 ft <- colformat_int(x = ft, col_keys = int_keys, big.mark = ",")
 autofit(ft)
 ```
+
+
+> Their names is `col_format_*` as the first version was not working with rows subset. 
+This limitation is no more true and the functions should then be named `format_int`, 
+`format_num`... as they can operate on rows and columns.
 
 
 ## set_formatter function
@@ -84,7 +90,6 @@ ft <- theme_booktabs(ft)
 ft <- autofit(ft)
 ft
 ```
-
 
 ## compose function
 
@@ -162,6 +167,14 @@ myft <- autofit(myft)
 myft
 ```
 
+### Limitation for PowerPoint
+
+Using images in flextable is not supported when output format is PowerPoint. This is not a choice nor a unimplemented 
+feature. This is because PowerPoint is not able to embed images in a table cell. That's a PowerPoint limitation.
+
+If beeing able to display images in PowerPoint table is important to you, you can use the `plot` function or the 
+`save_as_image` and embed the result in the PowerPoint. You will of course loose ability to edit the table in PowerPoint.
+
 ### Images
 
 Function `compose` supports images insertion. Use function `as_image` in `as_paragraph` call:
@@ -209,5 +222,29 @@ myft <- compose( myft, j = 1,
 autofit(myft)
 ```
 
+
+
+## footnotes
+
+Adding footnotes is possible by using function `compose` but it requires a 
+two step approach (add the reference symbol and add the corresponding footnote 
+in the footer part). 
+
+To make the process simpler, use function `footnote` that will ease the addition 
+of footnotes. 
+
+```{r}
+ft <- flextable(head(iris))
+ft <- footnote( ft, i = 1, j = 1:3,
+            value = as_paragraph(
+              c("This is footnote one",
+                "This is footnote two",
+                "This is footnote three")
+            ),
+            ref_symbols = c("a", "b", "c"),
+            part = "header")
+ft <- valign(ft, valign = "bottom", part = "header")
+autofit(ft)
+```
 
 

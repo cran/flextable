@@ -108,20 +108,40 @@ print.flextable <- function(x, preview = "html", ...){
 #' @param ... further arguments, not used.
 #' @export
 #' @author Maxim Nazarov
+#' @importFrom utils getFromNamespace
 #' @importFrom htmltools HTML div
-#' @importFrom knitr knit_print asis_output opts_knit opts_current
+#' @importFrom knitr knit_print asis_output opts_knit opts_current fig_path
 #' @importFrom rmarkdown pandoc_version
 #' @importFrom stats runif
+#' @importFrom graphics plot par
 #' @family flextable print function
 knit_print.flextable <- function(x, ...){
 
-  if (is.null(opts_knit$get("rmarkdown.pandoc.to")))
-    stop("`render_flextable` needs to be used as a renderer for ",
-         "a knitr/rmarkdown R code chunk (render by rmarkdown)")
-
-  if ( grepl( "^html", opts_knit$get("rmarkdown.pandoc.to") ) ) {
+  if ( is.null(opts_knit$get("rmarkdown.pandoc.to"))){
+    knit_print(asis_output(format(x, type = "html")))
+  } else if ( grepl( "html", opts_knit$get("rmarkdown.pandoc.to") ) ) {
     knit_print(htmltools_value(x))
-  } else if (opts_knit$get("rmarkdown.pandoc.to") == "docx") {
+  } else if ( grepl( "latex", opts_knit$get("rmarkdown.pandoc.to") ) &&
+              requireNamespace("webshot", quietly = TRUE) ) {
+    # copied from https://github.com/ropensci/magick/blob/1e92b8331cd2cad6418b5e738939ac5918947a2f/R/base.R#L126
+    plot_counter <- getFromNamespace('plot_counter', 'knitr')
+    in_base_dir <- getFromNamespace('in_base_dir', 'knitr')
+    tmp <- fig_path("png", number = plot_counter())
+    width <- flextable_dim(x)$width
+    height <- flextable_dim(x)$height
+    # save relative to 'base' directory, see discussion in #110
+    in_base_dir({
+      dir.create(dirname(tmp), showWarnings = FALSE, recursive = TRUE)
+      tf <- tempfile(fileext = ".html")
+      save_as_html(x = x, path = tf)
+      webshot::webshot(url = sprintf("file://%s", tf),
+                       file = tmp, selector = "body > table",
+                       zoom = 3, expand = 0 )
+      unlink(tf)
+    })
+    knit_print( asis_output(sprintf("\\includegraphics[width=%.02fin,height=%.02fin,keepaspectratio]{%s}\n", width, height, tmp)) )
+
+  } else if (grepl( "docx", opts_knit$get("rmarkdown.pandoc.to") )) {
 
     if (pandoc_version() >= 2) {
       # insert rawBlock with Open XML
@@ -139,7 +159,7 @@ knit_print.flextable <- function(x, ...){
       stop("pandoc version >= 2.0 required for flextable rendering in docx")
     }
 
-  } else if (opts_knit$get("rmarkdown.pandoc.to") == "pptx") {
+  } else if (grepl( "pptx", opts_knit$get("rmarkdown.pandoc.to") ) ) {
     if (pandoc_version() < 2.4) {
       stop("pandoc version >= 2.4 required for printing flextable in pptx")
     }
@@ -220,4 +240,94 @@ save_as_html <- function(x, path){
   '</body></html>')
   cat(str, file = path)
   invisible(path)
+}
+
+#' @export
+#' @title save a flextable as an image
+#' @description save a flextable as a png, pdf or jpeg image.
+#' @note This function requires package webshot.
+#' @param x a flextable object
+#' @param path image file to be created. It should end with .png, .pdf, or .jpeg.
+#' @param zoom,expand parameters used by \code{webshot} function.
+#' @examples
+#' ft <- flextable( head( mtcars ) )
+#' ft <- autofit(ft)
+#' tf <- tempfile(fileext = ".png")
+#' \dontrun{
+#' if( require("webshot") ){
+#'   save_as_image(x = ft, path = "myimage.png")
+#' }
+#' }
+#' @family flextable print function
+save_as_image <- function(x, path, zoom = 3, expand = 10 ){
+  if (!requireNamespace("webshot", quietly = TRUE)) {
+    stop("package webshot is required when saving a flextable as an image.")
+  }
+
+  tf <- tempfile(fileext = ".html")
+  save_as_html(x = x, path = tf)
+  webshot::webshot(url = sprintf("file://%s", tf),
+                   file = path, selector = "body > table",
+                   zoom = zoom, expand = expand )
+  path
+}
+
+
+#' @export
+#' @title plot a flextable
+#' @description save a flextable as an image and display the
+#' result in a new R graphics window.
+#' @note This function requires packages: webshot and magick.
+#' @param x a flextable object
+#' @param zoom,expand parameters used by \code{webshot} function.
+#' @param ... additional parameters sent to plot function
+#' @examples
+#' ft <- flextable( head( mtcars ) )
+#' ft <- autofit(ft)
+#' \dontrun{
+#' if( require("webshot") ){
+#'   plot(ft)
+#' }
+#' }
+#' @family flextable print function
+#' @importFrom grDevices as.raster
+plot.flextable <- function(x, zoom = 2, expand = 2, ... ){
+  img <- as_raster(x = x, zoom = zoom, expand = expand)
+  par(mar = rep(0, 4))
+  plot(grDevices::as.raster(img), ...)
+}
+
+#' @export
+#' @title get a flextable as a raster
+#' @description save a flextable as an image and return the corresponding
+#' raster. This function has been implemented to let flextable be printed
+#' on a ggplot object.
+#' @note This function requires packages: webshot and magick.
+#' @param x a flextable object
+#' @param zoom,expand parameters used by \code{webshot} function.
+#' @importFrom grDevices as.raster
+#' @examples
+#' ft <- qflextable( head( mtcars ) )
+#' \dontrun{
+#' if( require("ggplot2") && require("webshot") ){
+#'   print(qplot(speed, dist, data = cars, geom = "point"))
+#'   grid::grid.raster(as_raster(ft))
+#' }
+#' }
+#' @family flextable print function
+as_raster <- function(x, zoom = 2, expand = 2){
+  if (!requireNamespace("webshot", quietly = TRUE)) {
+    stop("package webshot is required when saving a flextable as an image.")
+  }
+  if (!requireNamespace("magick", quietly = TRUE)) {
+    stop("package magick is required when saving a flextable as an image.")
+  }
+  path <- tempfile(fileext = ".png")
+  tf <- tempfile(fileext = ".html")
+  save_as_html(x = x, path = tf)
+  webshot::webshot(url = sprintf("file://%s", tf),
+                   file = path, selector = "body > table",
+                   zoom = zoom, expand = expand )
+  unlink(tf)
+  magick::image_read(path = path)
 }

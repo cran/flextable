@@ -17,8 +17,11 @@ This can be used in a shiny application.
 htmltools_value(flextable(iris[1:5,]))
 }
 \seealso{
-Other flextable print function: \code{\link{format.flextable}},
+Other flextable print function: \code{\link{as_raster}},
+  \code{\link{format.flextable}},
   \code{\link{knit_print.flextable}},
-  \code{\link{print.flextable}}, \code{\link{save_as_html}}
+  \code{\link{plot.flextable}},
+  \code{\link{print.flextable}},
+  \code{\link{save_as_html}}, \code{\link{save_as_image}}
 }
 \concept{flextable print function}

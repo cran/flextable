@@ -78,24 +78,20 @@ ft <- data.frame(a = 1:5, b = 6:10) %>%
 ft
 fix_border_issues(ft)
 
-## ----echo=FALSE----------------------------------------------------------
-as_ul(ls(envir = as.environment("package:flextable"), pattern = "^add_(header|footer)"))
-
 ## ------------------------------------------------------------------------
 ft <- flextable( head( iris ) ) 
 ft <- set_header_labels(ft, Sepal.Length = "Sepal", 
     Sepal.Width = "Sepal", Petal.Length = "Petal",
     Petal.Width = "Petal" )
+# merge them 
+ft <- merge_at(ft, i = 1, j = 1:2, part = "header")
+ft <- merge_at(ft, i = 1, j = 3:4, part = "header")
 ft
 
 ## ------------------------------------------------------------------------
-ft <- add_header(ft, 
-  Sepal.Length = "length", 
-  Sepal.Width = "width", 
-  Petal.Length = "length", 
-  Petal.Width = "width", 
-  top = FALSE )
-ft <- theme_booktabs(ft)
+ft <- add_header_row(ft, 
+  values = c("", "length", "width", "length", "width"), top = FALSE )
+ft <- theme_box(ft)
 
 ## ----echo=FALSE----------------------------------------------------------
 ft
@@ -104,7 +100,7 @@ ft
 ft <- add_header_lines(ft, 
   values = c("this is a first line", 
      "this is a second line") ) 
-ft <- theme_booktabs(ft)
+ft <- theme_box(ft)
 
 ## ----echo=FALSE----------------------------------------------------------
 ft

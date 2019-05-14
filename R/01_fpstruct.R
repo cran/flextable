@@ -96,6 +96,17 @@ as.data.frame.text_struct <- function(object, ...){
   data$col_id <- factor(data$col_id, levels = object$color$keys)
   data
 }
+as_fp_text_list <- function(x, i, j){
+  props_split <- mapply(function(z, colname, i, j){
+    out <- as.vector(z$data[i, z$keys[j] , drop = FALSE])
+    as.list(out)
+  }, x, names(x), MoreArgs = list( i = i, j = j ), SIMPLIFY = FALSE)
+  props_split$FUN <- fp_text
+  props_split$SIMPLIFY <- FALSE
+  props_split$USE.NAMES <- TRUE
+  do.call(mapply, props_split)
+}
+
 
 
 # par_struct -----
@@ -368,7 +379,7 @@ add_cellstyle_column <- function(x, type = "html"){
 
   if( type %in% "html"){
     background.color <- ifelse( colalpha(x$background.color) > 0,
-                       sprintf("background-color:%s;", colcodecss(x$background.color) ),
+                       sprintf("background-clip: padding-box;background-color:%s;", colcodecss(x$background.color) ),
                        "background-color:transparent;")
 
     width <- ifelse( is.na(x$width), "", sprintf("width:%s;", css_px(x$width * 72) ) )
@@ -543,7 +554,11 @@ chunkset_struct <- function( nrow, keys ){
 add_rows.chunkset_struct <- function(x, nrows, first, data, ...){
   old_nrow <- x$content$nrow
   x$content <- add_rows(x$content, nrows, first = first, default = as_paragraph(as_chunk("")) )
-  id <- ifelse(first, seq_len(nrows), rev(rev(seq_len(x$content$nrow) )[seq_len(nrows)] ) )
+  if(first){
+    id <- seq_len(nrows)
+  } else {
+    id <- rev(rev(seq_len(x$content$nrow) )[seq_len(nrows)] )
+  }
 
   newcontent <- lapply(data[x$content$keys], function(x) as_paragraph(as_chunk(x, formater = format_fun)) )
   x$content[id,x$content$keys] <- Reduce(append, newcontent)

@@ -72,6 +72,3 @@ process_url <- function(rel, url, str, pattern, double_esc = TRUE){
   as.character(doc)
 }
 
-
-
-

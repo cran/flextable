@@ -15,6 +15,7 @@ dat[3:7, 1] <- NA
 dat[, 2] <- dat[, 6] * 1000000
 
 ft <- flextable(dat)
+ft
 num_keys <- c("mpg", "disp", "drat", "wt", "qsec")
 int_keys <- c("cyl", "hp", "vs", "am", "gear", "carb")
 
@@ -111,4 +112,17 @@ myft <- compose( myft, j = 1,
   part = "body")
 
 autofit(myft)
+
+## ------------------------------------------------------------------------
+ft <- flextable(head(iris))
+ft <- footnote( ft, i = 1, j = 1:3,
+            value = as_paragraph(
+              c("This is footnote one",
+                "This is footnote two",
+                "This is footnote three")
+            ),
+            ref_symbols = c("a", "b", "c"),
+            part = "header")
+ft <- valign(ft, valign = "bottom", part = "header")
+autofit(ft)
 
