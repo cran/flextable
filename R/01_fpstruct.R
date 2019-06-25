@@ -586,6 +586,29 @@ print.chunkset_struct <- function(x, ...){
 }
 
 
+
+replace_missing_fptext_by_default <- function(x, default){
+  by_columns <- c("font.size", "italic", "bold", "underlined", "color", "shading.color", "font.family", "vertical.align")
+
+  keys <- default[, setdiff(names(default), by_columns), drop = FALSE]
+  values <- default[, by_columns, drop = FALSE]
+  names(values) <- paste0(by_columns, "_default")
+  defdata <- cbind(keys, values)
+
+  newx <- x
+  setDT(newx)
+  setDT(defdata)
+  newx <- newx[defdata, on=names(keys)]
+  setDF(newx)
+  for( j in by_columns){
+    newx[[j]] <- ifelse(is.na(newx[[j]]), newx[[paste0(j, "_default")]], newx[[j]])
+    newx[[paste0(j, "_default")]] <- NULL
+  }
+  newx
+
+}
+
+
 fortify_content <- function(x, default_chunk_fmt, ...){
 
   row_id <- unlist( mapply( function(rows, data){
@@ -600,27 +623,13 @@ fortify_content <- function(x, default_chunk_fmt, ...){
   columns = rep( x$content$keys, each = nrow(x$content$data) ),
   x$content$data, SIMPLIFY = FALSE, USE.NAMES = FALSE ) )
 
-  out <- rbindlist(x$content$data)
+  out <- rbindlist( apply(x$content$data, 2, rbindlist))
   out$row_id <- row_id
   out$col_id <- col_id
   setDF(out)
 
-  by_columns <- c("font.size", "italic", "bold", "underlined", "color", "shading.color", "font.family", "vertical.align")
-  default_props <- as.data.frame(default_chunk_fmt)
-
-  use_default_index <- Reduce(function(x,y) x & y, lapply(out[by_columns], function(x) {
-    is.na(x)
-  }) )
-
-  data0 <- out[!use_default_index,]
-  data1 <- out[use_default_index, !is.element(names(out), by_columns)]
-
-  setDT(data1)
-  data_ <- merge(data1, default_props, by = c("row_id", "col_id"), all.x = TRUE)
-  setDF(data_)
-
-  data_ <- data_[, names(data0)]
-  out <- rbind.match.columns(list(data0, data_))
+  default_props <- as.data.frame(default_chunk_fmt, stringsAsFactors = FALSE)
+  out <- replace_missing_fptext_by_default(out, default_props)
 
   out$col_id <- factor( out$col_id, levels = default_chunk_fmt$color$keys )
   out <- out[order(out$col_id, out$row_id, out$seq_index) ,]
@@ -642,14 +651,25 @@ add_runstyle_column <- function(x, type = "html"){
 
     family <- sprintf("font-family:'%s';", x$font.family )
 
-    font.size <- sprintf("font-size:%s;", css_px(x$font.size) )
+    positioning_val <- ifelse( x$vertical.align %in% "superscript", .3,
+                               ifelse(x$vertical.align %in% "subscript", .3, NA_real_ ) )
+    positioning_what <- ifelse( x$vertical.align %in% "superscript", "bottom",
+                                ifelse(x$vertical.align %in% "subscript", "top", NA_character_ ) )
+    vertical.align <- sprintf("position: relative;%s:%s;", positioning_what,
+                              css_px(x$font.size * positioning_val))
+    vertical.align <- ifelse(is.na(positioning_val), "", vertical.align)
+
+    font.size <- sprintf(
+      "font-size:%s;", css_px(x$font.size * ifelse(
+        x$vertical.align %in% "superscript", .6,
+        ifelse(x$vertical.align %in% "subscript", .6, 1.0 )
+      ) )
+    )
+
     bold <- ifelse(x$bold, "font-weight:bold;", "font-weight:normal;" )
     italic <- ifelse(x$italic, "font-style:italic;", "font-style:normal;" )
     underline <- ifelse(x$underlined, "text-decoration:underline;", "text-decoration:none;" )
 
-    vertical.align <- ifelse(
-      x$vertical.align %in% "superscript", "vertical-align: super;",
-      ifelse(x$vertical.align %in% "subscript","vertical-align: sub;", "") )
 
     style_column <- paste0("style=\"", family, font.size, bold, italic, underline,
                            color, shading, vertical.align, "\"")

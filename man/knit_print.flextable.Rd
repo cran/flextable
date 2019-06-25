@@ -22,9 +22,16 @@ this function is to be used within Shiny applications with \code{renderUI()}.
 For Word (docx) output, if pandoc version >= 2.0 is used, a raw XML block
 with the table code will be inserted. If pandoc version < 2.0 is used, an
 error will be raised. Insertion of images is not supported
-with rmarkdow for Word documents. For PowerPoint (pptx) output,
-if pandoc version < 2.4 is used, an error will be raised.
+with rmarkdown for Word documents (use the package officedown instead).
+For PowerPoint (pptx) output, if pandoc version < 2.4 is used, an error
+will be raised.
 }
+\section{HTML chunk options}{
+
+Result can be aligned with chunk option \code{ft.align} that
+accepts values 'left', 'center' and 'right'.
+}
+
 \section{Word chunk options}{
 
 Result can be aligned with chunk option \code{ft.align} that
@@ -32,6 +39,9 @@ accepts values 'left', 'center' and 'right'.
 
 Word option 'Allow row to break across pages' can be
 activated with chunk option \code{ft.split} set to TRUE.
+
+To specify a Word style for table caption use chunk option
+\code{tab.cap.style}. The default value is "Table Caption".
 }
 
 \section{PowerPoint chunk options}{
@@ -44,7 +54,7 @@ default to \code{{r ft.left=1, ft.left=2}}.
 
 \seealso{
 Other flextable print function: \code{\link{as_raster}},
-  \code{\link{format.flextable}},
+  \code{\link{docx_value}}, \code{\link{format.flextable}},
   \code{\link{htmltools_value}},
   \code{\link{plot.flextable}},
   \code{\link{print.flextable}},

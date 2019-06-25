@@ -114,6 +114,19 @@ myft <- compose( myft, j = 1,
 autofit(myft)
 
 ## ------------------------------------------------------------------------
+data <- structure(list(Species = structure(1:3, .Label = c("setosa", 
+"versicolor", "virginica"), class = "factor"), col1 = c(5.006, 
+5.936, 6.588)), class = "data.frame", row.names = c(NA, -3L))
+
+ft <- flextable(data)
+ft
+ft <- compose(ft, part = "header", j = "Species", 
+    value = as_paragraph(as_i(as_b("Species"))))
+ft <- compose(ft, part = "header", j = "col1", 
+    value = as_paragraph(as_b("µ"), as_sup("blah")))
+ft
+
+## ------------------------------------------------------------------------
 ft <- flextable(head(iris))
 ft <- footnote( ft, i = 1, j = 1:3,
             value = as_paragraph(

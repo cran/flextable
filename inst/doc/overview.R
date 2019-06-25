@@ -101,7 +101,7 @@ library(officer)
 ## ----eval=FALSE----------------------------------------------------------
 #  ppt <- read_pptx()
 #  ppt <- add_slide(ppt, layout = "Title and Content", master = "Office Theme")
-#  ppt <- ph_with_flextable(ppt, value = ft, type = "body")
+#  ppt <- ph_with(ppt, value = ft, location = officer::ph_location_left())
 #  
 #  print(ppt, target = "example.pptx")
 

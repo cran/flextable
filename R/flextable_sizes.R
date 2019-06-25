@@ -1,4 +1,39 @@
 #' @export
+#' @title fit a flextable to a maximum width
+#' @description decrease font size for each cell incrementally until
+#' it fits a given max_width.
+#' @param x flextable object
+#' @param max_width maximum width to fit in inches
+#' @param inc the font size decrease for each step
+#' @param max_iter maximum iterations
+#' @examples
+#' ft <- qflextable(head(mtcars))
+#' ft <- padding(ft, padding = 0, part = "all")
+#' fit_to_width(ft, max_width = 6)
+#' @family flextable dimensions
+fit_to_width <- function(x, max_width, inc = 1L, max_iter = 20 ){
+  go <- TRUE
+  while(go){
+    fdim <- flextable_dim(x)
+
+    if( fdim$widths > max_width){
+      # message("minimimising")
+      # browser()
+      if( nrow_part(x, part = "body") > 0 )
+        x$body$styles$text$font.size$data[] <- x$body$styles$text$font.size$data - inc
+      if( nrow_part(x, part = "footer") > 0 )
+        x$footer$styles$text$font.size$data[] <- x$footer$styles$text$font.size$data - inc
+      if( nrow_part(x, part = "header") > 0 )
+        x$header$styles$text$font.size$data[] <- x$header$styles$text$font.size$data - inc
+
+      x <- autofit(x, add_w = 0.0, add_h = 0.0)
+    } else go <- FALSE
+  }
+  x
+}
+
+
+#' @export
 #' @title Set flextable columns width
 #' @description control columns width
 #' @param x flextable object
@@ -285,8 +320,11 @@ text_metric <- function( x ){
   heights <- txt_data$height
   txt_data$width <- NULL
   txt_data$height <- NULL
+
+  fontsize <- txt_data$font.size
+  fontsize[!(txt_data$vertical.align %in% "baseline")] <- fontsize[!(txt_data$vertical.align %in% "baseline")]/2
   str_extents_ <- m_str_extents(txt_data$txt, fontname = txt_data$font.family,
-                fontsize = txt_data$font.size, bold = txt_data$bold,
+                fontsize = fontsize, bold = txt_data$bold,
                 italic = txt_data$italic) / 72
   str_extents_[,1] <- ifelse(is.na(str_extents_[,1]) & !is.null(widths), widths, str_extents_[,1] )
   str_extents_[,2] <- ifelse(is.na(str_extents_[,2]) & !is.null(heights), heights, str_extents_[,2] )

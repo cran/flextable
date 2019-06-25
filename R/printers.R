@@ -8,20 +8,41 @@ tabwid_htmldep <- function(){
 }
 
 #' @export
-#' @title flextable a tag object from htmltools package
+#' @title flextable as a div object
 #'
 #' @description get a \code{\link[htmltools]{div}} from a flextable object.
 #' This can be used in a shiny application.
 #' @param x a flextable object
+#' @param class css classes (default to "tabwid"), accepted values
+#' are "tabwid", "tabwid tabwid_left", "tabwid tabwid_right".
 #' @family flextable print function
 #' @examples
 #' htmltools_value(flextable(iris[1:5,]))
-htmltools_value <- function(x){
+htmltools_value <- function(x, class = "tabwid"){
   codes <- html_str(x)
-  html_o <- div( class='tabwid',
+  html_o <- div( class=class,
                  tabwid_htmldep(),
                  HTML(as.character(codes))
   )
+}
+
+#' @export
+#' @title flextable docx string
+#'
+#' @description get openxml raw code for Word
+#' from a flextable object.
+#' @param x a flextable object
+#' @param print print output if TRUE
+#' @family flextable print function
+#' @examples
+#' docx_value(flextable(iris[1:5,]))
+docx_value <- function(x, print = TRUE){
+  out <- paste("",
+      "```{=openxml}",
+      format(x, type = "docx"),
+      "```", "", sep = "\n")
+  if( print) cat(out)
+  out
 }
 
 
@@ -88,8 +109,13 @@ print.flextable <- function(x, preview = "html", ...){
 #' For Word (docx) output, if pandoc version >= 2.0 is used, a raw XML block
 #' with the table code will be inserted. If pandoc version < 2.0 is used, an
 #' error will be raised. Insertion of images is not supported
-#' with rmarkdow for Word documents. For PowerPoint (pptx) output,
-#' if pandoc version < 2.4 is used, an error will be raised.
+#' with rmarkdown for Word documents (use the package officedown instead).
+#' For PowerPoint (pptx) output, if pandoc version < 2.4 is used, an error
+#' will be raised.
+#'
+#' @section HTML chunk options:
+#' Result can be aligned with chunk option \code{ft.align} that
+#' accepts values 'left', 'center' and 'right'.
 #'
 #' @section Word chunk options:
 #' Result can be aligned with chunk option \code{ft.align} that
@@ -97,6 +123,9 @@ print.flextable <- function(x, preview = "html", ...){
 #'
 #' Word option 'Allow row to break across pages' can be
 #' activated with chunk option \code{ft.split} set to TRUE.
+#'
+#' To specify a Word style for table caption use chunk option
+#' \code{tab.cap.style}. The default value is "Table Caption".
 #'
 #' @section PowerPoint chunk options:
 #' Position should be defined with options \code{ft.left}
@@ -120,7 +149,15 @@ knit_print.flextable <- function(x, ...){
   if ( is.null(opts_knit$get("rmarkdown.pandoc.to"))){
     knit_print(asis_output(format(x, type = "html")))
   } else if ( grepl( "html", opts_knit$get("rmarkdown.pandoc.to") ) ) {
-    knit_print(htmltools_value(x))
+    tab_class <- "tabwid"
+
+    if( !is.null(align <- opts_current$get("ft.align")) ){
+      if( align == "left")
+        tab_class <- "tabwid tabwid_left"
+      else if( align == "right")
+        tab_class <- "tabwid tabwid_right"
+    }
+    knit_print(htmltools_value(x, class = tab_class))
   } else if ( grepl( "latex", opts_knit$get("rmarkdown.pandoc.to") ) &&
               requireNamespace("webshot", quietly = TRUE) ) {
     # copied from https://github.com/ropensci/magick/blob/1e92b8331cd2cad6418b5e738939ac5918947a2f/R/base.R#L126
@@ -132,9 +169,9 @@ knit_print.flextable <- function(x, ...){
     # save relative to 'base' directory, see discussion in #110
     in_base_dir({
       dir.create(dirname(tmp), showWarnings = FALSE, recursive = TRUE)
-      tf <- tempfile(fileext = ".html")
+      tf <- tempfile(fileext = ".html", tmpdir = ".")
       save_as_html(x = x, path = tf)
-      webshot::webshot(url = sprintf("file://%s", tf),
+      webshot::webshot(url = basename(tf),
                        file = tmp, selector = "body > table",
                        zoom = 3, expand = 0 )
       unlink(tf)
@@ -152,8 +189,19 @@ knit_print.flextable <- function(x, ...){
 
       str <- docx_str(x, align = align, split = TRUE %in% split)
 
+      if( is.null(tab.cap.style <- opts_current$get("tab.cap.style")) )
+        tab.cap.style <- "Table Caption"
+
+      if(!is.null(x$caption$value)){
+        caption <- paste0("\n::: {custom-style=\"",
+                          tab.cap.style,
+                          "\"}\n\n",
+                          x$caption$value, "\n\n",
+                          ":::\n\n")
+      } else caption <- ""
+
       knit_print( asis_output(
-        paste("```{=openxml}", str, "```", sep = "\n")
+        paste(caption, "```{=openxml}", str, "```", sep = "\n")
       ) )
     } else {
       stop("pandoc version >= 2.0 required for flextable rendering in docx")
@@ -263,12 +311,20 @@ save_as_image <- function(x, path, zoom = 3, expand = 10 ){
   if (!requireNamespace("webshot", quietly = TRUE)) {
     stop("package webshot is required when saving a flextable as an image.")
   }
+  curr_wd <- getwd()
+  path <- absolute_path(path)
 
   tf <- tempfile(fileext = ".html")
   save_as_html(x = x, path = tf)
-  webshot::webshot(url = sprintf("file://%s", tf),
+  setwd(dirname(tf))
+  tryCatch({
+    webshot::webshot(url = basename(tf),
                    file = path, selector = "body > table",
                    zoom = zoom, expand = expand )
+  }, finally = {
+    setwd(curr_wd)
+  })
+
   path
 }
 
@@ -323,11 +379,6 @@ as_raster <- function(x, zoom = 2, expand = 2){
     stop("package magick is required when saving a flextable as an image.")
   }
   path <- tempfile(fileext = ".png")
-  tf <- tempfile(fileext = ".html")
-  save_as_html(x = x, path = tf)
-  webshot::webshot(url = sprintf("file://%s", tf),
-                   file = path, selector = "body > table",
-                   zoom = zoom, expand = expand )
-  unlink(tf)
+  save_as_image(x, path, zoom = zoom, expand = expand )
   magick::image_read(path = path)
 }

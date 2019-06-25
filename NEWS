@@ -1,3 +1,19 @@
+# flextable 0.5.5
+
+## new features
+
+* new function `docx_value` to let display flextables from non top level
+ calls inside R Markdown document.
+* ph_with method for flextable object. This enable `ph_location*` usage
+  and make placement into slides easier.
+* new function `fit_to_width` to fit a flextable to a maximum width
+* `set_caption` can now be used with R Markdown for Word document and caption
+  style can be defined with chunk option `tab.cap.style`.
+
+## Issues
+
+* fix issue with `save_as_image` with R for Windows
+
 # flextable 0.5.3
 
 ## new features

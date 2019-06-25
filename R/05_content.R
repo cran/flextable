@@ -105,6 +105,145 @@ as_chunk <- function(x, props = NULL, formater = format_fun, ...) {
   data
 }
 
+
+#' @export
+#' @title subscript chunk
+#' @description The function is producing a chunk with
+#' subscript vertical alignment.
+#' @note
+#' This is a sugar function that ease the composition of complex
+#' labels made of different formattings. It should be used inside a
+#' call to \code{\link{as_paragraph}}.
+#' @param x value, if a chunk, the chunk will be updated
+#' @family chunk elements for paragraph
+#' @examples
+#' ft <- flextable( head(iris), col_keys = c("dummy") )
+#'
+#' ft <- compose(ft, i = 1, j = "dummy", part = "header",
+#'     value = as_paragraph(
+#'       as_sub("Sepal.Length"),
+#'       " anything "
+#'     ) )
+#'
+#' autofit(ft)
+as_sub <- function(x){
+  if( !inherits(x, "chunk") ){
+    x <- as_chunk(x)
+  }
+  x$vertical.align = "subscript"
+  x
+}
+#' @export
+#' @title superscript chunk
+#' @description The function is producing a chunk with
+#' superscript vertical alignment.
+#' @inheritParams as_sub
+#' @note
+#' This is a sugar function that ease the composition of complex
+#' labels made of different formattings. It should be used inside a
+#' call to \code{\link{as_paragraph}}.
+#' @family chunk elements for paragraph
+#' @examples
+#' ft <- flextable( head(iris), col_keys = c("dummy") )
+#'
+#' ft <- compose(ft, i = 1, j = "dummy", part = "header",
+#'     value = as_paragraph(
+#'       " anything ",
+#'       as_sup("Sepal.Width")
+#'     ) )
+#'
+#' autofit(ft)
+as_sup <- function(x){
+  if( !inherits(x, "chunk") ){
+    x <- as_chunk(x)
+  }
+  x$vertical.align = "superscript"
+  x
+}
+
+
+#' @export
+#' @title bold chunk
+#' @description The function is producing a chunk with
+#' bold font.
+#' @note
+#' This is a sugar function that ease the composition of complex
+#' labels made of different formattings. It should be used inside a
+#' call to \code{\link{as_paragraph}}.
+#' @inheritParams as_sub
+#' @family chunk elements for paragraph
+#' @examples
+#' ft <- flextable( head(iris), col_keys = c("dummy") )
+#'
+#' ft <- compose(ft, j = "dummy",
+#'     value = as_paragraph(
+#'       as_b(Sepal.Length)
+#'     ) )
+#'
+#' autofit(ft)
+as_b <- function(x){
+  if( !inherits(x, "chunk") ){
+    x <- as_chunk(x)
+  }
+  x$bold = TRUE
+  x
+}
+
+#' @export
+#' @title italic chunk
+#' @description The function is producing a chunk with
+#' italic font.
+#' @note
+#' This is a sugar function that ease the composition of complex
+#' labels made of different formattings. It should be used inside a
+#' call to \code{\link{as_paragraph}}.
+#' @inheritParams as_sub
+#' @family chunk elements for paragraph
+#' @examples
+#' ft <- flextable( head(iris), col_keys = c("dummy") )
+#'
+#' ft <- compose(ft, j = "dummy",
+#'     value = as_paragraph(
+#'       as_i(Sepal.Length)
+#'     ) )
+#'
+#' autofit(ft)
+as_i <- function(x){
+  if( !inherits(x, "chunk") ){
+    x <- as_chunk(x)
+  }
+  x$italic = TRUE
+  x
+}
+
+#' @export
+#' @title chunk with values in brackets
+#' @description The function is producing a chunk by
+#' pasting values and add the result in brackets.
+#' It should be used inside a call to \code{\link{as_paragraph}}.
+#' @param ... text and column names
+#' @param sep separator
+#' @param p prefix, default to '('
+#' @param s suffix, default to ')'
+#' @family chunk elements for paragraph
+#' @examples
+#' ft <- flextable( head(iris),
+#'   col_keys = c("Species", "Sepal", "Petal") )
+#' ft <- set_header_labels(ft, Sepal="Sepal", Petal="Petal")
+#' ft <- compose(ft, j = "Sepal",
+#'   value = as_paragraph( as_bracket(Sepal.Length, Sepal.Width) ) )
+#' ft <- compose(ft, j = "Petal",
+#'   value = as_paragraph( as_bracket(Petal.Length, Petal.Width) ) )
+#' autofit(ft)
+as_bracket <- function(..., sep = ", ", p = "(", s = ")"){
+  x <- list(...)
+  x <- lapply(x, formatC)
+  x$sep <- sep
+  x <- do.call(paste, x)
+  x <- paste0(p, x, s)
+  as_chunk(x)
+}
+
 #' @importFrom grDevices as.raster
 #' @export
 #' @title image chunk wrapper
