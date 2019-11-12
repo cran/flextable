@@ -88,7 +88,7 @@ format.complex_tabpart <- function( x, type = "wml", header = FALSE,
 
   paragraphs <- par_data(x$styles$pars, txt_data, type = type)
   cells <- cell_data(x$styles$cells, paragraphs, type = type,
-                     span_rows = x$span$rows,
+                     span_rows = x$spans$rows,
                      span_columns = x$spans$columns, x$colwidths, x$rowheights)
   setDT(cells)
   cells <- dcast(cells, row_id ~ col_id, drop=FALSE, fill="", value.var = "cell_str", fun.aggregate = I)
@@ -101,7 +101,7 @@ format.complex_tabpart <- function( x, type = "wml", header = FALSE,
     rows <- paste0( "<w:tr><w:trPr>",
             ifelse(split, "", "<w:cantSplit/>"),
             "<w:trHeight w:val=",
-            shQuote( round(x$rowheights * 72*20, 0 ), type = "cmd"), "/>",
+            shQuote( round(x$rowheights * 72*20, 0 ), type = "cmd"), " w:hRule=\"exact\"/>",
             ifelse( header, "<w:tblHeader/>", ""),
             "</w:trPr>", cells, "</w:tr>")
   } else if( type == "pml"){
