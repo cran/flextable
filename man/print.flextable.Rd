@@ -33,11 +33,16 @@ Note also that a print method is used when flextable are used within
 R markdown documents. See \code{\link{knit_print.flextable}}.
 }
 \seealso{
-Other flextable print function: \code{\link{as_raster}},
-  \code{\link{docx_value}}, \code{\link{format.flextable}},
-  \code{\link{htmltools_value}},
-  \code{\link{knit_print.flextable}},
-  \code{\link{plot.flextable}}, \code{\link{save_as_html}},
-  \code{\link{save_as_image}}
+Other flextable print function: 
+\code{\link{as_raster}()},
+\code{\link{docx_value}()},
+\code{\link{format.flextable}()},
+\code{\link{htmltools_value}()},
+\code{\link{knit_print.flextable}()},
+\code{\link{plot.flextable}()},
+\code{\link{save_as_docx}()},
+\code{\link{save_as_html}()},
+\code{\link{save_as_image}()},
+\code{\link{save_as_pptx}()}
 }
 \concept{flextable print function}

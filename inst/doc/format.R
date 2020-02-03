@@ -1,68 +1,66 @@
-## ----echo = FALSE--------------------------------------------------------
+## ----echo = FALSE-------------------------------------------------------------
 knitr::opts_chunk$set(
   message = FALSE,
   collapse = TRUE,
   comment = "#>")
 
-## ----warning=FALSE, echo=FALSE, message=FALSE----------------------------
+## ----warning=FALSE, echo=FALSE, message=FALSE---------------------------------
 library(officer)
 library(flextable)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 myft <- flextable(head(iris))
 myft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 myft <- flextable(head(iris)) 
 myft <- bold(myft, part = "header") # bold header
 myft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 myft <- fontsize(myft, part = "header", size = 12) 
 myft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 myft <- color(myft, color = "#E4C994")
 myft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 myft <- italic(myft, i = ~ Sepal.Length > 5, 
          j = ~ Sepal.Length + Sepal.Width, italic = TRUE)
 myft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # light gray as background color for header
 myft <-  bg(myft, bg = "#E4C994", part = "header")
 # dark gray as background color for body
 myft <-  bg(myft, bg = "#333333", part = "body")
 myft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 myft <- align( myft, align = "center", part = "all" )
 myft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 myft <- padding( myft, padding = 3, part = "all" )
 myft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 myft <- font(myft, j = "Species", fontname = "Times")
 myft <- fontsize(myft, j = "Species", size = 14)
 myft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 ft <- flextable(head(iris))
-# ft <- theme_box(ft)
 ft <- rotate(ft, rotation = "tbrl", align = "center", part = "header")
 ft <- align(ft, align = "right", part = "header")
+ft <- valign(ft, valign = "center", part = "header")
 ft <- align(ft, align = "center", part = "body")
-ft <- autofit(ft)
 
-# as autofit do not handle rotation, you will have
-# to change manually header cells'height.
-ft <- height(ft, height = 1.1, part = "header")
+## ----echo=FALSE---------------------------------------------------------------
+ft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 library(officer)
 big_border = fp_border(color="orange", width = 2)
 border_v = fp_border(color="gray")
@@ -76,7 +74,7 @@ ft <- border_inner_h(ft, part="all", border = border_h )
 ft <- border_inner_v(ft, part="all", border = border_v )
 ft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 dat <- iris[c(1:2, 51:52, 101:102),]
 ft <- flextable(dat)
 ft <- border_remove( ft )
@@ -92,7 +90,7 @@ ft <- hline_bottom( ft, border = big_b )
 ft <- hline_top( ft, border = big_b, part = "all" )
 ft
 
-## ----warning=FALSE, message=FALSE----------------------------------------
+## ----warning=FALSE, message=FALSE---------------------------------------------
 dat <- iris[c(1:2, 51:52, 101:102),]
 ft <- flextable(dat)
 ft <- fontsize(ft, size = 14, part = "all")
@@ -103,7 +101,7 @@ ft <- italic(ft, i = ~ Sepal.Length > 5)
 ft <- bold(ft, i = 4, j = "Sepal.Length")
 ft
 
-## ----warning=FALSE, message=FALSE----------------------------------------
+## ----warning=FALSE, message=FALSE---------------------------------------------
 row_id <- with(dat, Sepal.Length < 5 & Petal.Length > 1.3 )
 col_id <- c("Petal.Width", "Species")
 
@@ -111,7 +109,7 @@ ft <- color(ft, i = row_id, j = col_id, color="red")
 
 ft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 library(officer)
 def_cell <- fp_cell(border = fp_border(color="#00C9C9"))
 def_par <- fp_par(text.align = "center")

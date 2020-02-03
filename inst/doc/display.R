@@ -1,15 +1,15 @@
-## ----echo = FALSE--------------------------------------------------------
+## ----echo = FALSE-------------------------------------------------------------
 knitr::opts_chunk$set(
   message = FALSE,
   collapse = TRUE,
   comment = "#>"
 )
 
-## ----warning=FALSE, echo=FALSE, message=FALSE----------------------------
+## ----warning=FALSE, echo=FALSE, message=FALSE---------------------------------
 library(officer)
 library(flextable)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 dat <- head(mtcars, n = 10)
 dat[3:7, 1] <- NA
 dat[, 2] <- dat[, 6] * 1000000
@@ -23,7 +23,7 @@ ft <- colformat_num(x = ft, col_keys = num_keys, big.mark = ",", digits = 2, na_
 ft <- colformat_int(x = ft, col_keys = int_keys, big.mark = ",")
 autofit(ft)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 ft <- flextable(head(mtcars, n = 10 ), 
                    col_keys = c("gear", "mpg", "qsec"))
 ft <- set_formatter(ft, 
@@ -34,7 +34,7 @@ ft <- theme_booktabs(ft)
 ft <- autofit(ft)
 ft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 myft <- flextable( head(mtcars), 
   col_keys = c("am", "separator", "gear", "mpg", "drat", "qsec" ))
 myft <- bold(myft, part = "header")
@@ -46,7 +46,7 @@ myft <- border(myft, j = ~ separator, border = fp_border(width=0), part = "all")
 myft <- width(myft, j = ~ separator, width = .1)
 myft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 myft <- compose( 
   myft, j = "mpg", 
   value = as_paragraph(
@@ -56,7 +56,7 @@ myft <- compose(
 myft <- autofit(myft)
 myft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 myft <- compose( 
   myft, j = "mpg", 
   value = as_paragraph(
@@ -70,7 +70,7 @@ myft <- compose(
 myft <- autofit(myft)
 myft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 myft <- compose( 
   myft, j = "mpg", part = "header",
   value = as_paragraph(
@@ -82,7 +82,7 @@ myft <- compose(
 myft <- autofit(myft)
 myft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 img.file <- file.path( R.home("doc"), "html", "logo.jpg" )
 
 myft <- compose( myft, i = ~ qsec > 18, j = "qsec", 
@@ -91,7 +91,7 @@ myft <- compose( myft, i = ~ qsec > 18, j = "qsec",
 myft <- autofit(myft)
 myft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 myft <- flextable( head(iris, n = 10 ))
 
 myft <- compose( myft, j = 1,
@@ -102,7 +102,7 @@ myft <- compose( myft, j = 1,
 
 autofit(myft)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 myft <- flextable( head(iris, n = 10 ))
 
 myft <- compose( myft, j = 1,
@@ -113,7 +113,7 @@ myft <- compose( myft, j = 1,
 
 autofit(myft)
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 data <- structure(list(Species = structure(1:3, .Label = c("setosa", 
 "versicolor", "virginica"), class = "factor"), col1 = c(5.006, 
 5.936, 6.588)), class = "data.frame", row.names = c(NA, -3L))
@@ -126,7 +126,7 @@ ft <- compose(ft, part = "header", j = "col1",
     value = as_paragraph(as_b("µ"), as_sup("blah")))
 ft
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 ft <- flextable(head(iris))
 ft <- footnote( ft, i = 1, j = 1:3,
             value = as_paragraph(

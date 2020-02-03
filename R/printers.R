@@ -86,7 +86,7 @@ print.flextable <- function(x, preview = "html", ...){
   } else if( preview == "pptx" ){
     doc <- read_pptx()
     doc <- add_slide(doc, layout = "Title and Content", master = "Office Theme")
-    doc <- ph_with_flextable(doc, value = x, type = "body")
+    doc <- ph_with(doc, value = x, location = ph_location_type(type = "body"))
     file_out <- print(doc, target = tempfile(fileext = ".pptx"))
     browseURL(file_out)
   } else if( preview == "docx" ){
@@ -282,9 +282,9 @@ format.flextable <- function(x, type, ...){
 #' @export
 #' @title save a flextable in an HTML file
 #' @description save a flextable in an HTML file. This function
-#' has been implemented to help users that do not understand
-#' R Markdown. It is highly recommanded to use R Markdown
-#' instead.
+#' is useful to save the flextable in HTML file without using
+#' R Markdown (it is highly recommanded to use R Markdown
+#' instead).
 #' @param x a flextable object
 #' @param path HTML file to be created
 #' @examples
@@ -307,6 +307,90 @@ save_as_html <- function(x, path){
   invisible(path)
 }
 
+
+
+#' @export
+#' @title save flextable objects in an PowerPoint file
+#' @description sugar function to save flextable objects in an PowerPoint file.
+#' @param ... flextable objects, objects, possibly named. If named objects, names are
+#' used as slide titles.
+#' @param values a list (possibly named), each element is a flextable object. If named objects, names are
+#' used as slide titles. If provided, argument \code{...} will be ignored.
+#' @param path PowerPoint file to be created
+#' @examples
+#' ft1 <- flextable( head( iris ) )
+#' tf <- tempfile(fileext = ".pptx")
+#' save_as_pptx(ft1, path = tf)
+#'
+#' ft2 <- flextable( head( mtcars ) )
+#' tf <- tempfile(fileext = ".pptx")
+#' save_as_pptx(`iris table` = ft1, `mtcars table` = ft2, path = tf)
+#' @family flextable print function
+save_as_pptx <- function(..., values = NULL, path){
+
+  if( is.null(values) ){
+    values <- list(...)
+  }
+
+  values <- Filter(function(x) inherits(x, "flextable"), values)
+  titles <- names(values)
+  show_names <- !is.null(titles)
+  z <- read_pptx()
+  for( i in seq_along(values) ){
+    z <- add_slide(z)
+    if(show_names){
+      z <- ph_with(z, titles[i], location = ph_location_type(type = "title") )
+    }
+    z <- ph_with(z, values[[i]], location = ph_location_type(type = "body") )
+  }
+  print(z, target = path )
+  invisible(path)
+}
+
+
+
+#' @export
+#' @title save flextable objects in an Word file
+#' @description sugar function to save flextable objects in an Word file.
+#' @param ... flextable objects, objects, possibly named. If named objects, names are
+#' used as titles.
+#' @param values a list (possibly named), each element is a flextable object. If named objects, names are
+#' used as titles. If provided, argument \code{...} will be ignored.
+#' @param path Word file to be created
+#' @examples
+#' ft1 <- flextable( head( iris ) )
+#' tf <- tempfile(fileext = ".docx")
+#' save_as_docx(ft1, path = tf)
+#'
+#'
+#' ft2 <- flextable( head( mtcars ) )
+#' tf <- tempfile(fileext = ".docx")
+#' save_as_docx(`iris table` = ft1, `mtcars table` = ft2, path = tf)
+#' @family flextable print function
+#' @importFrom officer body_add_par
+save_as_docx <- function(..., values = NULL, path){
+
+  if( is.null(values) ){
+    values <- list(...)
+  }
+
+  values <- Filter(function(x) inherits(x, "flextable"), values)
+  titles <- names(values)
+  show_names <- !is.null(titles)
+
+  z <- read_docx()
+  for( i in seq_along(values) ){
+    if(show_names){
+      z <- body_add_par(z, titles[i], style = "heading 2" )
+    }
+    z <- body_add_flextable(z, values[[i]] )
+  }
+  print(z, target = path )
+  invisible(path)
+}
+
+
+
 #' @export
 #' @title save a flextable as an image
 #' @description save a flextable as a png, pdf or jpeg image.
@@ -314,7 +398,7 @@ save_as_html <- function(x, path){
 #' Image generated with package 'webshot' or package 'webshot2'.
 #' Package 'webshot2' should be prefered as 'webshot' can have
 #' issues with some properties (i.e. bold are not rendered for some users).
-#' @note This function requires package webshot.
+#' @note This function requires package webshot or webshot2.
 #' @param x a flextable object
 #' @param path image file to be created. It should end with .png, .pdf, or .jpeg.
 #' @param zoom,expand parameters used by \code{webshot} function.

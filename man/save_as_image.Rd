@@ -24,7 +24,7 @@ Package 'webshot2' should be prefered as 'webshot' can have
 issues with some properties (i.e. bold are not rendered for some users).
 }
 \note{
-This function requires package webshot.
+This function requires package webshot or webshot2.
 }
 \examples{
 ft <- flextable( head( mtcars ) )
@@ -37,11 +37,16 @@ if( require("webshot") ){
 }
 }
 \seealso{
-Other flextable print function: \code{\link{as_raster}},
-  \code{\link{docx_value}}, \code{\link{format.flextable}},
-  \code{\link{htmltools_value}},
-  \code{\link{knit_print.flextable}},
-  \code{\link{plot.flextable}},
-  \code{\link{print.flextable}}, \code{\link{save_as_html}}
+Other flextable print function: 
+\code{\link{as_raster}()},
+\code{\link{docx_value}()},
+\code{\link{format.flextable}()},
+\code{\link{htmltools_value}()},
+\code{\link{knit_print.flextable}()},
+\code{\link{plot.flextable}()},
+\code{\link{print.flextable}()},
+\code{\link{save_as_docx}()},
+\code{\link{save_as_html}()},
+\code{\link{save_as_pptx}()}
 }
 \concept{flextable print function}
