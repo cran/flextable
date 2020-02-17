@@ -1,5 +1,12 @@
 #' @importFrom htmltools htmlDependency
-tabwid_htmldep <- function(){
+#' @export
+#' @title htmlDependency for flextable objects
+#' @description When using loops in an R Markdown for HTML document, the
+#' htmlDependency object for flextable must also be added at least once.
+#' @examples
+#' if(require("htmltools"))
+#'   div(flextable_html_dependency())
+flextable_html_dependency <- function(){
   htmlDependency("tabwid",
                  "1.0.0",
                  src = system.file(package="flextable", "web_1.0.0"),
@@ -12,37 +19,82 @@ tabwid_htmldep <- function(){
 #'
 #' @description get a \code{\link[htmltools]{div}} from a flextable object.
 #' This can be used in a shiny application.
+#'
+#' Argument `ft.align` can be specified also as knitr chunk options.
+
 #' @param x a flextable object
-#' @param class css classes (default to "tabwid"), accepted values
-#' are "tabwid", "tabwid tabwid_left", "tabwid tabwid_right".
+#' @param ft.align flextable alignment, supported values are 'left', 'center' and 'right'.
+#' @param class css classes (default to "tabwid"), if ft.align is set to 'left' or 'right',
+#' class 'tabwid_left' or 'tabwid_right' will be added to class.
 #' @family flextable print function
 #' @examples
 #' htmltools_value(flextable(iris[1:5,]))
-htmltools_value <- function(x, class = "tabwid"){
+htmltools_value <- function(x, ft.align = opts_current$get("ft.align"), class = "tabwid"){
+
+  if( is.null(ft.align) ) ft.align <- "center"
+
+  if( "left" %in% ft.align )
+    tab_class <- paste0(class, " tabwid_left")
+  else if( "right" %in% ft.align )
+    tab_class <- paste0(class, " tabwid_right")
+  else tab_class <- class
+
   codes <- html_str(x)
-  html_o <- div( class=class,
-                 tabwid_htmldep(),
+  html_o <- div( class=tab_class,
+                 flextable_html_dependency(),
                  HTML(as.character(codes))
   )
 }
 
 #' @export
-#' @title flextable docx string
+#' @title flextable Office Open XML string for Word
 #'
 #' @description get openxml raw code for Word
 #' from a flextable object.
+#'
+#' The function is particularly useful when you want
+#' to generate flextable in a loop from a R Markdown document.
+#' By default, the output is printed and is returned as a
+#' character scalar.
+#'
+#' When used inside an R Markdown document, chunk option `results`
+#' must be set to 'asis'.
+#'
+#' Arguments `ft.align`, `ft.split` and `tab.cap.style` can be
+#' specified also as knitr chunk options.
 #' @param x a flextable object
 #' @param print print output if TRUE
+#' @param ft.align flextable alignment, supported values are 'left', 'center' and 'right'.
+#' @param ft.split Word option 'Allow row to break across pages' can be
+#' activated when TRUE.
+#' @param tab.cap.style specifies a Word style for table caption,
+#' default value is "Table Caption".
 #' @family flextable print function
 #' @examples
 #' docx_value(flextable(iris[1:5,]))
-docx_value <- function(x, print = TRUE){
-  out <- paste("",
+docx_value <- function(x, print = TRUE,
+                       ft.align = opts_current$get("ft.align"),
+                       ft.split = opts_current$get("ft.split"),
+                       tab.cap.style = opts_current$get("tab.cap.style")){
+
+  if( is.null(ft.align) ) ft.align <- "center"
+  if( is.null(ft.split) ) ft.split <- FALSE
+  if( is.null(tab.cap.style) ) tab.cap.style <- "Table Caption"
+
+  if(!is.null(x$caption$value)){
+    caption <- paste0("\n\n::: {custom-style=\"",
+                      tab.cap.style,
+                      "\"}\n\n",
+                      x$caption$value, "\n\n",
+                      ":::\n\n")
+  } else caption <- ""
+
+  out <- paste(caption,
       "```{=openxml}",
-      format(x, type = "docx"),
-      "```", "", sep = "\n")
+      docx_str(x, align = ft.align, split = ft.split),
+      "```\n\n", sep = "\n")
   if( print) cat(out)
-  out
+  invisible(out)
 }
 
 
@@ -102,9 +154,6 @@ print.flextable <- function(x, preview = "html", ...){
 #' @title Render flextable in rmarkdown
 #' @description Function used to render flextable in knitr/rmarkdown documents.
 #' HTML, Word and PowerPoint outputs are supported.
-#'
-#' Function \code{htmltools_value} return an HTML version of the flextable,
-#' this function is to be used within Shiny applications with \code{renderUI()}.
 #' @note
 #' For Word (docx) output, if pandoc version >= 2.0 is used, a raw XML block
 #' with the table code will be inserted. If pandoc version < 2.0 is used, an
@@ -155,11 +204,47 @@ print.flextable <- function(x, preview = "html", ...){
 #' @importFrom stats runif
 #' @importFrom graphics plot par
 #' @family flextable print function
+#' @examples
+#'
+#' # simple examples -----
+#' demo_docx <- system.file(package = "flextable", "examples/rmd", "demo.Rmd")
+#' rmd_file <- tempfile(fileext = ".Rmd")
+#' file.copy(demo_docx, to = rmd_file, overwrite = TRUE)
+#' rmd_file # R Markdown document used for demo
+#' if(require("rmarkdown", quietly = TRUE)){
+#' #  knitr::opts_chunk$set(webshot = "webshot2")
+#' #  render(input = rmd_file, output_format = "word_document", output_file = "doc.docx")
+#' #  render(input = rmd_file, output_format = "pdf_document", output_file = "doc.pdf")
+#' #  render(input = rmd_file, output_format = "html_document", output_file = "doc.html")
+#' #  render(input = rmd_file, output_format = "powerpoint_presentation", output_file = "pres.pptx")
+#' #  render(input = rmd_file, output_format = "slidy_presentation", output_file = "slidy.html")
+#' #  render(input = rmd_file, output_format = "beamer_presentation", output_file = "beamer.pdf")
+#' #  render(input = rmd_file, output_format = "pagedown::html_paged", output_file = "paged.html")
+#' }
+#'
+#'
+#' # looping examples for Word output -----
+#' demo_loop <- system.file(package = "flextable", "examples/rmd", "loop_docx.Rmd")
+#' rmd_file <- tempfile(fileext = ".Rmd")
+#' file.copy(demo_loop, to = rmd_file, overwrite = TRUE)
+#' rmd_file # R Markdown document used for demo
+#' if(require("rmarkdown", quietly = TRUE)){
+#' #  render(input = rmd_file, output_format = "word_document", output_file = "loop_docx.docx")
+#' }
+#'
+#' # looping examples for HTML output -----
+#' demo_loop <- system.file(package = "flextable", "examples/rmd", "loop_html.Rmd")
+#' rmd_file <- tempfile(fileext = ".Rmd")
+#' file.copy(demo_loop, to = rmd_file, overwrite = TRUE)
+#' rmd_file # R Markdown document used for demo
+#' if(require("rmarkdown", quietly = TRUE)){
+#' #  render(input = rmd_file, output_format = "html_document", output_file = "loop_html.html")
+#' }
 knit_print.flextable <- function(x, ...){
 
   if ( is.null(opts_knit$get("rmarkdown.pandoc.to"))){
-    knit_print(asis_output(format(x, type = "html")))
-  } else if ( grepl( "html", opts_knit$get("rmarkdown.pandoc.to") ) ) {
+    knit_print(asis_output(html_str(x)))
+  } else if ( grepl( "(html|slidy)", opts_knit$get("rmarkdown.pandoc.to") ) ) {
     tab_class <- "tabwid"
 
     if( !is.null(align <- opts_current$get("ft.align")) ){
@@ -169,7 +254,7 @@ knit_print.flextable <- function(x, ...){
         tab_class <- "tabwid tabwid_right"
     }
     knit_print(htmltools_value(x, class = tab_class))
-  } else if ( grepl( "latex", opts_knit$get("rmarkdown.pandoc.to") ) ) {
+  } else if ( grepl( "(latex|beamer)", opts_knit$get("rmarkdown.pandoc.to") ) ) {
 
     if( is.null( webshot_package <- opts_current$get("webshot")) ){
       webshot_package <- "webshot"
@@ -198,28 +283,8 @@ knit_print.flextable <- function(x, ...){
   } else if (grepl( "docx", opts_knit$get("rmarkdown.pandoc.to") )) {
 
     if (pandoc_version() >= 2) {
-      # insert rawBlock with Open XML
-      if( is.null(align <- opts_current$get("ft.align")) )
-        align <- "center"
-      if( is.null(split <- opts_current$get("ft.split")) )
-        split <- FALSE
-
-      str <- docx_str(x, align = align, split = TRUE %in% split)
-
-      if( is.null(tab.cap.style <- opts_current$get("tab.cap.style")) )
-        tab.cap.style <- "Table Caption"
-
-      if(!is.null(x$caption$value)){
-        caption <- paste0("\n::: {custom-style=\"",
-                          tab.cap.style,
-                          "\"}\n\n",
-                          x$caption$value, "\n\n",
-                          ":::\n\n")
-      } else caption <- ""
-
-      knit_print( asis_output(
-        paste(caption, "```{=openxml}", str, "```", sep = "\n")
-      ) )
+      str <- docx_value(x, print = FALSE)
+      knit_print( asis_output(str) )
     } else {
       stop("pandoc version >= 2.0 required for flextable rendering in docx")
     }
@@ -247,39 +312,6 @@ knit_print.flextable <- function(x, ...){
 }
 
 #' @export
-#' @title Encode flextable in a document format.
-#'
-#' @description Encode flextable in a document format, \code{html}, \code{docx},
-#' \code{pptx}.
-#'
-#' This function is exported so that users can create their own custom
-#' component.
-#' @param x flextable object
-#' @param type one of pptx, docx or html.
-#' @param ... unused
-#' @examples
-#' ft <- flextable(head(iris, n = 2))
-#' format(ft, type = "html")
-#' @family flextable print function
-format.flextable <- function(x, type, ...){
-
-  stopifnot( length(type) == 1,
-             type %in% c("wml", "pml", "html", "pptx", "docx") )
-
-  if( type %in% "pptx") type <- "pml"
-  if( type %in% "docx") type <- "wml"
-
-  if( type == "wml" ){
-    out <- docx_str(x, ...)
-  } else if( type == "pml" ){
-    out <- pml_flextable(x)
-  } else if( type == "html" ){
-    out <- html_str(x)
-  } else stop("unimplemented")
-  out
-}
-
-#' @export
 #' @title save a flextable in an HTML file
 #' @description save a flextable in an HTML file. This function
 #' is useful to save the flextable in HTML file without using
@@ -301,7 +333,7 @@ save_as_html <- function(x, path){
   '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />',
   '<meta name="viewport" content="width=device-width, initial-scale=1.0"/>',
   '<title>', deparse(substitute(x)), '</title></head>',
-  '<body>', format(x, type = "html"),
+  '<body>', html_str(x),
   '</body></html>')
   cat(str, file = path)
   invisible(path)

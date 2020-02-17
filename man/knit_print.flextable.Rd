@@ -14,9 +14,6 @@
 \description{
 Function used to render flextable in knitr/rmarkdown documents.
 HTML, Word and PowerPoint outputs are supported.
-
-Function \code{htmltools_value} return an HTML version of the flextable,
-this function is to be used within Shiny applications with \code{renderUI()}.
 }
 \note{
 For Word (docx) output, if pandoc version >= 2.0 is used, a raw XML block
@@ -65,11 +62,47 @@ be prefered as 'webshot' can have issues with some properties
 To specify usage of 'webshot2', use chunk option \code{webshot="webshot2"}.
 }
 
+\examples{
+
+# simple examples -----
+demo_docx <- system.file(package = "flextable", "examples/rmd", "demo.Rmd")
+rmd_file <- tempfile(fileext = ".Rmd")
+file.copy(demo_docx, to = rmd_file, overwrite = TRUE)
+rmd_file # R Markdown document used for demo
+if(require("rmarkdown", quietly = TRUE)){
+#  knitr::opts_chunk$set(webshot = "webshot2")
+#  render(input = rmd_file, output_format = "word_document", output_file = "doc.docx")
+#  render(input = rmd_file, output_format = "pdf_document", output_file = "doc.pdf")
+#  render(input = rmd_file, output_format = "html_document", output_file = "doc.html")
+#  render(input = rmd_file, output_format = "powerpoint_presentation", output_file = "pres.pptx")
+#  render(input = rmd_file, output_format = "slidy_presentation", output_file = "slidy.html")
+#  render(input = rmd_file, output_format = "beamer_presentation", output_file = "beamer.pdf")
+#  render(input = rmd_file, output_format = "pagedown::html_paged", output_file = "paged.html")
+}
+
+
+# looping examples for Word output -----
+demo_loop <- system.file(package = "flextable", "examples/rmd", "loop_docx.Rmd")
+rmd_file <- tempfile(fileext = ".Rmd")
+file.copy(demo_loop, to = rmd_file, overwrite = TRUE)
+rmd_file # R Markdown document used for demo
+if(require("rmarkdown", quietly = TRUE)){
+#  render(input = rmd_file, output_format = "word_document", output_file = "loop_docx.docx")
+}
+
+# looping examples for HTML output -----
+demo_loop <- system.file(package = "flextable", "examples/rmd", "loop_html.Rmd")
+rmd_file <- tempfile(fileext = ".Rmd")
+file.copy(demo_loop, to = rmd_file, overwrite = TRUE)
+rmd_file # R Markdown document used for demo
+if(require("rmarkdown", quietly = TRUE)){
+#  render(input = rmd_file, output_format = "html_document", output_file = "loop_html.html")
+}
+}
 \seealso{
 Other flextable print function: 
 \code{\link{as_raster}()},
 \code{\link{docx_value}()},
-\code{\link{format.flextable}()},
 \code{\link{htmltools_value}()},
 \code{\link{plot.flextable}()},
 \code{\link{print.flextable}()},
