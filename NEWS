@@ -1,3 +1,10 @@
+# flextable 0.5.9
+
+## Changes
+
+* defunct of `display()`
+* rename arg 'formater' to 'formatter' of `as_chunk` (#152)
+
 # flextable 0.5.8
 
 ## Changes
