@@ -4,7 +4,7 @@
 \alias{bg}
 \title{Set background color}
 \usage{
-bg(x, i = NULL, j = NULL, bg, part = "body")
+bg(x, i = NULL, j = NULL, bg, part = "body", source = j)
 }
 \arguments{
 \item{x}{a flextable object}
@@ -13,16 +13,44 @@ bg(x, i = NULL, j = NULL, bg, part = "body")
 
 \item{j}{columns selection}
 
-\item{bg}{color to use as background color}
+\item{bg}{color to use as background color. If a function, function need to return
+a character vector of colors.}
 
 \item{part}{partname of the table (one of 'all', 'body', 'header', 'footer')}
+
+\item{source}{if bg is a function, source is specifying the dataset column to be used
+as argument to \code{bg}. This is only useful if j is colored with values contained in another
+(or other) column.}
 }
 \description{
 change background color of selected rows and columns of a flextable.
 }
+\section{Illustrations}{
+
+
+\if{html}{\figure{fig_bg_1.png}{options: width=100\%}}
+
+\if{html}{\figure{fig_bg_2.png}{options: width=50\%}}
+}
+
 \examples{
-ft <- flextable(mtcars)
-ft <- bg(ft, bg = "#DDDDDD", part = "header")
+ft_1 <- flextable(head(mtcars))
+ft_1 <- bg(ft_1, bg = "wheat", part = "header")
+ft_1 <- bg(ft_1, i = ~ qsec < 18, bg = "#EFEFEF", part = "body")
+ft_1 <- bg(ft_1, j = "drat", bg = "#606060", part = "all")
+ft_1 <- color(ft_1, j = "drat", color = "white", part = "all")
+ft_1
+
+if(require("scales")){
+  ft_2 <- flextable(head(iris))
+  colourer <- col_numeric(
+    palette = c("wheat", "red"),
+    domain = c(0, 7))
+  ft_2 <- bg(ft_2, j = c("Sepal.Length", "Sepal.Width",
+                     "Petal.Length", "Petal.Width"),
+           bg = colourer, part = "body")
+  ft_2
+}
 }
 \seealso{
 Other sugar functions for table style: 

@@ -26,10 +26,13 @@ flextable_html_dependency <- function(){
 #' @param ft.align flextable alignment, supported values are 'left', 'center' and 'right'.
 #' @param class css classes (default to "tabwid"), if ft.align is set to 'left' or 'right',
 #' class 'tabwid_left' or 'tabwid_right' will be added to class.
+#' @param bookdown `TRUE` or `FALSE` (default) to support cross referencing with bookdown.
 #' @family flextable print function
 #' @examples
 #' htmltools_value(flextable(iris[1:5,]))
-htmltools_value <- function(x, ft.align = opts_current$get("ft.align"), class = "tabwid"){
+htmltools_value <- function(
+  x, ft.align = opts_current$get("ft.align"), class = "tabwid", bookdown = FALSE
+){
 
   if( is.null(ft.align) ) ft.align <- "center"
 
@@ -39,11 +42,12 @@ htmltools_value <- function(x, ft.align = opts_current$get("ft.align"), class = 
     tab_class <- paste0(class, " tabwid_right")
   else tab_class <- class
 
-  codes <- html_str(x)
+  codes <- html_str(x, bookdown = bookdown)
   html_o <- div( class=tab_class,
                  flextable_html_dependency(),
                  HTML(as.character(codes))
   )
+  html_o
 }
 
 #' @export
@@ -60,33 +64,52 @@ htmltools_value <- function(x, ft.align = opts_current$get("ft.align"), class = 
 #' When used inside an R Markdown document, chunk option `results`
 #' must be set to 'asis'.
 #'
-#' Arguments `ft.align`, `ft.split` and `tab.cap.style` can be
+#' Arguments `ft.align` and `ft.split` can be
 #' specified also as knitr chunk options.
 #' @param x a flextable object
 #' @param print print output if TRUE
 #' @param ft.align flextable alignment, supported values are 'left', 'center' and 'right'.
 #' @param ft.split Word option 'Allow row to break across pages' can be
 #' activated when TRUE.
-#' @param tab.cap.style specifies a Word style for table caption,
-#' default value is "Table Caption".
+#' @inheritParams htmltools_value
 #' @family flextable print function
 #' @examples
 #' docx_value(flextable(iris[1:5,]))
+#' @importFrom officer opts_current_table block_caption styles_info run_autonum to_wml
 docx_value <- function(x, print = TRUE,
                        ft.align = opts_current$get("ft.align"),
                        ft.split = opts_current$get("ft.split"),
-                       tab.cap.style = opts_current$get("tab.cap.style")){
+                       bookdown = FALSE){
 
   if( is.null(ft.align) ) ft.align <- "center"
   if( is.null(ft.split) ) ft.split <- FALSE
-  if( is.null(tab.cap.style) ) tab.cap.style <- "Table Caption"
 
+  tab_props <- opts_current_table()
   if(!is.null(x$caption$value)){
-    caption <- paste0("\n\n::: {custom-style=\"",
-                      tab.cap.style,
-                      "\"}\n\n",
-                      x$caption$value, "\n\n",
-                      ":::\n\n")
+    bc <- block_caption(label = x$caption$value, style = x$caption$style,
+                        autonum = x$caption$autonum)
+    caption <- to_wml(bc, knitting = TRUE)
+  } else if(!is.null(tab_props$cap) && !is.null(tab_props$id)) {
+    bc <- block_caption(label = tab_props$cap, style = tab_props$cap.style,
+                        autonum = run_autonum(
+                          seq_id = gsub(":$", "", tab_props$tab.lp),
+                          pre_label = tab_props$cap.pre,
+                          post_label = tab_props$cap.sep,
+                          bkm = tab_props$id
+                        ))
+    caption <- to_wml(bc, knitting = TRUE)
+  } else if(bookdown) {
+    bkm <- opts_current$get("label")
+    caption <- paste0(
+      "\n\n::: {custom-style=\"",
+      tab_props$cap.style,
+      "\"}\n\n",
+      "<caption>", ref_label(), tab_props$cap, "</caption>",
+      "\n\n", ":::\n\n")
+  }  else if(!is.null(tab_props$cap)) {
+    caption <- paste0(
+      "\n\n::: {custom-style=\"", tab_props$cap.style,
+      "\"}\n\n", tab_props$cap, ":::\n\n")
   } else caption <- ""
 
   out <- paste(caption,
@@ -173,8 +196,24 @@ print.flextable <- function(x, preview = "html", ...){
 #' Word option 'Allow row to break across pages' can be
 #' activated with chunk option \code{ft.split} set to TRUE.
 #'
-#' To specify a Word style for table caption use chunk option
-#' \code{tab.cap.style}. The default value is "Table Caption".
+#' Table captioning is a flextable feature compatible with knitr. Three methods are available and are presented below in order of triggering:
+#'
+#' * with the `set_caption` function, if the function is used, this definition will be chosen.
+#' * with knitr's chunk options:
+#'
+#'     * `tab.cap.style`: Word style name to use for table captions.
+#'     * `tab.cap.pre`: Prefix for numbering chunk (default to "Table").
+#'     * `tab.cap.sep`: Suffix for numbering chunk (default to ": ").
+#'     * `tab.cap`: Caption label.
+#'     * `tab.id`: Caption reference unique identifier.
+#'
+#' * with knitr chunk and bookdown options (if you're in a bookdown):
+#'
+#'     * `tab.cap.style`: Word style name to use for table captions.
+#'     * `tab.cap.pre`: Prefix for numbering chunk (default to "Table").
+#'     * `tab.cap.sep`: Suffix for numbering chunk (default to ": ").
+#'     * `tab.cap`: Caption label.
+#'     * `label`: Caption reference unique identifier.
 #'
 #' @section PowerPoint chunk options:
 #' Position should be defined with options \code{ft.left}
@@ -242,6 +281,8 @@ print.flextable <- function(x, preview = "html", ...){
 #' }
 knit_print.flextable <- function(x, ...){
 
+  is_bookdown <- isTRUE(opts_knit$get('bookdown.internal.label'))
+
   if ( is.null(opts_knit$get("rmarkdown.pandoc.to"))){
     knit_print(asis_output(html_str(x)))
   } else if ( grepl( "(html|slidy)", opts_knit$get("rmarkdown.pandoc.to") ) ) {
@@ -253,7 +294,7 @@ knit_print.flextable <- function(x, ...){
       else if( align == "right")
         tab_class <- "tabwid tabwid_right"
     }
-    knit_print(htmltools_value(x, class = tab_class))
+    knit_print(htmltools_value(x, class = tab_class, bookdown = is_bookdown))
   } else if ( grepl( "(latex|beamer)", opts_knit$get("rmarkdown.pandoc.to") ) ) {
 
     if( is.null( webshot_package <- opts_current$get("webshot")) ){
@@ -283,7 +324,7 @@ knit_print.flextable <- function(x, ...){
   } else if (grepl( "docx", opts_knit$get("rmarkdown.pandoc.to") )) {
 
     if (pandoc_version() >= 2) {
-      str <- docx_value(x, print = FALSE)
+      str <- docx_value(x, print = FALSE, bookdown = is_bookdown)
       knit_print( asis_output(str) )
     } else {
       stop("pandoc version >= 2.0 required for flextable rendering in docx")
@@ -301,8 +342,13 @@ knit_print.flextable <- function(x, ...){
     uid <- as.integer(runif(n=1) * 10^9)
     str <- pml_flextable(x, uid = uid, offx = left, offy = top, cx = 10, cy = 6)
 
+    caption <- ""
+    if(is_bookdown && !is.null(opts_current$get("tab.cap"))) {
+      bkm <- opts_current$get("label")
+      caption <- paste0("<caption>", ref_label(), opts_current$get("tab.cap"), "</caption>\n\n")
+    }
     knit_print( asis_output(
-      paste("```{=openxml}", str, "```", sep = "\n")
+      paste(caption, "```{=openxml}", str, "```", sep = "\n")
     ) )
 
 
@@ -481,13 +527,13 @@ save_as_image <- function(x, path, zoom = 3, expand = 10, webshot = "webshot" ){
 #' @note This function requires packages: webshot and magick.
 #' @param x a flextable object
 #' @param zoom,expand parameters used by \code{webshot} function.
-#' @param ... additional parameters sent to plot function
+#' @param ... additional parameters sent to [as_raster()] function
 #' @examples
-#' ft <- flextable( head( mtcars ) )
-#' ft <- autofit(ft)
+#' ftab <- flextable( head( mtcars ) )
+#' ftab <- autofit(ftab)
 #' \dontrun{
 #' if( require("webshot") ){
-#'   plot(ft)
+#'   plot(ftab)
 #' }
 #' }
 #' @family flextable print function
@@ -495,7 +541,7 @@ save_as_image <- function(x, path, zoom = 3, expand = 10, webshot = "webshot" ){
 plot.flextable <- function(x, zoom = 2, expand = 2, ... ){
   img <- as_raster(x = x, zoom = zoom, expand = expand)
   par(mar = rep(0, 4))
-  plot(grDevices::as.raster(img), ...)
+  plot(grDevices::as.raster(img, ...))
 }
 
 #' @export

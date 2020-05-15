@@ -24,11 +24,16 @@
 #' @note Function \code{regulartable} is maintained for compatibility with old codes
 #' mades by users but be aware it produces the same exact object than \code{flextable}.
 #' @examples
-#' ft <- flextable(mtcars)
+#' ft <- flextable(head(mtcars))
 #' ft
 #' @export
 #' @importFrom stats setNames
 #' @importFrom gdtools font_family_exists
+#' @seealso [style()], [autofit()], [theme_booktabs()], [knit_print.flextable()],
+#' [compose()], [footnote()]
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_flextable_1.png}{options: width=100\%}}
 flextable <- function( data, col_keys = names(data), cwidth = .75, cheight = .25,
                        defaults = list(), theme_fun = theme_booktabs ){
 
@@ -98,6 +103,9 @@ flextable <- function( data, col_keys = names(data), cwidth = .75, cheight = .25
                 pr_c = fp_cell(border = fp_border(color = "transparent")), part = "all")
   if( !is.null(theme_fun) )
     out <- theme_fun(out)
+
+  out <- set_table_properties(x = out, layout = "fixed")
+
   out
 }
 
@@ -115,15 +123,31 @@ qflextable <- function(data){
 #' @description set caption value in flextable
 #' @param x flextable object
 #' @param caption caption value
+#' @param autonum an autonum representation. See \code{\link[officer]{run_autonum}}.
+#' This has only an effect when output is Word. If used, the caption is preceded
+#' by an auto-number sequence. In this case, the caption is preceded by an auto-number
+#' sequence that can be cross referenced.
+#' @param style caption paragraph style name. These names are available with
+#' function \code{\link[officer]{styles_info}} when output is Word; if HTML, a
+#' corresponding css class definition should exist.
 #' @param html_escape should HTML entities be escaped so that it can be safely
 #' included as text or an attribute value within an HTML document.
 #' @note
 #' this will have an effect only when output is HTML or Word document.
 #' @examples
-#' ft <- flextable( head( iris ) )
-#' ft <- set_caption(ft, "my caption")
-#' ft
-set_caption <- function(x, caption, html_escape = TRUE){
+#' ftab <- flextable( head( iris ) )
+#' ftab <- set_caption(ftab, "my caption")
+#' ftab
+#'
+#' library(officer)
+#' autonum <- run_autonum(seq_id = "tab", bkm = "mtcars")
+#' ftab <- flextable( head( mtcars ) )
+#' ftab <- set_caption(ftab, caption = "mtcars data", autonum = autonum)
+#' ftab
+#' @importFrom officer run_autonum
+set_caption <- function(x, caption,
+    autonum = NULL, style = "Table Caption",
+    html_escape = TRUE){
 
   if( !inherits(x, "flextable") ) stop("set_caption supports only flextable objects.")
 
@@ -134,6 +158,12 @@ set_caption <- function(x, caption, html_escape = TRUE){
     caption <- htmlEscape(caption)
   }
   x$caption <- list(value = caption)
+
+  if(!is.null(autonum) && inherits(autonum, "run_autonum")){
+    x$caption$autonum <- autonum
+  }
+  x$caption$style <- style
+
   x
 }
 

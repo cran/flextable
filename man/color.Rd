@@ -4,7 +4,7 @@
 \alias{color}
 \title{Set font color}
 \usage{
-color(x, i = NULL, j = NULL, color, part = "body")
+color(x, i = NULL, j = NULL, color, part = "body", source = j)
 }
 \arguments{
 \item{x}{a flextable object}
@@ -13,16 +13,46 @@ color(x, i = NULL, j = NULL, color, part = "body")
 
 \item{j}{columns selection}
 
-\item{color}{color to use as font color}
+\item{color}{color to use as font color. If a function, function need to return
+a character vector of colors.}
 
 \item{part}{partname of the table (one of 'all', 'body', 'header', 'footer')}
+
+\item{source}{if bg is a function, source is specifying the dataset column to be used
+as argument to \code{color}. This is only useful if j is colored with values contained in another
+(or other) column.}
 }
 \description{
 change font color of selected rows and columns of a flextable.
 }
+\section{Illustrations}{
+
+
+\if{html}{\figure{fig_color_1.png}{options: width=100\%}}
+
+\if{html}{\figure{fig_color_2.png}{options: width=50\%}}
+}
+
 \examples{
-ft <- flextable(mtcars)
+ft <- flextable(head(mtcars))
 ft <- color(ft, color = "orange", part = "header")
+ft <- color(ft, color = "red",
+  i = ~ qsec < 18 & vs < 1 )
+ft
+
+if(require("scales")){
+scale <- scales::col_numeric(domain= c(-1, 1), palette ="RdBu")
+  x <- as.data.frame(cor(iris[-5]))
+  x <- cbind(
+    data.frame(colname = colnames(x),
+               stringsAsFactors = FALSE),
+    x)
+
+  ft_2 <- flextable(x)
+  ft_2 <- color(ft_2, j = x$colname, color = scale)
+  ft_2 <- set_formatter_type(ft_2)
+  ft_2
+}
 }
 \seealso{
 Other sugar functions for table style: 

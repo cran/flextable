@@ -8,20 +8,31 @@
 #' option 'Allow row to break across pages'.
 #' @param pos where to add the flextable relative to the cursor,
 #' one of "after", "before", "on" (end of line).
-#' @importFrom officer body_add_xml wml_link_images docx_reference_img
+#' @importFrom officer body_add_xml wml_link_images docx_reference_img block_caption
 #' @examples
 #' library(officer)
-#' ft <- flextable(head(mtcars))
-#' ft <- theme_zebra(ft)
-#' \donttest{ft <- autofit(ft)}
+#'
+#' # autonum for caption
+#' autonum <- run_autonum(seq_id = "tab", bkm = "mtcars")
+#'
+#' ftab <- flextable( head( mtcars ) )
+#' ftab <- set_caption(ftab, caption = "mtcars data", autonum = autonum)
+#' ftab <- autofit(ftab)
 #' doc <- read_docx()
-#' doc <- body_add_flextable(doc, value = ft)
+#' doc <- body_add_flextable(doc, value = ftab)
 #' fileout <- tempfile(fileext = ".docx")
 #' # fileout <- "test.docx" # uncomment to write in your working directory
 #' print(doc, target = fileout)
 body_add_flextable <- function( x, value, align = "center", pos = "after", split = FALSE) {
 
   stopifnot(inherits(x, "rdocx"))
+
+  if(!is.null(value$caption$value)){
+    bc <- block_caption(label = value$caption$value,
+                        style = value$caption$style,
+                        autonum = value$caption$autonum)
+    x <- body_add_xml(x = x, str = to_wml(bc, base_document = x, add_ns = TRUE), pos = pos)
+  }
 
   out <- docx_str(value, doc = x, align = align, split = split)
 

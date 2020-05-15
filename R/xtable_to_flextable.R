@@ -4,6 +4,8 @@
 #' @description Get a \code{flextable} object from
 #' a \code{xtable} object.
 #'
+#' `xtable_to_flextable` will be deprecated in favor of `as_flextable.xtable`.
+#'
 #' @param x \code{xtable} object
 #' @param text.properties default text formatting properties
 #' @param format.args List of arguments for the formatC function.
@@ -14,6 +16,7 @@
 #' @param NA.string see \code{?print.xtable}.
 #' @param include.rownames see \code{?print.xtable}.
 #' @param rotate.colnames see \code{?print.xtable}.
+#' @param ... unused arguments
 #' @examples
 #' library(officer)
 #' if( require("xtable") ){
@@ -22,12 +25,12 @@
 #'   tli.table <- xtable(tli[1:10, ])
 #'   align(tli.table) <- rep("r", 6)
 #'   align(tli.table) <- "|r|r|clr|r|"
-#'   ft <- xtable_to_flextable(
+#'   ft_1 <- as_flextable(
 #'     tli.table,
 #'     rotate.colnames = TRUE,
 #'     include.rownames = FALSE)
-#'   ft <- height(ft, i = 1, part = "header", height = 1)
-#'   ft
+#'   ft_1 <- height(ft_1, i = 1, part = "header", height = 1)
+#'   ft_1
 #'
 #'   \donttest{
 #'   Grade3 <- c("A","B","B","A","B","C","C","D","A","B",
@@ -35,31 +38,42 @@
 #'   Grade6 <- c("A","A","A","B","B","B","B","B","C","C",
 #'     "A","C","C","C","D","D","D","D","D","D")
 #'   Cohort <- table(Grade3, Grade6)
-#'   ft <- xtable_to_flextable(xtable(Cohort))
-#'   ft <- set_header_labels(ft, rowname = "Grade 3")
-#'   ft <- autofit(ft)
-#'   ft <- add_header(ft, A = "Grade 6")
-#'   ft <- merge_at(ft, i = 1, j = seq_len( ncol(Cohort) ) + 1,
+#'   ft_2 <- as_flextable(xtable(Cohort))
+#'   ft_2 <- set_header_labels(ft_2, rowname = "Grade 3")
+#'   ft_2 <- autofit(ft_2)
+#'   ft_2 <- add_header(ft_2, A = "Grade 6")
+#'   ft_2 <- merge_at(ft_2, i = 1, j = seq_len( ncol(Cohort) ) + 1,
 #'     part = "header" )
-#'   ft <- bold(ft, j = 1, bold = TRUE, part = "body")
-#'   ft <- height_all(ft, part = "header", height = .4)
-#'   ft
+#'   ft_2 <- bold(ft_2, j = 1, bold = TRUE, part = "body")
+#'   ft_2 <- height_all(ft_2, part = "header", height = .4)
+#'   ft_2
 #'
 #'   temp.ts <- ts(cumsum(1 + round(rnorm(100), 0)),
 #'     start = c(1954, 7), frequency = 12)
-#'   xtable_to_flextable(x = xtable(temp.ts, digits = 0),
+#'   ft_3 <- as_flextable(x = xtable(temp.ts, digits = 0),
 #'     NA.string = "-")
+#'   ft_3
 #'   }
+#'   detach("package:xtable", unload = TRUE)
 #' }
 #' @export
-xtable_to_flextable <- function(
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_as_flextable.xtable_1.png}{options: width=30\%}}
+#'
+#' \if{html}{\figure{fig_as_flextable.xtable_2.png}{options: width=30\%}}
+#'
+#' \if{html}{\figure{fig_as_flextable.xtable_3.png}{options: width=100\%}}
+#' @family as_flextable methods
+as_flextable.xtable <- function(
   x, text.properties = officer::fp_text(),
   format.args = getOption("xtable.format.args", NULL),
   rowname_col = "rowname",
   hline.after = getOption("xtable.hline.after", c(-1,0,nrow(x))),
   NA.string = getOption("xtable.NA.string", ""),
   include.rownames = TRUE,
-  rotate.colnames = getOption("xtable.rotate.colnames", FALSE)
+  rotate.colnames = getOption("xtable.rotate.colnames", FALSE),
+  ...
 ){
 
   padding.left <- 4
@@ -239,7 +253,9 @@ xtable_to_flextable <- function(
   ft
 }
 
-
+#' @export
+#' @rdname as_flextable.xtable
+xtable_to_flextable <- as_flextable.xtable
 
 get_xtable_widths <- function(align, default_width = .3){
   rex <- "^(p\\{)([0-9\\.]+)(cm|in|px)(\\}$)"

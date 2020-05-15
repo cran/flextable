@@ -8,6 +8,7 @@ knitr::opts_chunk$set(
 ## ----warning=FALSE, echo=FALSE, message=FALSE---------------------------------
 library(officer)
 library(flextable)
+library(htmltools)
 
 ## -----------------------------------------------------------------------------
 dat <- head(mtcars, n = 10)
@@ -127,6 +128,18 @@ ft <- compose(ft, part = "header", j = "col1",
 ft
 
 ## -----------------------------------------------------------------------------
+ft <- set_caption(ft, caption = "this is a caption")
+ft
+
+## ----eval=FALSE---------------------------------------------------------------
+#  system.file(package = "flextable", "examples", "rmd", "captions")
+
+## ----echo=FALSE---------------------------------------------------------------
+dir <- system.file(package = "flextable", "examples", "rmd", "captions")
+files <- list.files(dir, pattern = "^captions_")
+tags$ul(lapply(files, tags$li))
+
+## -----------------------------------------------------------------------------
 ft <- flextable(head(iris))
 ft <- footnote( ft, i = 1, j = 1:3,
             value = as_paragraph(
@@ -138,4 +151,23 @@ ft <- footnote( ft, i = 1, j = 1:3,
             part = "header")
 ft <- valign(ft, valign = "bottom", part = "header")
 autofit(ft)
+
+## -----------------------------------------------------------------------------
+ft <- flextable(head(iris))
+ft <- autofit(ft)
+ft <- footnote( ft, i = 1, j = 1:2,
+                value = as_paragraph(
+                  c("This is footnote one",
+                    "This is footnote two")
+                ),
+                ref_symbols = c("a", "b"),
+                part = "header",inline=T)
+ft <- footnote( ft, i = 1, j = 3:4,
+                value = as_paragraph(
+                  c("This is footnote three",
+                    "This is footnote four")
+                ),
+                ref_symbols = c( "c","d"),
+                part = "header",inline=T)
+ft
 

@@ -14,17 +14,20 @@
 #' @importFrom stats terms
 #' @examples
 #' library(officer)
-#' def_cell <- fp_cell(border = fp_border(color="#00FFFF"))
+#' def_cell <- fp_cell(border = fp_border(color="wheat"))
 #'
 #' def_par <- fp_par(text.align = "center")
 #'
-#' ft <- flextable(mtcars)
+#' ft <- flextable(head(mtcars))
 #'
 #' ft <- style( ft, pr_c = def_cell, pr_p = def_par, part = "all")
 #' ft <- style(ft, ~ drat > 3.5, ~ vs + am + gear + carb,
 #'   pr_t = fp_text(color="red", italic = TRUE) )
 #'
 #' ft
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_style_1.png}{options: width=100\%}}
 style <- function(x, i = NULL, j = NULL,
                   pr_t = NULL, pr_p = NULL, pr_c = NULL, part = "body" ){
 
@@ -81,8 +84,11 @@ style <- function(x, i = NULL, j = NULL,
 #' @param bold boolean value
 #' @family sugar functions for table style
 #' @examples
-#' ft <- flextable(mtcars)
+#' ft <- flextable(head(iris))
 #' ft <- bold(ft, bold = TRUE, part = "header")
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_bold_1.png}{options: width=50\%}}
 bold <- function(x, i = NULL, j = NULL, bold = TRUE, part = "body" ){
 
   if( !inherits(x, "flextable") ) stop("bold supports only flextable objects.")
@@ -116,8 +122,14 @@ bold <- function(x, i = NULL, j = NULL, bold = TRUE, part = "body" ){
 #' @param size integer value (points)
 #' @family sugar functions for table style
 #' @examples
-#' ft <- flextable(mtcars)
+#' ft <- flextable(head(iris))
 #' ft <- fontsize(ft, size = 14, part = "header")
+#' ft <- fontsize(ft, size = 14, j = 2)
+#' ft <- fontsize(ft, size = 7, j = 3)
+#' ft
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_fontsize_1.png}{options: width=50\%}}
 fontsize <- function(x, i = NULL, j = NULL, size = 11, part = "body" ){
 
   if( !inherits(x, "flextable") ) stop("fontsize supports only flextable objects.")
@@ -151,8 +163,11 @@ fontsize <- function(x, i = NULL, j = NULL, size = 11, part = "body" ){
 #' @param italic boolean value
 #' @family sugar functions for table style
 #' @examples
-#' ft <- flextable(mtcars)
+#' ft <- flextable(head(mtcars))
 #' ft <- italic(ft, italic = TRUE, part = "header")
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_italic_1.png}{options: width=50\%}}
 italic <- function(x, i = NULL, j = NULL, italic = TRUE, part = "body" ){
 
   if( !inherits(x, "flextable") ) stop("italic supports only flextable objects.")
@@ -183,19 +198,45 @@ italic <- function(x, i = NULL, j = NULL, italic = TRUE, part = "body" ){
 #' @param i rows selection
 #' @param j columns selection
 #' @param part partname of the table (one of 'all', 'body', 'header', 'footer')
-#' @param color color to use as font color
+#' @param color color to use as font color. If a function, function need to return
+#' a character vector of colors.
+#' @param source if bg is a function, source is specifying the dataset column to be used
+#' as argument to `color`. This is only useful if j is colored with values contained in another
+#' (or other) column.
 #' @family sugar functions for table style
 #' @examples
-#' ft <- flextable(mtcars)
+#' ft <- flextable(head(mtcars))
 #' ft <- color(ft, color = "orange", part = "header")
-color <- function(x, i = NULL, j = NULL, color, part = "body" ){
+#' ft <- color(ft, color = "red",
+#'   i = ~ qsec < 18 & vs < 1 )
+#' ft
+#'
+#' if(require("scales")){
+#' scale <- scales::col_numeric(domain= c(-1, 1), palette ="RdBu")
+#'   x <- as.data.frame(cor(iris[-5]))
+#'   x <- cbind(
+#'     data.frame(colname = colnames(x),
+#'                stringsAsFactors = FALSE),
+#'     x)
+#'
+#'   ft_2 <- flextable(x)
+#'   ft_2 <- color(ft_2, j = x$colname, color = scale)
+#'   ft_2 <- set_formatter_type(ft_2)
+#'   ft_2
+#' }
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_color_1.png}{options: width=100\%}}
+#'
+#' \if{html}{\figure{fig_color_2.png}{options: width=50\%}}
+color <- function(x, i = NULL, j = NULL, color, part = "body", source = j ){
 
   if( !inherits(x, "flextable") ) stop("color supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
     for( p in c("header", "body", "footer") ){
-      x <- color(x = x, i = i, j = j, color = color, part = p)
+      x <- color(x = x, i = i, j = j, color = color, part = p, source = source)
     }
     return(x)
   }
@@ -206,6 +247,14 @@ color <- function(x, i = NULL, j = NULL, color, part = "body" ){
   check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
+
+  if(is.function(color)){
+    source <- get_dataset_columns_id(x[[part]], source )
+    lcolor <- lapply(x[[part]]$dataset[source], color)
+    color <- matrix( unlist( lcolor ), ncol = length(lcolor) )
+  }
+
+
   x[[part]]$styles$text[i, j, "color"] <- color
 
   x
@@ -222,12 +271,19 @@ color <- function(x, i = NULL, j = NULL, color, part = "body" ){
 #' @family sugar functions for table style
 #' @examples
 #' require("gdtools")
-#' fontname <- "Times"
+#' fontname <- "Brush Script MT"
 #'
-#' if( !font_family_exists(fontname) ){
-#'   ft <- flextable(head(iris))
-#'   ft <- font(ft, fontname = fontname, part = "header")
+#' if( font_family_exists(fontname) ){
+#'   ft_1 <- flextable(head(iris))
+#'   ft_2 <- font(ft_1, fontname = fontname, part = "header")
+#'   ft_2 <- font(ft_2, fontname = fontname, j = 5)
+#'   ft_2
 #' }
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_font_1.png}{options: width=70\%}}
+#'
+#' \if{html}{\figure{fig_font_2.png}{options: width=70\%}}
 font <- function(x, i = NULL, j = NULL, fontname, part = "body" ){
 
   if( !inherits(x, "flextable") ) stop("font supports only flextable objects.")
@@ -267,8 +323,18 @@ font <- function(x, i = NULL, j = NULL, fontname, part = "body" ){
 #' @param padding.right padding right
 #' @family sugar functions for table style
 #' @examples
-#' ft <- flextable(mtcars)
-#' ft <- padding(ft, padding.top = 4)
+#' ft_1 <- flextable(head(iris))
+#' ft_1 <- theme_vader(ft_1)
+#' ft_1 <- padding(ft_1, padding.top = 4, part = "all")
+#' ft_1 <- padding(ft_1, j = 1, padding.right = 40)
+#' ft_1 <- padding(ft_1, i = 3, padding.top = 40)
+#' ft_1 <- padding(ft_1, padding.top = 10, part = "header")
+#' ft_1 <- padding(ft_1, padding.bottom = 10, part = "header")
+#' ft_1 <- autofit(ft_1)
+#' ft_1
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_padding_1.png}{options: width=50\%}}
 padding <- function(x, i = NULL, j = NULL, padding = NULL,
                     padding.top = NULL, padding.bottom = NULL,
                     padding.left = NULL, padding.right = NULL,
@@ -329,8 +395,13 @@ padding <- function(x, i = NULL, j = NULL, padding = NULL,
 #' is one of 'left', 'right', 'center', 'justify'.
 #' @family sugar functions for table style
 #' @examples
-#' ft <- flextable(mtcars)
-#' ft <- align(ft, align = "center")
+#' ft <- flextable(head(mtcars)[,3:6])
+#' ft <- align(ft, align = "right", part = "all")
+#' ft <- theme_tron_legacy(ft)
+#' ft
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_align_1.png}{options: width=100\%}}
 align <- function(x, i = NULL, j = NULL, align = "left",
                   part = "body" ){
 
@@ -359,12 +430,11 @@ align <- function(x, i = NULL, j = NULL, align = "left",
 #' @rdname align
 #' @param header should the header be aligned with the body
 #' @param footer should the footer be aligned with the body
-#' @family sugar functions for table style
 #' @examples
-#' ft <- flextable(mtcars)
-#' ft <- align_text_col(ft, align = "left")
-#' ft <- align_nottext_col(ft, align = "right")
-#' ft
+#' ftab <- flextable(mtcars)
+#' ftab <- align_text_col(ftab, align = "left")
+#' ftab <- align_nottext_col(ftab, align = "right")
+#' ftab
 align_text_col <- function(x, align = "left", header = TRUE, footer = TRUE ){
 
   which_j <- which( sapply(x$body$dataset[x$col_keys], function(x) is.character(x) | is.factor(x) ) )
@@ -402,19 +472,43 @@ align_nottext_col <- function(x, align = "right", header = TRUE, footer = TRUE )
 #' @param i rows selection
 #' @param j columns selection
 #' @param part partname of the table (one of 'all', 'body', 'header', 'footer')
-#' @param bg color to use as background color
+#' @param bg color to use as background color. If a function, function need to return
+#' a character vector of colors.
+#' @param source if bg is a function, source is specifying the dataset column to be used
+#' as argument to `bg`. This is only useful if j is colored with values contained in another
+#' (or other) column.
 #' @family sugar functions for table style
 #' @examples
-#' ft <- flextable(mtcars)
-#' ft <- bg(ft, bg = "#DDDDDD", part = "header")
-bg <- function(x, i = NULL, j = NULL, bg, part = "body" ){
+#' ft_1 <- flextable(head(mtcars))
+#' ft_1 <- bg(ft_1, bg = "wheat", part = "header")
+#' ft_1 <- bg(ft_1, i = ~ qsec < 18, bg = "#EFEFEF", part = "body")
+#' ft_1 <- bg(ft_1, j = "drat", bg = "#606060", part = "all")
+#' ft_1 <- color(ft_1, j = "drat", color = "white", part = "all")
+#' ft_1
+#'
+#' if(require("scales")){
+#'   ft_2 <- flextable(head(iris))
+#'   colourer <- col_numeric(
+#'     palette = c("wheat", "red"),
+#'     domain = c(0, 7))
+#'   ft_2 <- bg(ft_2, j = c("Sepal.Length", "Sepal.Width",
+#'                      "Petal.Length", "Petal.Width"),
+#'            bg = colourer, part = "body")
+#'   ft_2
+#' }
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_bg_1.png}{options: width=100\%}}
+#'
+#' \if{html}{\figure{fig_bg_2.png}{options: width=50\%}}
+bg <- function(x, i = NULL, j = NULL, bg, part = "body", source = j ){
 
   if( !inherits(x, "flextable") ) stop("bg supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
 
   if( part == "all" ){
     for( p in c("header", "body", "footer") ){
-      x <- bg(x = x, i = i, j = j, bg = bg, part = p)
+      x <- bg(x = x, i = i, j = j, bg = bg, part = p, source = source)
     }
     return(x)
   }
@@ -425,6 +519,12 @@ bg <- function(x, i = NULL, j = NULL, bg, part = "body" ){
   check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i )
   j <- get_columns_id(x[[part]], j )
+
+  if(is.function(bg)){
+    source <- get_dataset_columns_id(x[[part]], source )
+    lbg <- lapply(x[[part]]$dataset[source], bg)
+    bg <- matrix( unlist( lbg ), ncol = length(lbg) )
+  }
 
   x[[part]]$styles$cells[i, j, "background.color"] <- bg
 
@@ -441,11 +541,18 @@ bg <- function(x, i = NULL, j = NULL, bg, part = "body" ){
 #' one of "center" or "top" or "bottom".
 #' @family sugar functions for table style
 #' @examples
-#' ft <- flextable(iris[c(1:3, 51:53, 101:103),])
-#' ft <- theme_box(ft)
-#' ft <- merge_v( ft, j = 5)
-#' ft <- valign(ft, j = 5, valign = "top", part = "all")
-#' ft
+#' ft_1 <- flextable(iris[c(1:3, 51:53, 101:103),])
+#' ft_1 <- theme_box(ft_1)
+#' ft_1 <- merge_v(ft_1, j = 5)
+#' ft_1
+#'
+#' ft_2 <- valign(ft_1, j = 5, valign = "top", part = "all")
+#' ft_2
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_valign_1.png}{options: width=50\%}}
+#'
+#' \if{html}{\figure{fig_valign_2.png}{options: width=50\%}}
 valign <- function(x, i = NULL, j = NULL, valign = "center", part = "body" ){
 
   if( !inherits(x, "flextable") ) stop("valign supports only flextable objects.")
@@ -507,7 +614,7 @@ valign <- function(x, i = NULL, j = NULL, valign = "center", part = "body" ){
 #' ft <- rotate(ft, j = 5, rotation="tbrl",part="header")
 #'
 #' ft <- valign(ft, valign = "center", part = "header")
-#' ft <- align(ft, align = "center", part = "all")
+#' ft <- flextable::align(ft, align = "center", part = "all")
 #'
 #' # Manage header height
 #' ft <- height(ft, height = h_header * 1.1, part = "header")
@@ -515,6 +622,9 @@ valign <- function(x, i = NULL, j = NULL, valign = "center", part = "body" ){
 #' ft <- hrule(ft, i = 1, rule = "exact", part = "header")
 #'
 #' ft
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_rotate_1.png}{options: width=50\%}}
 rotate <- function(x, i = NULL, j = NULL, rotation, align = "center", part = "body" ){
 
   if( !inherits(x, "flextable") ) stop("rotate supports only flextable objects.")
@@ -560,15 +670,15 @@ rotate <- function(x, i = NULL, j = NULL, rotation, align = "center", part = "bo
 #'   stringsAsFactors = FALSE )
 #' typology
 #'
-#' ft <- flextable(head(iris), col_keys = c("Species",
+#' ftab <- flextable(head(iris), col_keys = c("Species",
 #'   "break1", "Sepal.Length", "Sepal.Width",
 #'   "break2", "Petal.Length", "Petal.Width") )
-#' ft <- set_header_df(ft, mapping = typology, key = "col_keys" )
-#' ft <- merge_h(ft, part = "header")
-#' ft <- theme_vanilla(ft)
-#' ft <- empty_blanks(ft)
-#' ft <- width(ft, j = c(2, 5), width = .1 )
-#' ft
+#' ftab <- set_header_df(ftab, mapping = typology, key = "col_keys" )
+#' ftab <- merge_h(ftab, part = "header")
+#' ftab <- theme_vanilla(ftab)
+#' ftab <- empty_blanks(ftab)
+#' ftab <- width(ftab, j = c(2, 5), width = .1 )
+#' ftab
 #' @export
 #' @importFrom officer shortcuts
 empty_blanks <- function(x){

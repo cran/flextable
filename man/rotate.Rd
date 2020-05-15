@@ -34,6 +34,12 @@ When function \code{autofit} is used, the rotation will be
 ignored. In that case, use \link{dim_pretty} and \link{width} instead
 of \link{autofit}.
 }
+\section{Illustrations}{
+
+
+\if{html}{\figure{fig_rotate_1.png}{options: width=50\%}}
+}
+
 \examples{
 library(flextable)
 
@@ -49,7 +55,7 @@ ft <- rotate(ft, j = 1:4, rotation="btlr",part="header")
 ft <- rotate(ft, j = 5, rotation="tbrl",part="header")
 
 ft <- valign(ft, valign = "center", part = "header")
-ft <- align(ft, align = "center", part = "all")
+ft <- flextable::align(ft, align = "center", part = "all")
 
 # Manage header height
 ft <- height(ft, height = h_header * 1.1, part = "header")

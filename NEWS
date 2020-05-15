@@ -1,9 +1,35 @@
+# flextable 0.5.10
+
+## new features
+
+* flextable captions in Word can be auto-numbered and bookmarked
+* function `footnote` is now able to add inline footnotes
+* support for bookdown references
+* new as_flextable methods for lm and glm objects and xtable (replacing `xtable_to_flextable()`)
+* new sugar function `continuous_summary()`: summarize continuous columns in a flextable
+* function `autofit` can now use only some parts of the tables. This allows
+for example to no longer have gigantic columns by not taking into account the "footer" part that is often composed of long texts.
+* bookdown and xaringan HTML outputs should now be rendered as expected - table css has been overwritten.
+* new function `set_table_properties` lets adapt flextable size as "100%", "50%" of the available width
+for Word and HTML.
+
+## Changes
+
+* manual pages have been improved and illustrations are added
+* `bg()` and `color()` now accept functions (i.e. `scales::col_numeric()`)
+
 # flextable 0.5.9
 
 ## Changes
 
 * defunct of `display()`
 * rename arg 'formater' to 'formatter' of `as_chunk` (#152)
+
+## Internal
+
+* drop `officer::fp_sign` importation that was not used anymore so that officer can
+ drop digest dependency.
+
 
 # flextable 0.5.8
 

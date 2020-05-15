@@ -162,6 +162,9 @@ myft %>%
     i = 1:2, j = 1:2)
 ```
 
+Note that the content that is rendered is not the result of the concatenation of each paragraphs 
+contained into the merge cells. Only one paragraph will be kept, the top left one of all merge cells.
+
 </div>
 
 </div>
@@ -194,7 +197,6 @@ ft <- data.frame(a = 1:5, b = 6:10) %>%
 ft
 fix_border_issues(ft)
 ```
-
 
 
 ## Manage headers and footers
@@ -365,8 +367,27 @@ ft
 
 
 
+## Table width
+
+By default, table width is fixed. This setting allows to have the same rendering 
+with Word, HTML and PowerPoint formats. 
+
+You can use another setting with function `set_table_properties()`. Alternative is 
+'autofit', an algorithm implemented by HTML and Word. It allows to size the table 
+along an available width. 
+
+```{r eval=FALSE}
+library(flextable)
+ft <- qflextable(head(cars))
+set_table_properties(ft, width = .5, layout = "autofit")
+set_table_properties(ft, width = 1, layout = "autofit")
+```
+
+
 
 ## Cell widths and heights
+
+> This oonly applies when layout is "fixed"
 
 The default sizes of flextable columns and rows are set by default values. 
 This will drive to inadequate rows heights and columns widths in some cases. 
@@ -393,6 +414,9 @@ Function `autofit()` optimises widths and heights of the flextable.
 This function is almost always to be called once when using 
 flextable objects, it makes compact tables.
 
+> `autofit` was not my biggest naming idea as users are thinking it is the 
+'Microsoft Word feature' (see [set_table_properties](../reference/set_table_properties.html))
+
 ```{r}
 ft <- autofit(ft_base, add_w = 0, add_h = 0)
 
@@ -415,97 +439,4 @@ ft <- height( ft, i = 3, height = 1 )
 ft
 ```
 
-## Groups as row titles
-
-
-Package flextable does not support data transformation. A *grouped* dataset 
-is then needed (and *tidy*). This has to be done prior to the creation of the object. 
-
-Function `as_grouped_data` will modify data structure so that it will be 
-easy to manage grouped data representation. Repeated consecutive values 
-of group columns will be used to define the title of the groups and will 
-be added as a *row title*.
-
-Let's have an example with aggragated data from dataset `CO2`:
-
-```{r}
-library(data.table)
-data_CO2 <- dcast(as.data.table(CO2), 
-  Treatment + conc ~ Type, value.var = "uptake", fun.aggregate = mean)
-head(data_CO2)
-```
-
-`as_grouped_data` will restructure the dataset:
-
-```{r}
-data_CO2 <- as_grouped_data(x = data_CO2, groups = c("Treatment"))
-head(data_CO2)
-```
-
-The result is suitable for method `as_flextable`. A call to this function 
-and few formatting operations are producing the following result:
-
-```{r}
-zz <- as_flextable( data_CO2 ) %>% 
-  bold(j = 1, i = ~ !is.na(Treatment), bold = TRUE, part = "body" ) %>% 
-  bold(part = "header", bold = TRUE ) %>% 
-  width(width = 1.5)
-zz
-```
-
-It's now easier to customize the rendering. Let's format column `conc` 
-as an integer column:
-
-```{r}
-zz <- zz %>% 
-  compose(i = ~ !is.na(conc), j = "conc", 
-          value = as_paragraph(
-            as_chunk(conc, formatter = function(x) sprintf("%.0f", x))
-          )
-  )
-zz
-```
-
-Now let's add nice bars before displaying the figures:
-
-```{r}
-zz <- zz %>% 
-  compose(i = ~ is.na(Treatment), j = "Quebec", 
-          value = as_paragraph(
-            minibar(Quebec), 
-            " ", 
-            as_chunk(Quebec, formatter = function(x) sprintf("%.01f", x))
-            )
-          ) %>% 
-  compose(i = ~ is.na(Treatment), j = "Mississippi", 
-          value = as_paragraph( minibar(Mississippi), 
-                                " ",
-                                as_chunk(Mississippi, 
-                                         formatter = function(x) sprintf("%.01f", x) )
-                                )
-          ) %>% 
-  align(j = 2:3, align = "left")
-zz
-```
-
-And finally, add a footnote in the footer part:
-
-```{r}
-add_footer_lines(zz, "dataset CO2 has been used for this flextable") 
-```
-
-
-## xtable 
-
-`xtable` objects can be transformed as flextable objects with function `xtable_to_flextable()`. 
-
-```{r}
-if( require("xtable") ){
-  temp.ts <- ts(cumsum(1 + round(rnorm(100), 0)),
-    start = c(1954, 7), frequency = 12)
-  ft <- xtable_to_flextable(x = xtable(temp.ts, digits = 0),
-    NA.string = "-")
-  ft
-}
-```
 

@@ -4,12 +4,27 @@
 \alias{set_caption}
 \title{set caption}
 \usage{
-set_caption(x, caption, html_escape = TRUE)
+set_caption(
+  x,
+  caption,
+  autonum = NULL,
+  style = "Table Caption",
+  html_escape = TRUE
+)
 }
 \arguments{
 \item{x}{flextable object}
 
 \item{caption}{caption value}
+
+\item{autonum}{an autonum representation. See \code{\link[officer]{run_autonum}}.
+This has only an effect when output is Word. If used, the caption is preceded
+by an auto-number sequence. In this case, the caption is preceded by an auto-number
+sequence that can be cross referenced.}
+
+\item{style}{caption paragraph style name. These names are available with
+function \code{\link[officer]{styles_info}} when output is Word; if HTML, a
+corresponding css class definition should exist.}
 
 \item{html_escape}{should HTML entities be escaped so that it can be safely
 included as text or an attribute value within an HTML document.}
@@ -21,7 +36,13 @@ set caption value in flextable
 this will have an effect only when output is HTML or Word document.
 }
 \examples{
-ft <- flextable( head( iris ) )
-ft <- set_caption(ft, "my caption")
-ft
+ftab <- flextable( head( iris ) )
+ftab <- set_caption(ftab, "my caption")
+ftab
+
+library(officer)
+autonum <- run_autonum(seq_id = "tab", bkm = "mtcars")
+ftab <- flextable( head( mtcars ) )
+ftab <- set_caption(ftab, caption = "mtcars data", autonum = autonum)
+ftab
 }

@@ -18,10 +18,10 @@ is the ratio corresponding to \code{height/width}.
 Names of the list are \code{width}, \code{height} and \code{aspect_ratio}.
 }
 \examples{
-ft <- flextable(head(iris))
-flextable_dim(ft)
-ft <- autofit(ft)
-flextable_dim(ft)
+ftab <- flextable(head(iris))
+flextable_dim(ftab)
+ftab <- autofit(ftab)
+flextable_dim(ftab)
 }
 \seealso{
 Other flextable dimensions: 
@@ -31,6 +31,7 @@ Other flextable dimensions:
 \code{\link{fit_to_width}()},
 \code{\link{height}()},
 \code{\link{hrule}()},
+\code{\link{set_table_properties}()},
 \code{\link{width}()}
 }
 \concept{flextable dimensions}

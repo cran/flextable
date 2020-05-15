@@ -9,7 +9,7 @@ docx_value(
   print = TRUE,
   ft.align = opts_current$get("ft.align"),
   ft.split = opts_current$get("ft.split"),
-  tab.cap.style = opts_current$get("tab.cap.style")
+  bookdown = FALSE
 )
 }
 \arguments{
@@ -22,8 +22,7 @@ docx_value(
 \item{ft.split}{Word option 'Allow row to break across pages' can be
 activated when TRUE.}
 
-\item{tab.cap.style}{specifies a Word style for table caption,
-default value is "Table Caption".}
+\item{bookdown}{\code{TRUE} or \code{FALSE} (default) to support cross referencing with bookdown.}
 }
 \description{
 get openxml raw code for Word
@@ -37,7 +36,7 @@ character scalar.
 When used inside an R Markdown document, chunk option \code{results}
 must be set to 'asis'.
 
-Arguments \code{ft.align}, \code{ft.split} and \code{tab.cap.style} can be
+Arguments \code{ft.align} and \code{ft.split} can be
 specified also as knitr chunk options.
 }
 \examples{

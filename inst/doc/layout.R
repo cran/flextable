@@ -135,6 +135,12 @@ ft <- fix_border_issues(ft)
 ## ----echo=FALSE---------------------------------------------------------------
 ft
 
+## ----eval=FALSE---------------------------------------------------------------
+#  library(flextable)
+#  ft <- qflextable(head(cars))
+#  set_table_properties(ft, width = .5, layout = "autofit")
+#  set_table_properties(ft, width = 1, layout = "autofit")
+
 ## -----------------------------------------------------------------------------
 ft_base <- flextable(head(mtcars))
 ft_base <- theme_vader(ft_base, fontsize = 13)
@@ -156,61 +162,4 @@ ft <- width(ft, j = ~ mpg + cyl + disp, width = 2)
 ft <- height_all( ft, height = .4 )
 ft <- height( ft, i = 3, height = 1 )
 ft
-
-## -----------------------------------------------------------------------------
-library(data.table)
-data_CO2 <- dcast(as.data.table(CO2), 
-  Treatment + conc ~ Type, value.var = "uptake", fun.aggregate = mean)
-head(data_CO2)
-
-## -----------------------------------------------------------------------------
-data_CO2 <- as_grouped_data(x = data_CO2, groups = c("Treatment"))
-head(data_CO2)
-
-## -----------------------------------------------------------------------------
-zz <- as_flextable( data_CO2 ) %>% 
-  bold(j = 1, i = ~ !is.na(Treatment), bold = TRUE, part = "body" ) %>% 
-  bold(part = "header", bold = TRUE ) %>% 
-  width(width = 1.5)
-zz
-
-## -----------------------------------------------------------------------------
-zz <- zz %>% 
-  compose(i = ~ !is.na(conc), j = "conc", 
-          value = as_paragraph(
-            as_chunk(conc, formatter = function(x) sprintf("%.0f", x))
-          )
-  )
-zz
-
-## -----------------------------------------------------------------------------
-zz <- zz %>% 
-  compose(i = ~ is.na(Treatment), j = "Quebec", 
-          value = as_paragraph(
-            minibar(Quebec), 
-            " ", 
-            as_chunk(Quebec, formatter = function(x) sprintf("%.01f", x))
-            )
-          ) %>% 
-  compose(i = ~ is.na(Treatment), j = "Mississippi", 
-          value = as_paragraph( minibar(Mississippi), 
-                                " ",
-                                as_chunk(Mississippi, 
-                                         formatter = function(x) sprintf("%.01f", x) )
-                                )
-          ) %>% 
-  align(j = 2:3, align = "left")
-zz
-
-## -----------------------------------------------------------------------------
-add_footer_lines(zz, "dataset CO2 has been used for this flextable") 
-
-## -----------------------------------------------------------------------------
-if( require("xtable") ){
-  temp.ts <- ts(cumsum(1 + round(rnorm(100), 0)),
-    start = c(1954, 7), frequency = 12)
-  ft <- xtable_to_flextable(x = xtable(temp.ts, digits = 0),
-    NA.string = "-")
-  ft
-}
 

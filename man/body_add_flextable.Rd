@@ -41,11 +41,15 @@ a bookmark with a flextable. As a side effect, the bookmark will be lost.
 
 \examples{
 library(officer)
-ft <- flextable(head(mtcars))
-ft <- theme_zebra(ft)
-\donttest{ft <- autofit(ft)}
+
+# autonum for caption
+autonum <- run_autonum(seq_id = "tab", bkm = "mtcars")
+
+ftab <- flextable( head( mtcars ) )
+ftab <- set_caption(ftab, caption = "mtcars data", autonum = autonum)
+ftab <- autofit(ftab)
 doc <- read_docx()
-doc <- body_add_flextable(doc, value = ft)
+doc <- body_add_flextable(doc, value = ftab)
 fileout <- tempfile(fileext = ".docx")
 # fileout <- "test.docx" # uncomment to write in your working directory
 print(doc, target = fileout)

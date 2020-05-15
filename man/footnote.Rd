@@ -4,7 +4,16 @@
 \alias{footnote}
 \title{add footnotes to flextable}
 \usage{
-footnote(x, i = NULL, j = NULL, value, ref_symbols = NULL, part = "body")
+footnote(
+  x,
+  i = NULL,
+  j = NULL,
+  value,
+  ref_symbols = NULL,
+  part = "body",
+  inline = FALSE,
+  sep = "; "
+)
 }
 \arguments{
 \item{x}{a flextable object}
@@ -19,15 +28,27 @@ footnote(x, i = NULL, j = NULL, value, ref_symbols = NULL, part = "body")
 as references to notes.}
 
 \item{part}{partname of the table (one of 'body', 'header', 'footer')}
+
+\item{inline}{whether to add footnote on same line as previous footnote or not}
+
+\item{sep}{inline = T, character string to use as a separator between footnotes}
 }
 \description{
 add footnotes to a flextable object. A symbol is appened
 where the footnote is defined and the note is appened in the footer part
 of the table.
 }
+\section{Illustrations}{
+
+
+\if{html}{\figure{fig_footnote_1.png}{options: width=50\%}}
+
+\if{html}{\figure{fig_footnote_2.png}{options: width=50\%}}
+}
+
 \examples{
-ft <- flextable(head(iris))
-ft <- footnote( ft, i = 1, j = 1:3,
+ft_1 <- flextable(head(iris))
+ft_1 <- footnote( ft_1, i = 1, j = 1:3,
             value = as_paragraph(
               c("This is footnote one",
                 "This is footnote two",
@@ -35,6 +56,24 @@ ft <- footnote( ft, i = 1, j = 1:3,
             ),
             ref_symbols = c("a", "b", "c"),
             part = "header")
-ft <- valign(ft, valign = "bottom", part = "header")
-\donttest{ft <- autofit(ft)}
+ft_1 <- valign(ft_1, valign = "bottom", part = "header")
+ft_1 <- autofit(ft_1)
+
+ft_2 <- flextable(head(iris))
+ft_2 <- autofit(ft_2)
+ft_2 <- footnote( ft_2, i = 1, j = 1:2,
+               value = as_paragraph(
+                c("This is footnote one",
+                   "This is footnote two")
+               ),
+               ref_symbols = c("a", "b"),
+               part = "header", inline = TRUE)
+ft_2 <- footnote( ft_2, i = 1, j = 3:4,
+               value = as_paragraph(
+                 c("This is footnote three",
+                   "This is footnote four")
+               ),
+               ref_symbols = c("c","d"),
+               part = "header", inline = TRUE)
+ft_2
 }

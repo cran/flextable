@@ -19,11 +19,17 @@ control columns width
 \details{
 Heights are not used when flextable is been rendered into HTML.
 }
+\section{Illustrations}{
+
+
+\if{html}{\figure{fig_width_1.png}{options: width=100\%}}
+}
+
 \examples{
 
-ft <- flextable(iris)
-ft <- width(ft, width = 1)
-
+ft <- flextable(head(iris))
+ft <- width(ft, width = 1.5)
+ft
 }
 \seealso{
 Other flextable dimensions: 
@@ -33,6 +39,7 @@ Other flextable dimensions:
 \code{\link{fit_to_width}()},
 \code{\link{flextable_dim}()},
 \code{\link{height}()},
-\code{\link{hrule}()}
+\code{\link{hrule}()},
+\code{\link{set_table_properties}()}
 }
 \concept{flextable dimensions}

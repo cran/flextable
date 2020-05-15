@@ -4,7 +4,7 @@
 \alias{autofit}
 \title{Adjusts cell widths and heights}
 \usage{
-autofit(x, add_w = 0.1, add_h = 0.1)
+autofit(x, add_w = 0.1, add_h = 0.1, part = c("body", "header"))
 }
 \arguments{
 \item{x}{flextable object}
@@ -12,16 +12,40 @@ autofit(x, add_w = 0.1, add_h = 0.1)
 \item{add_w}{extra width to add in inches}
 
 \item{add_h}{extra height to add in inches}
+
+\item{part}{partname of the table (one of 'all', 'body', 'header' or 'footer')}
 }
 \description{
-compute and apply optimized widths and heights.
+compute and apply optimized widths and heights
+(minimum estimated widths and heights for each table columns and rows
+in inches returned by function \code{\link[=dim_pretty]{dim_pretty()}}).
+
 This function is to be used when the table widths and heights
 should automatically be adjusted to fit the size of the content.
 }
+\note{
+This function is not related to 'Microsoft Word' \emph{Autofit} feature.
+}
+\section{line breaks}{
+
+Soft returns (a line break in a paragraph) are not supported. Function
+\code{autofit} will return wrong results if \verb{\\n} are used (they will be
+considered as "").
+}
+
+\section{Illustrations}{
+
+
+\if{html}{\figure{fig_autofit_1.png}{options: width=90\%}}
+
+\if{html}{\figure{fig_autofit_2.png}{options: width=70\%}}
+}
+
 \examples{
-ft <- flextable(mtcars)
-\donttest{ft <- autofit(ft)}
-ft
+ft_1 <- flextable(head(mtcars))
+ft_1
+ft_2 <- autofit(ft_1)
+ft_2
 }
 \seealso{
 Other flextable dimensions: 
@@ -31,6 +55,7 @@ Other flextable dimensions:
 \code{\link{flextable_dim}()},
 \code{\link{height}()},
 \code{\link{hrule}()},
+\code{\link{set_table_properties}()},
 \code{\link{width}()}
 }
 \concept{flextable dimensions}
