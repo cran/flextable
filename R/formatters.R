@@ -19,6 +19,7 @@
 #' @section Illustrations:
 #'
 #' \if{html}{\figure{fig_set_formatter_1.png}{options: width=50\%}}
+#' @family cells formatters
 set_formatter <- function(x, ..., values = NULL, part = "body"){
 
 
@@ -53,6 +54,7 @@ set_formatter <- function(x, ..., values = NULL, part = "body"){
 #' format date and date time columns.
 #' @param false,true string to be used for logical columns
 #' @param na_str string for NA values
+#' @family cells formatters
 set_formatter_type <- function(x, fmt_double = "%.03f", fmt_integer = "%.0f",
                                fmt_date = "%Y-%m-%d", fmt_datetime = "%Y-%m-%d %H:%M:%S",
                                true = "true", false = "false",
@@ -103,7 +105,7 @@ colformat_char <- function(x, ...){
 #' @title format numeric cells
 #' @description Format numeric cells in a flextable.
 #' @inheritParams colformat_char
-#' @param big.mark,digits see \code{\link[base]{formatC}}
+#' @param big.mark,digits,decimal.mark see [formatC()]
 #' @family cells formatters
 #' @examples
 #' dat <- iris
@@ -127,7 +129,7 @@ colformat_num <- function(x, ...){
 #' @title format integer cells
 #' @description Format integer cells in a flextable.
 #' @inheritParams colformat_char
-#' @param big.mark see \code{\link[base]{formatC}}
+#' @param big.mark see [formatC()]
 #' @family cells formatters
 #' @export
 #' @examples
@@ -164,7 +166,9 @@ colformat_lgl <- function(x, ...){
 
 #' @export
 #' @rdname colformat_num
-colformat_num.flextable <- function(x, j = NULL, col_keys = NULL, big.mark=",", digits = 2, na_str = "", prefix = "", suffix = "", ...){
+colformat_num.flextable <- function(x, j = NULL, col_keys = NULL, big.mark=",",
+                                    decimal.mark = getOption("OutDec"),
+                                    digits = 2, na_str = "", prefix = "", suffix = "", ...){
 
   if(!is.null(col_keys)){
     warning("argument col_keys is deprecated in favor of argument j")
@@ -172,7 +176,7 @@ colformat_num.flextable <- function(x, j = NULL, col_keys = NULL, big.mark=",", 
   }
 
   fun_ <- function(x) {
-    out <- paste0(prefix, formatC(x, format="f", big.mark=big.mark, digits = digits), suffix )
+    out <- paste0(prefix, formatC(x, format="f", big.mark=big.mark, digits = digits, decimal.mark = decimal.mark), suffix )
     ifelse(is.na(x), na_str, out)
   }
   docall_display(j, fun_, x, ...)

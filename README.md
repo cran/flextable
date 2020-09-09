@@ -3,22 +3,16 @@ flextable R package
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-[![Build
-Status](https://travis-ci.org/davidgohel/flextable.svg?branch=master)](https://travis-ci.org/davidgohel/flextable)
-[![Build
-status](https://ci.appveyor.com/api/projects/status/github/davidgohel/flextable?branch=master)](https://ci.appveyor.com/project/davidgohel/flextable/branch/master)
-[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/flextable)](https://cran.r-project.org/package=flextable)
-![cranlogs](http://cranlogs.r-pkg.org./badges/flextable) [![Project
-Status: Active – The project has reached a stable, usable state and is
-being actively
-developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
+[![R build
+status](https://github.com/davidgohel/flextable/workflows/R-CMD-check/badge.svg)](https://github.com/davidgohel/flextable/actions)
+[![version](https://www.r-pkg.org/badges/version/flextable)](https://CRAN.R-project.org/package=flextable)
+![cranlogs](https://cranlogs.r-pkg.org/badges/flextable) [![codecov test
+coverage](https://codecov.io/gh/davidgohel/flextable/branch/master/graph/badge.svg)](https://codecov.io/gh/davidgohel/flextable)
+![Active](https://www.repostatus.org/badges/latest/active.svg)
+[![Lifecycle:
+maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 
-<p align="center">
-
-<img width="15%" src="https://www.ardata.fr/img/hexbin/flextable.svg">
-
-</p>
-
+<a href="https://github.com/davidgohel/flextable"><img src="man/figures/logo.png" alt="flextable logo" align="right" /></a>.
 The flextable package provides a framework for easily create tables for
 reporting and publications. Tables can be embedded within:
 
@@ -30,6 +24,8 @@ reporting and publications. Tables can be embedded within:
 
 Tables can also be rendered as R plots or graphic files (png, pdf and
 jpeg).
+
+**Documentation**: <https://davidgohel.github.io/flextable/>
 
 ## Getting Started
 
@@ -53,7 +49,7 @@ to start quickly:
     reference](https://davidgohel.github.io/flextable/reference/index.html)
 
 The help pages can be read
-[here](https://davidgohel.github.io/flextable).
+[here](https://davidgohel.github.io/flextable/).
 
 ### Installation
 

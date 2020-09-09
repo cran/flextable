@@ -61,6 +61,13 @@ ft <- align(ft, align = "center", part = "body")
 ft
 
 ## -----------------------------------------------------------------------------
+ft <- flextable(head(mtcars))
+line_spacing(ft, space = 1)
+
+## -----------------------------------------------------------------------------
+line_spacing(ft, space = 1.5)
+
+## -----------------------------------------------------------------------------
 library(officer)
 big_border = fp_border(color="orange", width = 2)
 border_v = fp_border(color="gray")

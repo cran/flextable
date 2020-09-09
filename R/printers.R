@@ -17,7 +17,7 @@ flextable_html_dependency <- function(){
 #' @export
 #' @title flextable as a div object
 #'
-#' @description get a \code{\link[htmltools]{div}} from a flextable object.
+#' @description get a [div()] from a flextable object.
 #' This can be used in a shiny application.
 #'
 #' Argument `ft.align` can be specified also as knitr chunk options.
@@ -219,7 +219,7 @@ print.flextable <- function(x, preview = "html", ...){
 #' Position should be defined with options \code{ft.left}
 #' and \code{ft.top}. Theses are the top left coordinates
 #' of the placeholder that will contain the table. They
-#' default to \code{{r ft.left=1, ft.left=2}}.
+#' default to \code{{r ft.left=1, ft.top=2}}.
 #'
 #' @section PDF chunk options:
 #'
@@ -331,7 +331,7 @@ knit_print.flextable <- function(x, ...){
     }
 
   } else if (grepl( "pptx", opts_knit$get("rmarkdown.pandoc.to") ) ) {
-    if (pandoc_version() < 2.4) {
+    if (pandoc_version() < numeric_version("2.4")) {
       stop("pandoc version >= 2.4 required for printing flextable in pptx")
     }
 
@@ -358,30 +358,31 @@ knit_print.flextable <- function(x, ...){
 }
 
 #' @export
-#' @title save a flextable in an HTML file
+#' @title Save a Flextable in an HTML File
 #' @description save a flextable in an HTML file. This function
 #' is useful to save the flextable in HTML file without using
 #' R Markdown (it is highly recommanded to use R Markdown
 #' instead).
 #' @param x a flextable object
 #' @param path HTML file to be created
+#' @param encoding encoding to be used in the HTML file
 #' @examples
 #' ft <- flextable( head( mtcars ) )
 #' tf <- tempfile(fileext = ".html")
 #' save_as_html(ft, tf)
 #' @family flextable print function
-save_as_html <- function(x, path){
+save_as_html <- function(x, path, encoding = "utf-8"){
 
   if( !inherits(x, "flextable"))
     stop("x is not a flextable")
 
-  str <- paste('<!DOCTYPE htm><html><head>',
-  '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />',
+  str <- c('<!DOCTYPE htm><html><head>',
+  sprintf('<meta http-equiv="Content-Type" content="text/html; charset=%s"/>', encoding),
   '<meta name="viewport" content="width=device-width, initial-scale=1.0"/>',
   '<title>', deparse(substitute(x)), '</title></head>',
-  '<body>', html_str(x),
+  '<body style="background-color:transparent;">', html_str(x),
   '</body></html>')
-  cat(str, file = path)
+  writeLines(str, path, useBytes = TRUE)
   invisible(path)
 }
 

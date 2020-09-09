@@ -1,3 +1,22 @@
+# flextable 0.5.11
+
+## Changes
+
+* HTML code is now minimized as CSS styles are now used instead of inline CSS.
+
+## new features
+
+* save_as_html now accepts argument `encoding`
+* line spacing (for Word and PowerPoint) or line height (for  HTML) can now be
+defined with function `line_spacing()` (or with function `style()`).
+
+## Issues
+
+* selection when i or j was integer(0) was resulting to all rows, it's now fixed. To
+select all rows or columns, use `i = NULL` or `j = NULL`, to select none, `i = integer(0)` or
+`j = integer(0)`.
+* tab were not displayed when output was HTML
+
 # flextable 0.5.10
 
 ## new features

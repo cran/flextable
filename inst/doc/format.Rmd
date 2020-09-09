@@ -1,5 +1,5 @@
 ---
-title: "flextable formatting"
+title: "Format flextable objects"
 output: 
   rmarkdown::html_vignette:
     toc: true 
@@ -189,6 +189,31 @@ ft
 
 </div>
 
+
+### Line spacing
+
+Line scaping can be defined with function `line_spacing()`.
+
+<div class="row">
+
+<div class="col-12 col-sm-8 col-md-6">
+
+```{r}
+ft <- flextable(head(mtcars))
+line_spacing(ft, space = 1)
+```
+
+</div>
+
+<div class="col-12 col-sm-8 col-md-6">
+
+```{r}
+line_spacing(ft, space = 1.5)
+```
+
+</div>
+
+</div>
 
 ## Borders
 

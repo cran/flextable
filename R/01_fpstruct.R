@@ -96,22 +96,12 @@ as.data.frame.text_struct <- function(object, ...){
   data$col_id <- factor(data$col_id, levels = object$color$keys)
   data
 }
-as_fp_text_list <- function(x, i, j){
-  props_split <- mapply(function(z, colname, i, j){
-    out <- as.vector(z$data[i, z$keys[j] , drop = FALSE])
-    as.list(out)
-  }, x, names(x), MoreArgs = list( i = i, j = j ), SIMPLIFY = FALSE)
-  props_split$FUN <- fp_text
-  props_split$SIMPLIFY <- FALSE
-  props_split$USE.NAMES <- TRUE
-  do.call(mapply, props_split)
-}
-
 
 
 # par_struct -----
 par_struct <- function( nrow, keys,
                         text.align = "left",
+                        line_spacing = 1,
                         padding.bottom = 0, padding.top = 0,
                         padding.left = 0, padding.right = 0,
                         border.width.bottom = 0, border.width.top = 0, border.width.left = 0, border.width.right = 0,
@@ -126,6 +116,8 @@ par_struct <- function( nrow, keys,
     padding.top = fpstruct(nrow = nrow, keys = keys, default = padding.top),
     padding.left = fpstruct(nrow = nrow, keys = keys, default = padding.left),
     padding.right = fpstruct(nrow = nrow, keys = keys, default = padding.right),
+
+    line_spacing = fpstruct(nrow = nrow, keys = keys, default = line_spacing),
 
     border.width.bottom = fpstruct(nrow = nrow, keys = keys, default = border.width.bottom),
     border.width.top = fpstruct(nrow = nrow, keys = keys, default = border.width.top),
@@ -233,15 +225,16 @@ add_parstyle_column <- function(x, type = "html", text.direction, valign){
     padding.left <- sprintf("padding-left:%s;", css_px(x$padding.left) )
     padding.right <- sprintf("padding-right:%s;", css_px(x$padding.right) )
 
+    line_spacing <- sprintf("line-height: %.2f;", x$line_spacing )
+
     style_column <- paste0("style=\"margin:0;", textalign, textdir, bb, bt, bl, br,
-                           padding.bottom, padding.top, padding.left, padding.right, shading, "\"" )
+                           padding.bottom, padding.top, padding.left, padding.right,
+                           line_spacing, shading, "\"" )
   } else if( type %in% "wml"){
 
     shading <- ifelse( colalpha(x$shading.color) > 0,
             sprintf("<w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"%s\"/>", colcode0(x$shading.color) ),
             "")
-
-    # shading <- sprintf("<w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"%s\"/>", colcode0(x$shading.color) )
 
     textalign <- ifelse( x$text.align %in% "justify", "<w:jc w:val=\"both\"/>", sprintf("<w:jc w:val=\"%s\"/>", x$text.align) )
 
@@ -258,8 +251,10 @@ add_parstyle_column <- function(x, type = "html", text.direction, valign){
       color = x$border.color.right, width = x$border.width.right,
       style = x$border.style.right, side = "right")
 
-    padding <- sprintf("<w:spacing w:after=\"%.0f\" w:before=\"%.0f\"/><w:ind w:firstLine=\"0\" w:left=\"%.0f\" w:right=\"%.0f\"/>",
-                       x$padding.bottom*20, x$padding.top*20, x$padding.left*20, x$padding.right*20 )
+    padding <- sprintf("<w:spacing w:after=\"%.0f\" w:before=\"%.0f\" w:line=\"%.0f\"/><w:ind w:firstLine=\"0\" w:left=\"%.0f\" w:right=\"%.0f\"/>",
+                       x$padding.bottom*20, x$padding.top*20,
+                       x$line_spacing*240,
+                       x$padding.left*20, x$padding.right*20 )
 
     style_column <- paste0("<w:pPr>", textalign, bb, bt, bl, br,
                            padding, shading, "</w:pPr>" )
@@ -270,8 +265,8 @@ add_parstyle_column <- function(x, type = "html", text.direction, valign){
                                  ifelse( x$text.align %in% "justify", " algn=\"just\"",
                                          " algn=\"r\"") ) )
 
-    padding <- sprintf(" marL=\"%.0f\" marR=\"%.0f\"><a:spcBef><a:spcPts val=\"%.0f\" /></a:spcBef><a:spcAft><a:spcPts val=\"%.0f\" /></a:spcAft>",
-                       x$padding.left*12700, x$padding.right*12700, x$padding.top*100, x$padding.bottom*100 )
+    padding <- sprintf(" marL=\"%.0f\" marR=\"%.0f\"><a:lnSpc><a:spcPct val=\"%.0f\"/></a:lnSpc><a:spcBef><a:spcPts val=\"%.0f\" /></a:spcBef><a:spcAft><a:spcPts val=\"%.0f\" /></a:spcAft>",
+                       x$padding.left*12700, x$padding.right*12700, x$line_spacing*100000, x$padding.top*100, x$padding.bottom*100 )
 
     style_column <- paste0("<a:pPr", textalign, padding, "<a:buNone/>", "</a:pPr>" )
   }
@@ -814,6 +809,7 @@ run_data <- function(x, type){
   } else if( type %in% "html" ){
 
     text_nodes_str <-  gsub("\n", "<br>", htmlEscape(x$txt))
+    text_nodes_str <-  gsub("\t", "&emsp;", text_nodes_str)
 
     # manage text
     str <- character(nrow(x))
