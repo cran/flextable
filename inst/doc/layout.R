@@ -135,15 +135,14 @@ ft <- fix_border_issues(ft)
 ## ----echo=FALSE---------------------------------------------------------------
 ft
 
-## ----eval=FALSE---------------------------------------------------------------
-#  library(flextable)
-#  ft <- qflextable(head(cars))
-#  set_table_properties(ft, width = .5, layout = "autofit")
-#  set_table_properties(ft, width = 1, layout = "autofit")
+## -----------------------------------------------------------------------------
+ft <- qflextable(head(airquality))
+set_table_properties(ft, width = .5, layout = "autofit")
+set_table_properties(ft, width = 1, layout = "autofit")
 
 ## -----------------------------------------------------------------------------
 ft_base <- flextable(head(mtcars))
-ft_base <- theme_vader(ft_base, fontsize = 13)
+ft_base <- theme_vader(ft_base)
 ft_base
 dim(ft_base)
 
@@ -157,9 +156,11 @@ dim(ft)
 ft
 
 ## -----------------------------------------------------------------------------
-ft <- autofit(ft_base)
-ft <- width(ft, j = ~ mpg + cyl + disp, width = 2)
-ft <- height_all( ft, height = .4 )
+ft <- hrule(ft, rule = "exact")
+ft <- valign(ft, valign = "top")
+ft <- width(ft, width = .5)
+ft <- width(ft, j = ~ mpg + disp, width = 1.5)
+ft <- height_all( ft, height = .6 )
 ft <- height( ft, i = 3, height = 1 )
 ft
 

@@ -10,14 +10,29 @@ theme_vanilla(x)
 \item{x}{a flextable object}
 }
 \description{
-Apply theme vanilla to a flextable
+Apply theme vanilla to a flextable:
+The external horizontal lines of the different parts of
+the table (body, header, footer) are black 2 points thick,
+the external horizontal lines of the different parts
+are black 0.5 point thick. Header text is bold,
+text columns are left aligned, other columns are
+right aligned.
 }
+\section{Illustrations}{
+
+
+\if{html}{\figure{fig_theme_vanilla_1.png}{options: width=60\%}}
+}
+
 \examples{
-ftab <- flextable(iris)
-ftab <- theme_vanilla(ftab)
+ft <- flextable(head(airquality))
+ft <- theme_vanilla(ft)
+ft
 }
 \seealso{
-Other flextable theme: 
+Other functions related to themes: 
+\code{\link{get_flextable_defaults}()},
+\code{\link{set_flextable_defaults}()},
 \code{\link{theme_alafoli}()},
 \code{\link{theme_booktabs}()},
 \code{\link{theme_box}()},
@@ -26,4 +41,4 @@ Other flextable theme:
 \code{\link{theme_vader}()},
 \code{\link{theme_zebra}()}
 }
-\concept{flextable theme}
+\concept{functions related to themes}

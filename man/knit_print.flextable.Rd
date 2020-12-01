@@ -13,71 +13,92 @@
 }
 \description{
 Function used to render flextable in knitr/rmarkdown documents.
-HTML, Word and PowerPoint outputs are supported.
+
+You should not call this method directly. This function is used by the knitr
+package to automatically display a flextable in an "R Markdown" document from
+a chunk. However, it is recommended to read its documentation in order to get
+familiar with the different options available.
+\if{html}{\figure{fig_formats.png}{options: width=200px}} HTML, Word, PowerPoint and PDF outputs are supported.
+
+Table captioning is a flextable feature compatible with R Markdown
+documents. The feature is available for HTML, PDF and Word documents.
+Compatibility with the "bookdown" package is also ensured, including the
+ability to produce captions so that they can be used in cross-referencing.
 }
 \note{
-For Word (docx) output, if pandoc version >= 2.0 is used, a raw XML block
-with the table code will be inserted. If pandoc version < 2.0 is used, an
-error will be raised. Insertion of images is not supported
-with rmarkdown for Word documents (use the package officedown instead).
-For PowerPoint (pptx) output, if pandoc version < 2.4 is used, an error
-will be raised.
+Supported formats require some
+minimum \href{https://pandoc.org/installing.html}{pandoc} versions:
+
+\tabular{rc}{
+\strong{Output format} \tab \strong{pandoc minimal version} \cr
+HTML              \tab >= 1.12\cr
+Word (docx)       \tab >= 2.0 \cr
+PowerPoint (pptx) \tab >= 2.4 \cr
+PDF               \tab >= 1.12
 }
-\section{HTML chunk options}{
-
-Result can be aligned with chunk option \code{ft.align} that
-accepts values 'left', 'center' and 'right'.
 }
+\section{Chunk options}{
 
-\section{Word chunk options}{
 
-Result can be aligned with chunk option \code{ft.align} that
-accepts values 'left', 'center' and 'right'.
+Some features, often specific to an output format, are available to help you
+configure some global settings relatve to the table output. knitr's chunk options
+are to be used to change the default settings:
 
-Word option 'Allow row to break across pages' can be
-activated with chunk option \code{ft.split} set to TRUE.
-
-Table captioning is a flextable feature compatible with knitr. Three methods are available and are presented below in order of triggering:
-\itemize{
-\item with the \code{set_caption} function, if the function is used, this definition will be chosen.
-\item with knitr's chunk options:
-\itemize{
-\item \code{tab.cap.style}: Word style name to use for table captions.
-\item \code{tab.cap.pre}: Prefix for numbering chunk (default to "Table").
-\item \code{tab.cap.sep}: Suffix for numbering chunk (default to ": ").
-\item \code{tab.cap}: Caption label.
-\item \code{tab.id}: Caption reference unique identifier.
-}
-\item with knitr chunk and bookdown options (if you're in a bookdown):
-\itemize{
-\item \code{tab.cap.style}: Word style name to use for table captions.
-\item \code{tab.cap.pre}: Prefix for numbering chunk (default to "Table").
-\item \code{tab.cap.sep}: Suffix for numbering chunk (default to ": ").
-\item \code{tab.cap}: Caption label.
-\item \code{label}: Caption reference unique identifier.
-}
+\tabular{lcccccc}{
+\strong{chunk option} \tab \strong{property} \tab \strong{default value} \tab \strong{HTML} \tab \strong{docx} \tab \strong{PDF} \tab \strong{pptx} \cr
+ft.align        \tab flextable alignment, supported values are 'left', 'center' and 'right'    \tab 'center' \tab yes \tab yes \tab yes \tab no \cr
+ft.split        \tab Word option 'Allow row to break across pages' can be activated when TRUE. \tab FALSE    \tab no  \tab yes \tab no  \tab no \cr
+ft.tabcolsep    \tab space between the text and the left/right border of its containing cell   \tab 8.0      \tab no  \tab no  \tab yes \tab no \cr
+ft.arraystretch \tab height of each row relative to its default height                         \tab 1.5      \tab no  \tab no  \tab yes \tab no \cr
+ft.left         \tab left coordinates in inches                                                \tab 1.0      \tab no  \tab no  \tab no  \tab yes\cr
+ft.top          \tab top coordinates in inches                                                 \tab 2.0      \tab no  \tab no  \tab no  \tab yes
 }
 }
 
-\section{PowerPoint chunk options}{
+\section{Table caption}{
 
-Position should be defined with options \code{ft.left}
-and \code{ft.top}. Theses are the top left coordinates
-of the placeholder that will contain the table. They
-default to \code{{r ft.left=1, ft.top=2}}.
+
+Captions can be defined in two ways.
+
+The first is with the \code{set_caption} function. If it is used,
+the other method will be ignored. The second method is by using
+knitr chunk option \code{tab.cap}.\preformatted{set_caption(x, caption = "my caption")
 }
 
-\section{PDF chunk options}{
+If \code{set_caption} function is not used, caption identifier will be
+read from knitr's chunk option \code{tab.id} or \code{label} if in a bookdown
+(this is to respect the bookdown standards).
+
+\code{tab.id='my_id'} or \code{label='my_id'}
+
+Word output provide more options such as ability to choose the prefix for numbering chunk for
+example. The table below expose these options:
+
+\tabular{llll}{
+\strong{chunk option} \tab \strong{purpose} \tab \strong{rmarkdown} \tab \strong{bookdown} \cr
+tab.cap.style \tab (Word only) style name to use for table captions            \tab yes \tab yes\cr
+tab.cap.pre   \tab (Word only) Prefix for numbering chunk (default to "Table") \tab yes \tab yes\cr
+tab.cap.sep   \tab (Word only) Suffix for numbering chunk (default to ": ")    \tab yes \tab yes\cr
+tab.cap       \tab \strong{Caption label}                                      \tab yes \tab yes\cr
+tab.id        \tab \strong{Caption reference unique identifier}                \tab yes \tab no \cr
+label         \tab \strong{Caption reference unique identifier}                \tab no  \tab yes
+}
+}
+
+\section{PDF output}{
 
 
-Using flextable with template \code{pdf_document} is OK if the
-flextable fits on one single page. The PDF output is not
-a real latex output but a PNG image generated with package
-'webshot' or package 'webshot2'. Package 'webshot2' should
-be prefered as 'webshot' can have issues with some properties
-(i.e. bold are not rendered for some users).
+Some features are not implemented in PDF due to technical
+infeasibility. These are the padding, line_spacing and
+height properties.
+}
 
-To specify usage of 'webshot2', use chunk option \code{webshot="webshot2"}.
+\section{PowerPoint output}{
+
+
+Auto-adjust Layout is not available for PowerPoint.
+
+Also images cannot be integrated into tables with the PowerPoint format.
 }
 
 \examples{
@@ -99,28 +120,56 @@ if(require("rmarkdown", quietly = TRUE)){
 }
 
 
-# looping examples for Word output -----
-demo_loop <- system.file(package = "flextable", "examples/rmd", "loop_docx.Rmd")
-rmd_file <- tempfile(fileext = ".Rmd")
-file.copy(demo_loop, to = rmd_file, overwrite = TRUE)
-rmd_file # R Markdown document used for demo
-if(require("rmarkdown", quietly = TRUE)){
-#  render(input = rmd_file, output_format = "word_document", output_file = "loop_docx.docx")
-}
+## bookdown examples wth captions and cross ref -----
+# captions_example <- system.file(
+#   package = "flextable",
+#   "examples/rmd", "captions_example.Rmd")
+#
+# dir_tmp <- tempfile(pattern = "dir")
+# dir.create(dir_tmp, showWarnings = FALSE, recursive = TRUE)
+# file.copy(captions_example, dir_tmp)
+# rmd_file <- file.path(dir_tmp, basename(captions_example))
+#
+# file.copy(captions_example, to = rmd_file, overwrite = TRUE)
+#
+# if(require("rmarkdown", quietly = TRUE)){
+#   render(input = rmd_file,
+#          output_format = word_document(),
+#          output_file = "doc.docx")
+#   render(input = rmd_file,
+#          output_format = pdf_document(latex_engine = "xelatex"),
+#          output_file = "doc.pdf")
+#   render(input = rmd_file,
+#          output_format = html_document(),
+#          output_file = "doc.html")
+#
+#   # bookdown ----
+#   if(require("bookdown", quietly = TRUE)){
+#     render(input = rmd_file, output_format = word_document2(),
+#            output_file = "book.docx")
+#     render(input = rmd_file,
+#            output_format = pdf_document2(latex_engine = "xelatex"),
+#            output_file = "book.pdf")
+#     render(input = rmd_file,
+#            output_format = html_document2(),
+#            output_file = "book.html")
+#
+#     # officedown ----
+#     if(require("officedown", quietly = TRUE)){
+#       render(input = rmd_file,
+#              output_format = markdown_document2(base_format=rdocx_document),
+#              output_file = "officedown.docx")
+#     }
+#   }
+# }
+# browseURL(dirname(rmd_file))
 
-# looping examples for HTML output -----
-demo_loop <- system.file(package = "flextable", "examples/rmd", "loop_html.Rmd")
-rmd_file <- tempfile(fileext = ".Rmd")
-file.copy(demo_loop, to = rmd_file, overwrite = TRUE)
-rmd_file # R Markdown document used for demo
-if(require("rmarkdown", quietly = TRUE)){
-#  render(input = rmd_file, output_format = "html_document", output_file = "loop_html.html")
-}
+
 }
 \seealso{
 Other flextable print function: 
 \code{\link{as_raster}()},
-\code{\link{docx_value}()},
+\code{\link{flextable_to_rmd}()},
 \code{\link{htmltools_value}()},
 \code{\link{plot.flextable}()},
 \code{\link{print.flextable}()},
@@ -128,8 +177,5 @@ Other flextable print function:
 \code{\link{save_as_html}()},
 \code{\link{save_as_image}()},
 \code{\link{save_as_pptx}()}
-}
-\author{
-Maxim Nazarov
 }
 \concept{flextable print function}

@@ -10,6 +10,9 @@ knitr::opts_chunk$set(
   eval = !is.null(knitr::opts_knit$get("rmarkdown.pandoc.to"))
 )
 
+## ---- echo = FALSE, out.width="50%"-------------------------------------------
+knitr::include_graphics("../man/figures/fig_formats.png")
+
 ## -----------------------------------------------------------------------------
 data <- iris[c(1:3, 51:53, 101:104),]
 data
@@ -54,9 +57,13 @@ myft
 myft <- merge_v(myft, j = c("am", "carb") )
 myft <- set_header_labels( myft, carb = "# carb." )
 myft <- autofit(myft)
+myft <- theme_vader(myft)
 myft
 
 ## -----------------------------------------------------------------------------
+myft <- theme_vanilla(myft)
+myft <- color(myft, color = "black", part = "all")
+myft <- bg(myft, bg = "transparent", part = "all")
 myft <- italic(myft, j = 1)
 myft <- bg(myft, bg = "#C90000", part = "header")
 myft <- color(myft, color = "white", part = "header")
@@ -94,10 +101,12 @@ knitr::knit_print(knitr::asis_output(as.character(code)))
 ## ----eval=FALSE---------------------------------------------------------------
 #  docx_file <- tempfile(fileext = ".docx")
 #  pptx_file <- tempfile(fileext = ".pptx")
+#  html_file <- tempfile(fileext = ".html")
 #  # docx_file <- "example.docx"
 #  # pptx_file <- "example.pptx"
 #  save_as_docx("my table" = ft, path = docx_file)
 #  save_as_docx("my table" = ft, path = pptx_file)
+#  save_as_html("my table" = ft, path = html_file, title = "example")
 
 ## ----eval=FALSE---------------------------------------------------------------
 #  print(ft, preview = "docx")

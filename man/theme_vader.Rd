@@ -2,24 +2,33 @@
 % Please edit documentation in R/themes.R
 \name{theme_vader}
 \alias{theme_vader}
-\title{Apply Sith Lord Darth Vader}
+\title{Apply Sith Lord Darth Vader theme}
 \usage{
-theme_vader(x, fontsize = 11)
+theme_vader(x, ...)
 }
 \arguments{
 \item{x}{a flextable object}
 
-\item{fontsize}{font size in pixel}
+\item{...}{unused}
 }
 \description{
 Apply Sith Lord Darth Vader theme to a flextable
 }
+\section{Illustrations}{
+
+
+\if{html}{\figure{fig_theme_vader_1.png}{options: width=60\%}}
+}
+
 \examples{
-ftab <- flextable(iris)
-ftab <- theme_vader(ftab)
+ft <- flextable(head(airquality))
+ft <- theme_vader(ft)
+ft
 }
 \seealso{
-Other flextable theme: 
+Other functions related to themes: 
+\code{\link{get_flextable_defaults}()},
+\code{\link{set_flextable_defaults}()},
 \code{\link{theme_alafoli}()},
 \code{\link{theme_booktabs}()},
 \code{\link{theme_box}()},
@@ -28,4 +37,4 @@ Other flextable theme:
 \code{\link{theme_vanilla}()},
 \code{\link{theme_zebra}()}
 }
-\concept{flextable theme}
+\concept{functions related to themes}

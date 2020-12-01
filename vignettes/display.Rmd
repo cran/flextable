@@ -25,6 +25,10 @@ library(flextable)
 library(htmltools)
 ```
 
+```{r}
+set_flextable_defaults(font.size = 14, table.layout = "fixed")
+```
+
 
 By default, the displayed content of each cell will be the 
 result of a simple formatting. The content can also be 
@@ -63,8 +67,8 @@ ft
 num_keys <- c("mpg", "disp", "drat", "wt", "qsec")
 int_keys <- c("cyl", "hp", "vs", "am", "gear", "carb")
 
-ft <- colformat_num(x = ft, col_keys = num_keys, big.mark = ",", digits = 2, na_str = "missing")
-ft <- colformat_int(x = ft, col_keys = int_keys, big.mark = ",")
+ft <- colformat_num(x = ft, j = num_keys, big.mark = ",", digits = 2, na_str = "missing")
+ft <- colformat_int(x = ft, j = int_keys, big.mark = ",")
 autofit(ft)
 ```
 
@@ -87,7 +91,6 @@ ft <- set_formatter(ft,
     mpg = function(x) sprintf("%.04f", x),
     gear = function(x) sprintf("%.0f gears", x)
   )
-ft <- theme_booktabs(ft)
 ft <- autofit(ft)
 ft
 ```
@@ -132,7 +135,7 @@ myft <- compose(
   myft, j = "mpg", 
   value = as_paragraph(
     "mpg value is ", 
-    as_chunk(sprintf("%.01f", mpg), props = fp_text(color = "red", bold = TRUE) ) )
+    as_chunk(sprintf("%.01f", mpg), props = fp_text(color = "red", bold = TRUE, font.size = 14) ) )
   )
 myft <- autofit(myft)
 myft
@@ -145,9 +148,9 @@ myft <- compose(
   myft, j = "mpg", 
   value = as_paragraph(
     "mpg value is ", 
-    as_chunk(sprintf("%.01f", mpg), props = fp_text(color = "red", bold = TRUE) ), 
+    as_chunk(sprintf("%.01f", mpg), props = fp_text(color = "red", bold = TRUE, font.size = 14) ), 
     " with ",
-    as_chunk(sprintf("# %.0f", carb), props = fp_text(color = "gray", italic = TRUE) )
+    as_chunk(sprintf("# %.0f", carb), props = fp_text(color = "gray", italic = TRUE, font.size = 14) )
     )
   )
 
@@ -162,7 +165,7 @@ myft <- compose(
   myft, j = "mpg", part = "header",
   value = as_paragraph(
     "Miles/(US) gallon ", 
-    as_chunk("* with num of carb.", props = fp_text(color = "gray", vertical.align = "superscript") )
+    as_chunk("* with num of carb.", props = fp_text(color = "gray", vertical.align = "superscript", font.size = 14) )
     )
   )
 
@@ -257,14 +260,13 @@ ft
 
 ## Captions
 
-Captions are supported for HTML and Word output (also from a bookdown project
+Captions are supported for HTML, PDF and Word output (also from a bookdown project
 with its specificities taken into account).
 
-Capacities are different from one format to another. For the Word part, we can
+Capacities are different from one format to another. For the Word format, we can
 produce real auto-numbered captions with a bookmark on the automatic number
 which can then be used as a reference, i.e. for cross-referencing. For the HTML
-part, you can produce real captions but without the auto-numbering.
-
+and PDF formats, you can produce real captions but without the auto-numbering.
 Of course, in a bookdown, we benefit from the cross reference capabilities.
 
 The recommended method to set a caption is via the function `set_caption`. If
@@ -295,7 +297,7 @@ triggering:
 caption {
   color:red;
   line-height: 1.5em;
-  font-size: 10px;
+  font-size: 14px;
 }
 ```
 

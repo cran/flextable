@@ -1,3 +1,34 @@
+# flextable 0.6.0
+
+## new features
+
+* flextable now supports PDF/latex output format.
+* new function `highlight()` for text highlighting color
+* new function `set_flextable_defaults()` to set some default 
+formatting properties, i.e. default border color, font color, padding, decimal.mark ...
+* `save_as_docx` gained a new argument `pr_section` to define page 
+layout with section properties, `save_as_html` can now output more than 
+a single table.
+* `colformat_` functions now use default values and filter columns that 
+are irrelevant (i.e. if colformat_num, only numeric values are formatted). 
+Also, new `colformat_` functions have been implemented (`colformat_date`, `colformat_datetime`
+and `colformat_double`).
+* new functions `plot_chunk` and `gg_chunk` to add miniplots or ggplots into a flextable
+
+## changes
+
+* defunct of `ph_with_flextable()`
+* use pandoc's raw attribute when possible within "R Markdown" documents.
+
+## Issues
+
+* fix bug in HTML output with invalid css when locale makes decimal separator not `.`
+* `fix_border_issues` is the last instruction of all theme functions so that borders 
+are corrected if some cells have been merged.
+* caption was always printed in bookdown and now it's conditionned by 
+testing if `tab_props$cap` has a value.
+* fix missing tfoot tag in HTML output
+
 # flextable 0.5.11
 
 ## Changes

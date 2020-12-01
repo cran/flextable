@@ -33,9 +33,9 @@ and specify how data should be displayed in cells. Tables content can also
 contain mixed type of content, text and images.
 
 
-
-![](../man/figures/fig_formats.png)
-
+```{r, echo = FALSE, out.width="50%"}
+knitr::include_graphics("../man/figures/fig_formats.png")
+```
 
 
 
@@ -121,13 +121,14 @@ myft
 
 Table layout can be modified. One can add or change header/footer rows, change cells height and width and merge cells. 
 
-Also, there is an important function named `autofit` (it adjusts widths and heights regarding to text widths and heights).
+Also, there is an important function named `autofit` (it adjusts widths and heights regarding to text widths and heights). 
 
 
 ```{r warning=FALSE}
 myft <- merge_v(myft, j = c("am", "carb") )
 myft <- set_header_labels( myft, carb = "# carb." )
 myft <- autofit(myft)
+myft <- theme_vader(myft)
 myft
 ```
 
@@ -143,6 +144,9 @@ Many sugar functions can be used to format flextables: `bg()`, `fontsize()`, `it
 Conditional formatting can be made by using the selector arguments. All formatting functions are accepting selector arguments. 
 
 ```{r}
+myft <- theme_vanilla(myft)
+myft <- color(myft, color = "black", part = "all")
+myft <- bg(myft, bg = "transparent", part = "all")
 myft <- italic(myft, j = 1)
 myft <- bg(myft, bg = "#C90000", part = "header")
 myft <- color(myft, color = "white", part = "header")
@@ -164,7 +168,9 @@ part is not implemented by default.
 
 
 * Any formatting property related to text, paragraphs, 
-cells in the table can be modified. 
+cells in the table can be modified. Lot of default values 
+are available with function `get_flextable_defaults()` and 
+can be updated with function `set_flextable_defaults()`.
 
 * A cell is made of one single paragraph of text. Paragraphs 
 can contain several chunks of text with different formatting 
@@ -185,7 +191,8 @@ contain blanks by default but this content can be customized.
 
 ## Flextable rendering
 
-When working in RStudio, flextable will be printed in the rstudio viewer pane, the default format is HTML output. 
+**When working in RStudio, flextable will be printed in the rstudio 
+viewer pane, the default format is HTML output. **
 
 We will use the following example:
 
@@ -232,20 +239,13 @@ knitr::knit_print(knitr::asis_output(as.character(code)))
 
 Supported formats require some minimum [pandoc](https://pandoc.org/installing.html) versions: 
 
-|                    R Markdown output | pandoc version |                 comment                |
-|-------------------------------------:|:--------------:|:--------------------------------------:|
-|                  `rmarkdown::html_*` |     >= 1.12    |                                        |
-|           `rmarkdown::word_document` |     >= 2.0     | require a recent RStudio (> june 2018) |
-| `rmarkdown::powerpoint_presentation` |     >= 2.4     |       require pandoc installation      |
-|            `rmarkdown::pdf_document` |     >= 1.12    |  produces an image - limited support   |
+|     Output format | pandoc version |
+|------------------:|:--------------:|
+|              HTML |     >= 1.12    |
+|       Word (docx) |     >= 2.0     |
+| PowerPoint (pptx) |     >= 2.4     |
+|               PDF |     >= 1.12    |
 
-#### Notes about PDF
-
-* Using flextable with template `pdf_document` is OK if the flextable fits on one single page. 
-The PDF output is not a real latex output but a PNG image.
-* The best option to produce PDF documents containing flextable objects is by using 
-package `pagedown`. The only current known limitation is the inability to repeat header 
-rows along pages when the table need more than a page. 
 
 #### Notes about rmarkdown::word_document
 
@@ -259,20 +259,37 @@ in the main document but stores *references*. This is not managed by rmarkdown u
 If you don't add images or hyperlinks in a flextable rendered by `officedown::rdocx_document()` then
 you can forget about that. 
 
+#### Notes about rmarkdown::pdf_document
+
+The PDF version of the flextable ignore some features 
+of flextable, here is the list of unsupported/ignored options:
+
+* padding is not taken into account (it is instead recommended 
+to use the arguments `ft.tabcolsep` and `ft.arraystretch`), 
+* the borders can only be full (no dash for example),  
+* the height of the lines cannot be defined.
+
+In order to be able to change latex font in a flextable, 
+PDF engine should be specified by adding `latex_engine: xelatex` 
+in the YAML header of the R Markdown document. The default one 
+`pdflatex` does not enable the use of system fonts.
+
 ### PowerPoint or Word documents with officer
 
 #### Simple export
 
-Use function `save_as_docx` or `save_as_pptx` that lets users export flextable objects 
-to PowerPoint or Word documents.. 
+Use function `save_as_docx` or `save_as_pptx` that lets users export flextable
+objects to PowerPoint or Word documents. Note `save_as_html` is also available.
 
 ```{r eval=FALSE}
 docx_file <- tempfile(fileext = ".docx")
 pptx_file <- tempfile(fileext = ".pptx")
+html_file <- tempfile(fileext = ".html")
 # docx_file <- "example.docx"
 # pptx_file <- "example.pptx"
 save_as_docx("my table" = ft, path = docx_file)
 save_as_docx("my table" = ft, path = pptx_file)
+save_as_html("my table" = ft, path = html_file, title = "example")
 ```
 
 #### In an interactive session

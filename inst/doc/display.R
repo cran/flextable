@@ -11,6 +11,9 @@ library(flextable)
 library(htmltools)
 
 ## -----------------------------------------------------------------------------
+set_flextable_defaults(font.size = 14, table.layout = "fixed")
+
+## -----------------------------------------------------------------------------
 dat <- head(mtcars, n = 10)
 dat[3:7, 1] <- NA
 dat[, 2] <- dat[, 6] * 1000000
@@ -20,8 +23,8 @@ ft
 num_keys <- c("mpg", "disp", "drat", "wt", "qsec")
 int_keys <- c("cyl", "hp", "vs", "am", "gear", "carb")
 
-ft <- colformat_num(x = ft, col_keys = num_keys, big.mark = ",", digits = 2, na_str = "missing")
-ft <- colformat_int(x = ft, col_keys = int_keys, big.mark = ",")
+ft <- colformat_num(x = ft, j = num_keys, big.mark = ",", digits = 2, na_str = "missing")
+ft <- colformat_int(x = ft, j = int_keys, big.mark = ",")
 autofit(ft)
 
 ## -----------------------------------------------------------------------------
@@ -31,7 +34,6 @@ ft <- set_formatter(ft,
     mpg = function(x) sprintf("%.04f", x),
     gear = function(x) sprintf("%.0f gears", x)
   )
-ft <- theme_booktabs(ft)
 ft <- autofit(ft)
 ft
 
@@ -52,7 +54,7 @@ myft <- compose(
   myft, j = "mpg", 
   value = as_paragraph(
     "mpg value is ", 
-    as_chunk(sprintf("%.01f", mpg), props = fp_text(color = "red", bold = TRUE) ) )
+    as_chunk(sprintf("%.01f", mpg), props = fp_text(color = "red", bold = TRUE, font.size = 14) ) )
   )
 myft <- autofit(myft)
 myft
@@ -62,9 +64,9 @@ myft <- compose(
   myft, j = "mpg", 
   value = as_paragraph(
     "mpg value is ", 
-    as_chunk(sprintf("%.01f", mpg), props = fp_text(color = "red", bold = TRUE) ), 
+    as_chunk(sprintf("%.01f", mpg), props = fp_text(color = "red", bold = TRUE, font.size = 14) ), 
     " with ",
-    as_chunk(sprintf("# %.0f", carb), props = fp_text(color = "gray", italic = TRUE) )
+    as_chunk(sprintf("# %.0f", carb), props = fp_text(color = "gray", italic = TRUE, font.size = 14) )
     )
   )
 
@@ -76,7 +78,7 @@ myft <- compose(
   myft, j = "mpg", part = "header",
   value = as_paragraph(
     "Miles/(US) gallon ", 
-    as_chunk("* with num of carb.", props = fp_text(color = "gray", vertical.align = "superscript") )
+    as_chunk("* with num of carb.", props = fp_text(color = "gray", vertical.align = "superscript", font.size = 14) )
     )
   )
 

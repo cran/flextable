@@ -2,31 +2,23 @@
 % Please edit documentation in R/formatters.R
 \name{colformat_char}
 \alias{colformat_char}
-\alias{colformat_char.flextable}
 \title{format character cells}
 \usage{
-colformat_char(x, ...)
-
-\method{colformat_char}{flextable}(
+colformat_char(
   x,
+  i = NULL,
   j = NULL,
-  col_keys = NULL,
-  na_str = "",
+  na_str = get_flextable_defaults()$na_str,
   prefix = "",
-  suffix = "",
-  ...
+  suffix = ""
 )
 }
 \arguments{
 \item{x}{a flextable object}
 
-\item{...}{additional arguments, i can be used to specify a
-row selector.}
+\item{i}{rows selection}
 
 \item{j}{columns selection.}
-
-\item{col_keys}{names of the colkeys. Will be deprectated in favor of j in the next
-version.}
 
 \item{na_str}{string to be used for NA values}
 
@@ -35,21 +27,19 @@ version.}
 \description{
 Format character cells in a flextable.
 }
-\section{Illustrations}{
-
-
-\if{html}{\figure{fig_colformat_char_1.png}{options: width=50\%}}
-}
-
 \examples{
 dat <- iris
-ft <- flextable(head(dat))
+z <- flextable(head(dat))
 ft <- colformat_char(
-  x = ft, j = "Species", suffix = "!")
-ft <- autofit(ft)
+  x = z, j = "Species", suffix = "!")
+z <- autofit(z)
+z
 }
 \seealso{
 Other cells formatters: 
+\code{\link{colformat_datetime}()},
+\code{\link{colformat_date}()},
+\code{\link{colformat_double}()},
 \code{\link{colformat_int}()},
 \code{\link{colformat_lgl}()},
 \code{\link{colformat_num}()},

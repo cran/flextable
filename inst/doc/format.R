@@ -9,6 +9,16 @@ library(officer)
 library(flextable)
 
 ## -----------------------------------------------------------------------------
+as.data.frame(get_flextable_defaults())
+
+## -----------------------------------------------------------------------------
+set_flextable_defaults(
+  font.family = "Helvetica", font.size = 12, font.color = "black",
+  text.align = "left", 
+  table.layout = "fixed",
+  theme_fun = "theme_booktabs")
+
+## -----------------------------------------------------------------------------
 myft <- flextable(head(iris))
 myft
 
@@ -42,13 +52,18 @@ myft <- align( myft, align = "center", part = "all" )
 myft
 
 ## -----------------------------------------------------------------------------
-myft <- padding( myft, padding = 3, part = "all" )
+myft <- padding( myft, padding = 6, part = "all" )
 myft
 
 ## -----------------------------------------------------------------------------
 myft <- font(myft, j = "Species", fontname = "Times")
 myft <- fontsize(myft, j = "Species", size = 14)
 myft
+
+## -----------------------------------------------------------------------------
+ft <- flextable(head( mtcars, n = 10))
+ft <- highlight(ft, j = "disp", i = ~ disp > 200, color = "yellow")
+ft
 
 ## -----------------------------------------------------------------------------
 ft <- flextable(head(iris))
@@ -118,15 +133,49 @@ ft
 
 ## -----------------------------------------------------------------------------
 library(officer)
-def_cell <- fp_cell(border = fp_border(color="#00C9C9"))
 def_par <- fp_par(text.align = "center")
-def_text <- fp_text(color="#999999", italic = TRUE)
-def_text_header <- update(color="black", def_text, bold = TRUE)
+def_text <- fp_text(font.size = 13, italic = TRUE)
+def_text_header <- update(color="#c90000", def_text, bold = TRUE)
 
-ft <- flextable(head(mtcars, n = 10 ))
-ft <- style( ft, pr_c = def_cell, pr_p = def_par, pr_t = def_text, part = "all")  
+ft <- flextable(head(airquality))
 ft
 
-ft <- style( ft, pr_t = def_text_header, part = "header")  
+ft <- style(
+  x = ft, 
+  pr_p = def_par, pr_t = def_text, 
+  part = "all")  
 ft
+
+ft <- style(
+  x = ft, pr_t = def_text_header, 
+  part = "header")  
+ft
+
+## -----------------------------------------------------------------------------
+ft <- flextable(head(airquality))
+ft <- add_header_row(ft, top = TRUE, 
+                     values = c("measures", "time"), 
+                     colwidths = c(4, 2))
+ft <- align(ft, i = 1, align = "center", part = "header")
+theme_booktabs(ft)
+
+## -----------------------------------------------------------------------------
+theme_alafoli(ft)
+theme_vader(ft)
+theme_box(ft)
+theme_vanilla(ft)
+theme_tron_legacy(ft)
+
+## -----------------------------------------------------------------------------
+my_theme <- function(x, ...) {
+    x <- set_formatter_type(x, fmt_double = "%.02f", na_str="na")
+    x <- set_table_properties(x, layout = "fixed")
+    x <- border_remove(x)
+    std_border <- fp_border(width = 1, color = "red")
+    x <- border_outer(x, part="all", border = std_border )
+    x <- border_inner_h(x, border = update(std_border, style = "dashed"), part="all")
+    x <- border_inner_v(x, border = update(std_border, style = "dashed"), part="all")
+    x
+}
+my_theme(ft)
 

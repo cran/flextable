@@ -1,28 +1,34 @@
-html_str <- function(x, bookdown = FALSE, ... ){
-
-  dims <- dim(x)
+caption_html_str <- function(x, bookdown = FALSE){
   tab_props <- opts_current_table()
 
-  # caption str value
+  # caption "bookmark"
   bookdown_ref_label <- ref_label()
-  if(!is.null(tab_props$id)){
+  if(bookdown && !is.null(x$caption$autonum$bookmark)){
+    bookdown_ref_label <- paste0("(\\#tab:", x$caption$autonum$bookmark, ")")
+  } else if(bookdown && !is.null(tab_props$id)){
     bookdown_ref_label <- paste0("(\\#tab:", tab_props$id, ")")
   }
+
+  caption_style <- tab_props$style
+  if(!is.null(x$caption$style)){
+    caption_style <- x$caption$style
+  }
+  if(is.null(caption_style)) caption_style <- ""
+
   caption_label <- tab_props$cap
   if(!is.null(x$caption$value)){
     caption_label <- x$caption$value
   }
   caption <- ""
-  if(!is.null(caption_label)){
-    caption <- paste0(
-      if ( bookdown ) "<!--/html_preserve-->",
-      "<caption>",
-      if(bookdown) bookdown_ref_label,
-      caption_label,
-      "</caption>",
-      if ( bookdown ) "<!--html_preserve-->"
-    )
+  has_caption_label <- !is.null(caption_label)
+  if(has_caption_label) {
+    caption <- paste0(sprintf("<caption class=\"%s\">", caption_style),
+                      if(bookdown) bookdown_ref_label,
+                      caption_label, "</caption>")
   }
+  caption
+}
+html_str <- function(x, ft.align = NULL, class = "tabwid", caption = ""){
 
   fixed_layout <- x$properties$layout %in% "fixed"
   if(!fixed_layout){
@@ -34,9 +40,27 @@ html_str <- function(x, bookdown = FALSE, ... ){
 
   codes <- html_gen(x)
 
-  sprintf("<style>%s</style><table style='%s'>%s%s</table>",
-          codes$css, tabcss, caption, codes$html)
+  classname <- UUIDgenerate(n = 1, use.time = TRUE)
+  classname <- gsub("(^[[:alnum:]]+)(.*)$", "cl-\\1", classname)
+  tabcss <- paste0(".", classname, "{", tabcss, "}")
+
+  codes <- sprintf("<style>%s%s</style><table class='%s'>%s%s</table>",
+          tabcss, codes$css, classname, caption, codes$html)
+
+  if( is.null(ft.align) ) ft.align <- "center"
+
+  if( "left" %in% ft.align )
+    tab_class <- paste0(class, " tabwid_left")
+  else if( "right" %in% ft.align )
+    tab_class <- paste0(class, " tabwid_right")
+  else tab_class <- class
+
+  paste0("<div class=\"", tab_class, "\">",
+         as.character(codes),
+         "</div>")
 }
+
+
 
 # to html/css  ----
 #' @importFrom data.table setnames setorderv := setcolorder setDT setDF dcast
@@ -57,8 +81,8 @@ html_gen <- function(x){
   cell_data$height  <- NULL
   cell_data$hrule  <- NULL
   cell_data <- merge(cell_data, cell_widths, by = "col_id")
-  cell_data <- merge(cell_data, cell_heights, by = c("part", "row_id"))
-  cell_data <- merge(cell_data, cell_hrule, by = c("part", "row_id"))
+  cell_data <- merge(cell_data, cell_heights, by = c("part", "ft_row_id"))
+  cell_data <- merge(cell_data, cell_hrule, by = c("part", "ft_row_id"))
   span_data <- fortify_span(x)
 
   data_ref_text <- part_style_list(txt_data, fun = officer::fp_text)
@@ -74,7 +98,7 @@ html_gen <- function(x){
 
   by_columns <- intersect(colnames(data_ref_text), colnames(txt_data))
   txt_data <- merge(txt_data, data_ref_text, by = by_columns)
-  setorderv(txt_data, c("row_id", "col_id", "seq_index"))
+  setorderv(txt_data, c("ft_row_id", "col_id", "seq_index"))
 
   is_hlink <- !is.na(txt_data$url)
   is_raster <- sapply(txt_data$img_data, function(x) {
@@ -87,15 +111,15 @@ html_gen <- function(x){
   txt_data[is_raster==FALSE, c("txt") := list(sprintf("<span class=\"%s\">%s</span>", .SD$classname, htmlize(.SD$txt)))]
   # manage hlinks
   txt_data[is_hlink==TRUE, c("txt") := list(paste0("<a href=\"", .SD$url, "\">", .SD$txt, "</a>"))]
-  txt_data <- txt_data[, list(span_tag = paste0(get("txt"), collapse = "")), by = c("part", "row_id", "col_id")]
+  txt_data <- txt_data[, list(span_tag = paste0(get("txt"), collapse = "")), by = c("part", "ft_row_id", "col_id")]
 
   by_columns <- intersect(colnames(par_data), colnames(data_ref_pars))
   par_data <- merge(par_data, data_ref_pars, by = by_columns)
-  par_data <- par_data[, list(p_tag = paste0("<p class=\"", get("classname"), "\">")), by = c("part", "row_id", "col_id")]
+  par_data <- par_data[, list(p_tag = paste0("<p class=\"", get("classname"), "\">")), by = c("part", "ft_row_id", "col_id")]
 
   by_columns <- intersect(colnames(cell_data), colnames(data_ref_cells))
   cell_data <- merge(cell_data, data_ref_cells, by = by_columns)
-  cell_data <- merge(cell_data, span_data, by = c("part", "row_id", "col_id"))
+  cell_data <- merge(cell_data, span_data, by = c("part", "ft_row_id", "col_id"))
 
   cell_data <- cell_data[, list(
     td_tag = paste0("<td ",
@@ -105,31 +129,33 @@ html_gen <- function(x){
                     ),
                     "class=\"", get("classname"), "\">")
   ),
-  by = c("part", "row_id", "col_id")]
+  by = c("part", "ft_row_id", "col_id")]
 
-  dat <- merge(txt_data, par_data , by = c("part", "row_id", "col_id"))
+  dat <- merge(txt_data, par_data , by = c("part", "ft_row_id", "col_id"))
   dat$p_tag <- paste0(dat$p_tag, dat$span_tag, "</p>")
-  dat <- merge(dat, cell_data , by = c("part", "row_id", "col_id"))
+  dat <- merge(dat, cell_data , by = c("part", "ft_row_id", "col_id"))
   dat$td_tag <- paste0(dat$td_tag, dat$p_tag, "</td>")
 
   rows_data <- fortify_rows_styles(x)
   rows_data$tr_tag <- ifelse(rows_data$hrule %in% "exact", "<tr>", "<tr style=\"overflow-wrap:break-word;\">")
-  rows_data <- rows_data[c("part", "row_id",  "tr_tag")]
+  rows_data <- rows_data[c("part", "ft_row_id",  "tr_tag")]
 
-  dat <- merge(dat, span_data, by = c("part", "row_id", "col_id"))
+  dat <- merge(dat, span_data, by = c("part", "ft_row_id", "col_id"))
   dat$col_id <- factor(dat$col_id, levels = x$col_keys)
   dat$td_tag[dat$rowspan < 1 | dat$colspan < 1] <- ""
 
-  z <- dcast(dat, part + row_id ~ col_id, drop=TRUE, fill="", value.var = "td_tag", fun.aggregate = I)
-  z <- merge(z, rows_data, by = c("part", "row_id"))
-  setorderv(z, c("part", "row_id"))
+  z <- dcast(dat, part + ft_row_id ~ col_id, drop=TRUE, fill="", value.var = "td_tag", fun.aggregate = I)
+  z <- merge(z, rows_data, by = c("part", "ft_row_id"))
+  setorderv(z, c("part", "ft_row_id"))
   z$tr_end <- "</tr>"
 
   parts <- z$part
   header_start <- head(which(parts %in% "header"), n = 1)
   header_end <- tail(which(parts %in% "header"), n = 1)
   body_start <- head(which(parts %in% "body"), n = 1)
-  body_end <- nrow(z)
+  body_end <- tail(which(parts %in% "body"), n = 1)
+  footer_start <- head(which(parts %in% "footer"), n = 1)
+  footer_end <- tail(which(parts %in% "footer"), n = 1)
 
   z$tpart_start <- ""
   z$tpart_end <- ""
@@ -137,9 +163,11 @@ html_gen <- function(x){
   z$tpart_end[header_end] <- "</thead>"
   z$tpart_start[body_start] <- "<tbody>"
   z$tpart_end[body_end] <- "</tbody>"
+  z$tpart_start[footer_start] <- "<tfoot>"
+  z$tpart_end[footer_end] <- "</tfoot>"
   setcolorder(z, neworder = c("tpart_start", "tr_tag"))
 
-  z[, c("part", "row_id") := NULL]
+  z[, c("part", "ft_row_id") := NULL]
 
   html <- apply(as.matrix(z), 1, paste0, collapse = "")
   html <- paste0(html, collapse = "")
@@ -191,7 +219,7 @@ img_as_html <- function(img_data, width, height){
     } else  {
       stop("unknown image format")
     }
-    sprintf("<img style=\"vertical-align:middle;width:%.0fpx;height:%.0fpx;\" src=\"%s\" />", width*72, height*72, img_raster)
+    sprintf("<img style=\"vertical-align:middle;width:%.0fpt;height:%.0fpt;\" src=\"%s\" />", width*72, height*72, img_raster)
   }, img_data, width, height, SIMPLIFY = FALSE, USE.NAMES = FALSE)
   str_raster <- as.character(unlist(str_raster))
   str_raster
@@ -216,11 +244,11 @@ text_css_styles <- function(x){
   positioning_what <- ifelse( x$vertical.align %in% "superscript", "bottom",
                               ifelse(x$vertical.align %in% "subscript", "top", NA_character_ ) )
   vertical.align <- sprintf("position: relative;%s:%s;", positioning_what,
-                            css_px(x$font.size * positioning_val))
+                            css_pt(x$font.size * positioning_val))
   vertical.align <- ifelse(is.na(positioning_val), "", vertical.align)
 
   font.size <- sprintf(
-    "font-size:%s;", css_px(x$font.size * ifelse(
+    "font-size:%s;", css_pt(x$font.size * ifelse(
       x$vertical.align %in% "superscript", .6,
       ifelse(x$vertical.align %in% "subscript", .6, 1.0 )
     ) )
@@ -269,12 +297,12 @@ par_css_styles <- function(x){
     color = x$border.color.right, width = x$border.width.right,
     style = x$border.style.right, side = "right")
 
-  padding.bottom <- sprintf("padding-bottom:%s;", css_px(x$padding.bottom) )
-  padding.top <- sprintf("padding-top:%s;", css_px(x$padding.top) )
-  padding.left <- sprintf("padding-left:%s;", css_px(x$padding.left) )
-  padding.right <- sprintf("padding-right:%s;", css_px(x$padding.right) )
+  padding.bottom <- sprintf("padding-bottom:%s;", css_pt(x$padding.bottom) )
+  padding.top <- sprintf("padding-top:%s;", css_pt(x$padding.top) )
+  padding.left <- sprintf("padding-left:%s;", css_pt(x$padding.left) )
+  padding.right <- sprintf("padding-right:%s;", css_pt(x$padding.right) )
 
-  line_spacing <- sprintf("line-height: %.2f;", x$line_spacing )
+  line_spacing <- sprintf("line-height: %s;", css_no_unit(x$line_spacing, 2) )
 
   style_column <- paste0("margin:0;", textalign, textdir, bb, bt, bl, br,
                          padding.bottom, padding.top, padding.left, padding.right,
@@ -288,8 +316,8 @@ cell_css_styles <- function(x){
                               sprintf("background-clip: padding-box;background-color:%s;", colcodecss(x$background.color) ),
                               "background-color:transparent;")
 
-  width <- ifelse( is.na(x$width), "", sprintf("width:%s;", css_px(x$width * 72) ) )
-  height <- ifelse( !is.na(x$height) & x$hrule %in% c("exact", "atleast"), sprintf("height:%s;", css_px(x$height * 72 ) ), "" )
+  width <- ifelse( is.na(x$width), "", sprintf("width:%s;", css_pt(x$width * 72) ) )
+  height <- ifelse( !is.na(x$height) & x$hrule %in% c("exact", "atleast"), sprintf("height:%s;", css_pt(x$height * 72 ) ), "" )
 
   vertical.align <- ifelse(
     x$vertical.align %in% "center", "vertical-align: middle;",
@@ -311,14 +339,30 @@ cell_css_styles <- function(x){
     color = x$border.color.right, width = x$border.width.right,
     style = x$border.style.right, side = "right")
 
-  margin.bottom <- sprintf("margin-bottom:%s;", css_px(x$margin.bottom) )
-  margin.top <- sprintf("margin-top:%s;", css_px(x$margin.top) )
-  margin.left <- sprintf("margin-left:%s;", css_px(x$margin.left) )
-  margin.right <- sprintf("margin-right:%s;", css_px(x$margin.right) )
+  margin.bottom <- sprintf("margin-bottom:%s;", css_pt(x$margin.bottom) )
+  margin.top <- sprintf("margin-top:%s;", css_pt(x$margin.top) )
+  margin.left <- sprintf("margin-left:%s;", css_pt(x$margin.left) )
+  margin.right <- sprintf("margin-right:%s;", css_pt(x$margin.right) )
 
   style_column <- paste0(width, height, background.color, vertical.align, bb, bt, bl, br,
                          margin.bottom, margin.top, margin.left, margin.right)
   paste0(".", x$classname, "{", style_column, "}", collapse = "")
 }
 
+# htmlDependency ----
+#' @importFrom htmltools htmlDependency
+#' @export
+#' @title htmlDependency for flextable objects
+#' @description When using loops in an R Markdown for HTML document, the
+#' htmlDependency object for flextable must also be added at least once.
+#' @examples
+#' if(require("htmltools"))
+#'   div(flextable_html_dependency())
+flextable_html_dependency <- function(){
+  htmlDependency("tabwid",
+                 "1.0.0",
+                 src = system.file(package="flextable", "web_1.0.0"),
+                 stylesheet = "tabwid.css", script = "tabwid.js")
+
+}
 

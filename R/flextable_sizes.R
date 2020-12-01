@@ -74,19 +74,27 @@ width <- function(x, j = NULL, width){
 
 #' @export
 #' @title Set flextable rows height
-#' @description control rows height for a part
-#' of the flextable.
+#' @description control rows height for a part of the flextable when the line
+#' height adjustment is "atleast" or "exact".
+#' @note
+#' This function has no effect when the rule for line height is set to
+#' "auto" (see [hrule()]), which is the default case, except with PowerPoint
+#' which does not support this automatic line height adjustment feature.
 #' @param x flextable object
 #' @param i rows selection
 #' @param height height in inches
 #' @param part partname of the table
 #' @examples
-#'
-#' ftab <- flextable(head(iris))
-#' ft <- height(ftab, height = .3)
-#' ftab
-#'
+#' ft_1 <- flextable(head(iris))
+#' ft_1 <- height(ft_1, height = .5)
+#' ft_1 <- hrule(ft_1, rule = "exact")
+#' ft_1
 #' @family flextable dimensions
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_height_1.png}{options: width=70\%}}
+#'
+#' \if{html}{\figure{fig_height_2.png}{options: width=70\%}}
 height <- function(x, i = NULL, height, part = "body"){
 
   part <- match.arg(part, c("body", "header", "footer"), several.ok = FALSE )
@@ -118,7 +126,6 @@ height <- function(x, i = NULL, height, part = "body"){
 #' are "atleast" (height should be at least the value specified), "exact"
 #' (height should be exactly the value specified), or the default value "auto"
 #' (height is determined based on the height of the contents, so the value is ignored).
-#' See details for more informations.
 #' @param part partname of the table, one of "all", "header", "body", "footer"
 #' @examples
 #'
@@ -169,9 +176,12 @@ hrule <- function(x, i = NULL, rule = "auto", part = "body"){
 #' setting the same height to all rows (selected
 #' with argument \code{part}).
 #' @examples
-#' ftab <- flextable(head(iris))
-#' ftab <- height_all(ftab, height = .3)
-#' ftab
+#'
+#'
+#' ft_2 <- flextable(head(iris))
+#' ft_2 <- height_all(ft_2, height = 1)
+#' ft_2 <- hrule(ft_2, rule = "exact")
+#' ft_2
 height_all <- function(x, height, part = "all"){
 
   part <- match.arg(part, c("body", "header", "footer", "all"), several.ok = FALSE )
@@ -357,10 +367,10 @@ optimal_sizes <- function( x ){
 
   sizes <- text_metric(x)
   sizes$col_id <- factor(sizes$col_id, levels = x$col_keys)
-  sizes <- sizes[order(sizes$col_id, sizes$row_id ), ]
-  widths <- as_wide_matrix_(data = sizes[, c("col_id", "width", "row_id")], idvar = "row_id", timevar = "col_id")
+  sizes <- sizes[order(sizes$col_id, sizes$ft_row_id ), ]
+  widths <- as_wide_matrix_(data = sizes[, c("col_id", "width", "ft_row_id")], idvar = "ft_row_id", timevar = "col_id")
   dimnames(widths)[[2]] <- gsub("^width\\.", "", dimnames(widths)[[2]])
-  heights <- as_wide_matrix_(data = sizes[, c("col_id", "height", "row_id")], idvar = "row_id", timevar = "col_id")
+  heights <- as_wide_matrix_(data = sizes[, c("col_id", "height", "ft_row_id")], idvar = "ft_row_id", timevar = "col_id")
   dimnames(heights)[[2]] <- gsub("^height\\.", "", dimnames(heights)[[2]])
 
   par_dim <- dim_paragraphs(x)
@@ -396,7 +406,11 @@ optimal_sizes <- function( x ){
 #' exist for this Microsoft format.
 #' @param x flextable object
 #' @param layout 'autofit' or 'fixed' algorithm. Default to 'autofit'.
-#' @param width value of the preferred width of the table in percent.
+#' @param width The parameter has a different effect depending on the
+#' output format. In HTML, it is the width of the space that the
+#' table should occupy. In Word, it is a preferred size and Word
+#' may decide not to strictly stick to it. It has no effect on
+#' PowerPoint and PDF output.
 #' @examples
 #' library(flextable)
 #' ft_1 <- qflextable(head(cars))
@@ -430,11 +444,11 @@ dim_paragraphs <- function(x){
   par_dim <- as.data.frame(x$styles$pars)
   par_dim$width <- as.vector(x$styles$pars[,,"padding.right"] + x$styles$pars[,,"padding.left"]) * (4/3) / 72
   par_dim$height <- as.vector(x$styles$pars[,,"padding.top"] + x$styles$pars[,,"padding.bottom"]) * (4/3) / 72
-  selection_ <- c("row_id", "col_id", "width", "height")
+  selection_ <- c("ft_row_id", "col_id", "width", "height")
   par_dim[, selection_]
 
-  list( widths = as_wide_matrix_( par_dim[,c("col_id", "width", "row_id")], idvar = "row_id", timevar = "col_id" ),
-        heights = as_wide_matrix_( par_dim[,c("col_id", "height", "row_id")], idvar = "row_id", timevar = "col_id" )
+  list( widths = as_wide_matrix_( par_dim[,c("col_id", "width", "ft_row_id")], idvar = "ft_row_id", timevar = "col_id" ),
+        heights = as_wide_matrix_( par_dim[,c("col_id", "height", "ft_row_id")], idvar = "ft_row_id", timevar = "col_id" )
   )
 }
 
@@ -442,11 +456,11 @@ dim_cells <- function(x){
   cell_dim <- as.data.frame(x$styles$cells)
   cell_dim$width <- as.vector(x$styles$cells[,,"margin.right"] + x$styles$cells[,,"margin.left"]) * (4/3) / 72
   cell_dim$height <- as.vector(x$styles$cells[,,"margin.top"] + x$styles$cells[,,"margin.bottom"]) * (4/3) / 72
-  selection_ <- c("row_id", "col_id", "width", "height")
+  selection_ <- c("ft_row_id", "col_id", "width", "height")
   cell_dim <- cell_dim[, selection_]
 
-  cellwidths <- as_wide_matrix_( cell_dim[,c("col_id", "width", "row_id")], idvar = "row_id", timevar = "col_id" )
-  cellheights <- as_wide_matrix_( cell_dim[,c("col_id", "height", "row_id")], idvar = "row_id", timevar = "col_id")
+  cellwidths <- as_wide_matrix_( cell_dim[,c("col_id", "width", "ft_row_id")], idvar = "ft_row_id", timevar = "col_id" )
+  cellheights <- as_wide_matrix_( cell_dim[,c("col_id", "height", "ft_row_id")], idvar = "ft_row_id", timevar = "col_id")
 
   list( widths = cellwidths, heights = cellheights )
 }
@@ -470,11 +484,11 @@ text_metric <- function( x ){
   dimnames(str_extents_) <- list(NULL, c("width", "height"))
   txt_data <- cbind( txt_data, str_extents_ )
 
-  selection_ <- c("row_id", "col_id", "seq_index", "width", "height")
+  selection_ <- c("ft_row_id", "col_id", "seq_index", "width", "height")
   txt_data <- txt_data[, selection_]
   setDT(txt_data)
   txt_data <- txt_data[, c(list(width=sum(width, na.rm = TRUE), height = max(height, na.rm = TRUE) )),
-                         by= c("row_id", "col_id") ]
+                         by= c("ft_row_id", "col_id") ]
   setDF(txt_data)
   txt_data
 }

@@ -102,9 +102,6 @@ myft <- theme_box(myft)
 myft
 ```
 
-<div class="row">
-
-<div class="col-12 col-sm-8 col-md-6">
 
 ### vertical merging of similar values
 
@@ -114,9 +111,6 @@ myft
 merge_v(myft, j = ~ letters1 + letters2 )
 ```
 
-</div>
-
-<div class="col-12 col-sm-8 col-md-6">
 
 ### horizontal merging of similar values
 
@@ -125,13 +119,6 @@ merge_v(myft, j = ~ letters1 + letters2 )
 ```{r}
 merge_h(myft)
 ```
-
-</div>
-
-</div>
-<div class="row">
-
-<div class="col-12 col-sm-8 col-md-6">
 
 
 ### horizontal merging of columns
@@ -144,12 +131,6 @@ merge_h_range(myft,
   i =  ~ number < 3, 
   j1 = "letters1", j2 = "letters2")
 ```
-
-
-</div>
-
-<div class="col-12 col-sm-8 col-md-6">
-
 
 ### general merging function
 
@@ -164,10 +145,6 @@ myft %>%
 
 Note that the content that is rendered is not the result of the concatenation of each paragraphs 
 contained into the merge cells. Only one paragraph will be kept, the top left one of all merge cells.
-
-</div>
-
-</div>
 
 
 
@@ -233,9 +210,6 @@ Now let's add new row of labels.
 
 ### Add a row of labels
 
-<div class="row">
-
-<div class="col-12 col-sm-8 col-md-6">
 
 ```{r}
 ft <- add_header_row(ft, 
@@ -243,24 +217,14 @@ ft <- add_header_row(ft,
 ft <- theme_box(ft)
 ```
 
-</div>
-
-<div class="col-12 col-sm-8 col-md-6">
 
 ```{r echo=FALSE}
 ft
 ```
 
-</div>
-
-</div>
-
 
 ### Add lines of text
 
-<div class="row">
-
-<div class="col-12 col-sm-8 col-md-6">
 
 ```{r}
 ft <- add_header_lines(ft, 
@@ -269,19 +233,10 @@ ft <- add_header_lines(ft,
 ft <- theme_box(ft)
 ```
 
-</div>
-
-<div class="col-12 col-sm-8 col-md-6">
 
 ```{r echo=FALSE}
 ft
 ```
-
-</div>
-
-</div>
-
-
 
 
 ### Define headers with a reference table
@@ -297,9 +252,6 @@ column keys (defined by argument `col_keys` of `flextable()` function).
 This key column will not be displayed. Other variables will added as 
 rows. Note that variables names are not displayed. 
 
-<div class="row">
-
-<div class="col-12 col-sm-8 col-md-6">
 
 ```{r}
 typology <- data.frame(
@@ -315,17 +267,10 @@ typology <- data.frame(
   stringsAsFactors = FALSE )
 ```
 
-</div>
-
-<div class="col-12 col-sm-8 col-md-6">
 
 ```{r echo=FALSE}
 autofit( theme_vanilla(flextable(typology)) )
 ```
-
-</div>
-
-</div>
 
 
 2. Use it as header rows
@@ -336,9 +281,6 @@ to permform the join operation.
 > Order of columns matters, first column will be first row, second one will 
   be the second row, etc.
 
-<div class="row">
-
-<div class="col-12 col-sm-8 col-md-6">
 
 ```{r}
 ft <- flextable( head( iris ) )
@@ -353,32 +295,26 @@ ft <- fix_border_issues(ft)
 ```
 
 
-</div>
-
-<div class="col-12 col-sm-8 col-md-6">
 
 ```{r echo=FALSE}
 ft
 ```
 
-</div>
-
-</div>
 
 
+## Table width {#tabwidth}
 
-## Table width
+By default, table width is fixed. This setting allows to have the same rendering
+with Word, HTML and PowerPoint formats.
 
-By default, table width is fixed. This setting allows to have the same rendering 
-with Word, HTML and PowerPoint formats. 
+You can use another setting with function `set_table_properties()` when argument
+`layout` is set to 'autofit', an algorithm implemented by HTML and Word.
 
-You can use another setting with function `set_table_properties()`. Alternative is 
-'autofit', an algorithm implemented by HTML and Word. It allows to size the table 
-along an available width. 
+When layout is set to autofit, you can also size the table along an available
+width with argument `width` (default to 1 that means 100% of the available width).
 
-```{r eval=FALSE}
-library(flextable)
-ft <- qflextable(head(cars))
+```{r}
+ft <- qflextable(head(airquality))
 set_table_properties(ft, width = .5, layout = "autofit")
 set_table_properties(ft, width = 1, layout = "autofit")
 ```
@@ -387,7 +323,7 @@ set_table_properties(ft, width = 1, layout = "autofit")
 
 ## Cell widths and heights
 
-> This oonly applies when layout is "fixed"
+> This only applies when layout is "fixed" - see [Table width](#tabwidth)
 
 The default sizes of flextable columns and rows are set by default values. 
 This will drive to inadequate rows heights and columns widths in some cases. 
@@ -395,7 +331,7 @@ You can use function `dim` to get flextable dimensions.
 
 ```{r}
 ft_base <- flextable(head(mtcars))
-ft_base <- theme_vader(ft_base, fontsize = 13)
+ft_base <- theme_vader(ft_base)
 ft_base
 dim(ft_base)
 ```
@@ -411,8 +347,7 @@ dim_pretty(ft_base)
 ### Adjusts automatically cell widths and heights
 
 Function `autofit()` optimises widths and heights of the flextable. 
-This function is almost always to be called once when using 
-flextable objects, it makes compact tables.
+This function makes compact tables.
 
 > `autofit` was not my biggest naming idea as users are thinking it is the 
 'Microsoft Word feature' (see [set_table_properties](../reference/set_table_properties.html))
@@ -429,14 +364,28 @@ support soft returns and may return wrong results (\n will be considered as "").
   
 ### Adjusts manually cell widths and heights
 
-Function `width()` and `height()` let you control dimensions of a flextable. `height_all()` is an helper function to set the same height to each part of the table.
+Function `width()` and `height()` let you control dimensions of a flextable.
+`height_all()` is an helper function to set the same height to each part of the
+table.
 
 ```{r}
-ft <- autofit(ft_base)
-ft <- width(ft, j = ~ mpg + cyl + disp, width = 2)
-ft <- height_all( ft, height = .4 )
+ft <- hrule(ft, rule = "exact")
+ft <- valign(ft, valign = "top")
+ft <- width(ft, width = .5)
+ft <- width(ft, j = ~ mpg + disp, width = 1.5)
+ft <- height_all( ft, height = .6 )
 ft <- height( ft, i = 3, height = 1 )
 ft
 ```
 
+Function `height()` has no effect when the rule for line height is set to
+"auto", which is the default case, except with PowerPoint which does not support
+this automatic line height adjustment feature. You can define that rule with function 
+`hrule`.
 
+Function `hrule` support three options  :
+
+* "atleast": height should be at least the value specified, 
+* "exact" : height should be exactly the value specified, 
+* "auto", the default value : height is determined based on 
+the height of the contents, so the value is ignored.

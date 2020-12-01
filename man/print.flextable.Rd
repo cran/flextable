@@ -35,7 +35,7 @@ R markdown documents. See \code{\link{knit_print.flextable}}.
 \seealso{
 Other flextable print function: 
 \code{\link{as_raster}()},
-\code{\link{docx_value}()},
+\code{\link{flextable_to_rmd}()},
 \code{\link{htmltools_value}()},
 \code{\link{knit_print.flextable}()},
 \code{\link{plot.flextable}()},
