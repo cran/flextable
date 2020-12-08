@@ -28,7 +28,7 @@ caption_html_str <- function(x, bookdown = FALSE){
   }
   caption
 }
-html_str <- function(x, ft.align = NULL, class = "tabwid", caption = ""){
+html_str <- function(x, ft.align = NULL, class = "tabwid", caption = "", shadow = TRUE){
 
   fixed_layout <- x$properties$layout %in% "fixed"
   if(!fixed_layout){
@@ -55,12 +55,43 @@ html_str <- function(x, ft.align = NULL, class = "tabwid", caption = ""){
     tab_class <- paste0(class, " tabwid_right")
   else tab_class <- class
 
-  paste0("<div class=\"", tab_class, "\">",
+  html <- paste0("<div class=\"", tab_class, "\">",
          as.character(codes),
          "</div>")
+  if(shadow){
+    uid <- UUIDgenerate(n = 2L)
+
+    tabwid_css <- paste(c("<style>", readLines(system.file(package="flextable", "web_1.0.0", "tabwid.css"), encoding = "UTF-8"), "</style>"), collapse = "\n")
+
+    html <- paste0("<template id=\"", uid[1], "\">",
+                   tabwid_css,
+                   html,
+           "</template>",
+           "\n<div id=\"", uid[2], "\"></div>",
+           to_shadow_dom(uid1 = uid[1], uid2 = uid[2])
+    )
+  }
+  html
 }
 
-
+to_shadow_dom <- function(uid1, uid2){
+  script_commands <- c("", "<script>",
+    paste0("var dest = document.getElementById(\"", uid2, "\");"),
+    paste0("var template = document.getElementById(\"", uid1, "\");"),
+    "var caption = template.content.querySelector(\"caption\");",
+    "if(caption) {",
+    "  caption.style.cssText = \"display:block;\"",
+    "  var newcapt = document.createElement(\"p\");",
+    "  newcapt.appendChild(caption)",
+    "  dest.parentNode.insertBefore(newcapt, dest.previousSibling);",
+    "}",
+    "var fantome = dest.attachShadow({mode: 'open'});",
+    "var templateContent = template.content;",
+    "fantome.appendChild(templateContent);",
+    "fantome.appendChild(templateContent);",
+    "</script>", "")
+  paste(script_commands, collapse = "\n")
+}
 
 # to html/css  ----
 #' @importFrom data.table setnames setorderv := setcolorder setDT setDF dcast
@@ -362,7 +393,7 @@ flextable_html_dependency <- function(){
   htmlDependency("tabwid",
                  "1.0.0",
                  src = system.file(package="flextable", "web_1.0.0"),
-                 stylesheet = "tabwid.css", script = "tabwid.js")
+                 stylesheet = "tabwid.css")
 
 }
 
