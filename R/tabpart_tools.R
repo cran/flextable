@@ -17,7 +17,7 @@ check_merge <- function(x){
     stop("invalid merging instructions", call. = FALSE)
   x
 }
-span_columns <- function( x, columns = NULL, target = columns){
+span_columns <- function( x, columns = NULL, target = columns, combine = FALSE){
 
   stopifnot(all( columns %in% colnames(x$dataset) ) )
   stopifnot(all( target %in% x$col_keys ) )
@@ -29,16 +29,34 @@ span_columns <- function( x, columns = NULL, target = columns){
     columns <- rep(columns, length(target))
   }
 
-  for(k in seq_along(columns)){
-    column <- columns[k]
-    if(column %in% x$col_keys){
-      values <- sapply(x$content[,columns[k]], function(x) {
-        paste(x$txt, collapse = "")
-      })
-    } else {
-      values <- format(x$dataset[[column]], trim = TRUE, justify = "left")
+  if(combine){
+    temp <- rep(list(NULL), length(columns))
+    for(k in seq_along(columns)){
+      column <- columns[k]
+      if(column %in% x$col_keys){
+        values <- sapply(x$content[,columns[k]], function(x) {
+          paste(x$txt, collapse = "")
+        })
+      } else {
+        values <- format(x$dataset[[column]], trim = TRUE, justify = "left")
+      }
+      temp[[k]] <- values
     }
-    x$spans$columns[, match(target[k], x$col_keys)] <- merge_rle(values)
+    values <- do.call(cbind, temp)
+    values <- apply(values, 1, paste0, collapse = "_")
+    x$spans$columns[, match(target, x$col_keys)] <- merge_rle(values)
+  } else {
+    for(k in seq_along(columns)){
+      column <- columns[k]
+      if(column %in% x$col_keys){
+        values <- sapply(x$content[,columns[k]], function(x) {
+          paste(x$txt, collapse = "")
+        })
+      } else {
+        values <- format(x$dataset[[column]], trim = TRUE, justify = "left")
+      }
+      x$spans$columns[, match(target[k], x$col_keys)] <- merge_rle(values)
+    }
   }
 
   check_merge(x)
@@ -197,5 +215,26 @@ get_rows_id <- function( x, i = NULL ){
   i
 }
 
+# formula tools -----
+get_i_from_formula <- function( f, data ){
+  if( length(f) > 2 )
+    stop("formula selection is not as expected ( ~ condition )", call. = FALSE)
+  i <- eval(as.call(f[[2]]), envir = data)
+  if( !is.logical(i) )
+    stop("formula selection should return a logical vector", call. = FALSE)
+  i
+}
+get_j_from_formula <- function( f, data ){
+  if( length(f) > 2 )
+    stop("formula selection is not as expected ( ~ variables )", call. = FALSE)
+  j <- attr(terms(f, data = data), "term.labels")
+  j <- gsub("(^`|`$)", "", j)
+  names_ <- names(data)
 
+  if( any( invalid_names <- (!j %in% names_) ) ){
+    invalid_names <- paste0("[", j[invalid_names], "]", collapse = ", ")
+    stop("unknown variables:", invalid_names, call. = FALSE)
+  }
+  j
+}
 

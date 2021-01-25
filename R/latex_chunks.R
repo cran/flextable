@@ -22,6 +22,8 @@ get_text_data <- function(x){
   })
   dat[is_hlink, c("txt") := list(paste0("\\href{", sanitize_latex_str(.SD$url), "}{", .SD$txt, "}"))]
   dat[is_raster==TRUE, c("txt") := list(img_to_latex(.SD$img_data, .SD$width, .SD$height))]
+  dat[is_raster==FALSE, c("txt") := list(gsub("\n", "\\linebreak ", .SD$txt, fixed = TRUE))]
+  dat[is_raster==FALSE, c("txt") := list(gsub("\t", "\\quad ", .SD$txt, fixed = TRUE))]
   dat[is_raster==FALSE, c("txt") := list(sprintf("%s%s%s", .SD$left, .SD$txt, .SD$right))]
 
   dat[, c("left", "right") := NULL]
@@ -130,7 +132,11 @@ img_to_latex <- function(img_data, width, height){
 
   str_raster <- mapply(function(img_raster, new_file, width, height ){
     if(inherits(img_raster, "raster")){
-      gdtools::raster_write(img_raster, path = new_file, width = width*72, height = height*72)
+      png(filename = new_file, units = "in", res = 300, bg = "transparent", width = width, height = height)
+      op <- par(mar=rep(0, 4))
+      plot(img_raster, interpolate = FALSE, asp=NA)
+      par(op)
+      dev.off()
     } else if(is.character(img_raster)){
       if(!file.exists(img_raster)){
         stop("file ", shQuote(img_raster), " could not be read")

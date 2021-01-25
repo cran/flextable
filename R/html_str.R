@@ -44,8 +44,8 @@ html_str <- function(x, ft.align = NULL, class = "tabwid", caption = "", shadow 
   classname <- gsub("(^[[:alnum:]]+)(.*)$", "cl-\\1", classname)
   tabcss <- paste0(".", classname, "{", tabcss, "}")
 
-  codes <- sprintf("<style>%s%s</style><table class='%s'>%s%s</table>",
-          tabcss, codes$css, classname, caption, codes$html)
+  codes <- sprintf("<style>%s%s%s</style><table class='%s'>%s%s</table>",
+          tabcss, codes$css, flextable_global$defaults$extra_css, classname, caption, codes$html)
 
   if( is.null(ft.align) ) ft.align <- "center"
 
@@ -68,26 +68,29 @@ html_str <- function(x, ft.align = NULL, class = "tabwid", caption = "", shadow 
                    html,
            "</template>",
            "\n<div id=\"", uid[2], "\"></div>",
-           to_shadow_dom(uid1 = uid[1], uid2 = uid[2])
+           to_shadow_dom(uid1 = uid[1], uid2 = uid[2], ft.align = ft.align)
     )
   }
   html
 }
 
-to_shadow_dom <- function(uid1, uid2){
+to_shadow_dom <- function(uid1, uid2, ft.align = NULL){
+
+  if( is.null(ft.align) )
+    ft.align <- "center"
+
   script_commands <- c("", "<script>",
     paste0("var dest = document.getElementById(\"", uid2, "\");"),
     paste0("var template = document.getElementById(\"", uid1, "\");"),
     "var caption = template.content.querySelector(\"caption\");",
     "if(caption) {",
-    "  caption.style.cssText = \"display:block;\"",
+    paste0("  caption.style.cssText = \"display:block;text-align:", ft.align, ";\";"),
     "  var newcapt = document.createElement(\"p\");",
     "  newcapt.appendChild(caption)",
     "  dest.parentNode.insertBefore(newcapt, dest.previousSibling);",
     "}",
     "var fantome = dest.attachShadow({mode: 'open'});",
     "var templateContent = template.content;",
-    "fantome.appendChild(templateContent);",
     "fantome.appendChild(templateContent);",
     "</script>", "")
   paste(script_commands, collapse = "\n")
@@ -96,6 +99,8 @@ to_shadow_dom <- function(uid1, uid2){
 # to html/css  ----
 #' @importFrom data.table setnames setorderv := setcolorder setDT setDF dcast
 html_gen <- function(x){
+
+  fixed_layout <- x$properties$layout %in% "fixed"
 
   cell_heights <- fortify_height(x)
   cell_widths <- fortify_width(x)
@@ -206,7 +211,9 @@ html_gen <- function(x){
   span_style_str <- text_css_styles(data_ref_text)
   par_style_str <- par_css_styles(data_ref_pars)
   cell_style_str <- cell_css_styles(data_ref_cells)
-
+  if(!fixed_layout) {
+    cell_style_str <- gsub("width:[ ]*[0-9\\.]+pt;", "", cell_style_str)
+  }
   list(
     html = html,
     css = paste0(span_style_str, par_style_str, cell_style_str)
@@ -224,9 +231,18 @@ htmlize <- function(x){
 
 img_as_html <- function(img_data, width, height){
   str_raster <- mapply(function(img_raster, width, height ){
+
     if(inherits(img_raster, "raster")){
-      img_raster <- paste("data:image/png;base64,", gdtools::raster_str(img_raster, width*72, height*72))
-    } else if(is.character(img_raster)){
+      outfile <- tempfile(fileext = ".png")
+      png(filename = outfile, units = "in", res = 300, bg = "transparent", width = width, height = height)
+      op <- par(mar=rep(0, 4))
+      plot(img_raster, interpolate = FALSE, asp=NA)
+      par(op)
+      dev.off()
+      img_raster <- outfile
+    }
+
+    if(is.character(img_raster)){
 
       if( grepl("\\.png", ignore.case = TRUE, x = img_raster) ){
         mime <- "image/png"
@@ -244,6 +260,9 @@ img_as_html <- function(img_data, width, height){
         mime <- "image/webp"
       } else {
         stop("this format is not implemented")
+      }
+      if(!file.exists(img_raster)){
+        stop("file ", shQuote(img_raster), " can not be found.")
       }
       img_raster <- base64enc::dataURI(file = img_raster, mime = mime )
 

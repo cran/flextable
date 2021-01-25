@@ -22,8 +22,13 @@ set_flextable_defaults(
   na_str = NULL,
   fmt_date = NULL,
   fmt_datetime = NULL,
+  extra_css = NULL,
   fonts_ignore = NULL,
-  theme_fun = NULL
+  theme_fun = NULL,
+  post_process_pdf = NULL,
+  post_process_docx = NULL,
+  post_process_html = NULL,
+  post_process_pptx = NULL
 )
 }
 \arguments{
@@ -54,12 +59,19 @@ and \code{\link[=colformat_int]{colformat_int()}}.}
 \item{fmt_date, fmt_datetime}{formats for date and datetime columns as
 documented in \code{\link[=strptime]{strptime()}}. Default to '\%Y-\%m-\%d' and '\%Y-\%m-\%d \%H:\%M:\%S'.}
 
+\item{extra_css}{css instructions to be integrated with the table. By default, it
+contains only the style for captions.}
+
 \item{fonts_ignore}{if TRUE, pdf-engine pdflatex can be used instead of
 xelatex or lualatex. If pdflatex is used, fonts will be ignored because they are
 not supported by pdflatex, whereas with the xelatex and lualatex engines they are.}
 
 \item{theme_fun}{a single character value (the name of the theme function
 to be applied) or a theme function (input is a flextable, output is a flextable).}
+
+\item{post_process_pdf, post_process_docx, post_process_html, post_process_pptx}{Post-processing functions
+that will allow you to customize the display by output type (pdf, html, docx, pptx).
+They are executed just before printing the table.}
 }
 \value{
 a list containing previous default values.

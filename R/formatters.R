@@ -5,7 +5,7 @@
 #' @param x a flextable object
 #' @param ... Name-value pairs of functions, names should be existing col_key values
 #' @param values a list of name-value pairs of functions, names should be existing col_key values.
-#' If values is supplied argument \code{...} is ignored.
+#' If values is supplied argument `...` is ignored.
 #' @param part partname of the table (one of 'body' or 'header' or 'footer')
 #' @examples
 #' ft <- flextable( head( iris ) )
@@ -46,11 +46,14 @@ set_formatter <- function(x, ..., values = NULL, part = "body"){
 #' @export
 #' @rdname set_formatter
 #' @section set_formatter_type:
-#' \code{set_formatter_type} is an helper function to quickly define
+#' `set_formatter_type` is an helper function to quickly define
 #' formatter functions regarding to column types.
-#' @param fmt_double,fmt_integer arguments used by \code{sprintf} to
+#'
+#' This function will be deprecated in favor of the `colformat_*` functions,
+#' for example [colformat_double()].
+#' @param fmt_double,fmt_integer arguments used by `sprintf` to
 #' format double and integer columns.
-#' @param fmt_date,fmt_datetime arguments used by \code{format} to
+#' @param fmt_date,fmt_datetime arguments used by `format` to
 #' format date and date time columns.
 #' @param false,true string to be used for logical columns
 #' @param na_str string for NA values
@@ -312,11 +315,55 @@ colformat_lgl <- function(
   docall_display(col_keys, fun_, x, i = i)
 }
 
+#' @title format cells as images
+#' @description Format image paths as images in a flextable.
+#' @inheritParams colformat_char
+#' @param width,height size of the png file in inches
+#' @family cells formatters
+#' @export
+#' @examples
+#' img.file <- file.path( R.home("doc"), "html", "logo.jpg" )
+#'
+#' dat <- head(iris)
+#' dat$Species <- as.character(dat$Species)
+#' dat[c(1, 3, 5), "Species"] <- img.file
+#'
+#' myft <- flextable( dat)
+#' myft <- colformat_image(
+#'   myft, i = c(1, 3, 5),
+#'   j = "Species", width = .20, height = .15)
+#' ft <- autofit(myft)
+#' ft
+colformat_image <- function(
+  x, i = NULL, j = NULL,
+  width, height,
+  na_str = get_flextable_defaults()$na_str,
+  prefix = "", suffix = ""){
+
+  stopifnot(inherits(x, "flextable"))
+
+  col_keys <- filter_col_keys(x, j, is.character)
+
+  check_formula_i_and_part(i, "body")
+  for( varname in col_keys){
+    x <- compose(x = x, j = varname, i = i, value =
+                   as_paragraph(
+                     prefix,
+                     as_image(get(varname), width = width, height = height),
+                     suffix
+                    ),
+                 part = "body"
+                 )
+  }
+  x
+
+}
+
 
 filter_col_keys <- function(x, j, fun){
   j <- get_columns_id(x[["body"]], j )
   col_keys <- x$col_keys[j]
-  col_keys[sapply(x[["body"]]$dataset[col_keys], fun)]
+  col_keys[vapply(x[["body"]]$dataset[col_keys], fun, FUN.VALUE = NA)]
 }
 
 docall_display <- function(col_keys, fun, x, i = NULL){

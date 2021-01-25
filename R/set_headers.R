@@ -3,11 +3,11 @@
 #' @description This function set labels for specified columns
 #' in a single row header of a flextable.
 #'
-#' @param x a \code{flextable} object
+#' @param x a `flextable` object
 #' @param ... named arguments (names are data colnames), each element is a single character
 #' value specifying label to use.
 #' @param values a named list (names are data colnames), each element is a single character
-#' value specifying label to use. If provided, argument \code{...} will be ignored.
+#' value specifying label to use. If provided, argument `...` will be ignored.
 #' @examples
 #' ft <- flextable( head( iris ))
 #' ft <- set_header_labels(ft, Sepal.Length = "Sepal length",
@@ -51,7 +51,7 @@ set_header_labels <- function(x, ..., values = NULL){
 #' @description indicate to not print a part of
 #' the flextable, i.e. an header, footer or the body.
 #'
-#' @param x a \code{flextable} object
+#' @param x a `flextable` object
 #' @param part partname of the table to delete (one of 'body', 'header' or 'footer').
 #' @examples
 #' ft <- flextable( head( iris ) )
@@ -87,6 +87,52 @@ as_new_data <- function(x, ..., values = NULL){
 # add header/footer row ----
 
 #' @export
+#' @title Add rows in body part
+#'
+#' @description Add rows in the flextable's body.
+#' It can be inserted at the top or the bottom.
+#' The function is column oriented, labels are specified for each columns, there
+#' can be more than a value - resulting in more than a new row.
+#'
+#' @param x a `flextable` object
+#' @param top should the rows be inserted at the top or the bottom.
+#' @param ... a named list (names are data colnames) of strings
+#' specifying corresponding values to add. It is important
+#' to insert data of the same type as the original data,
+#' otherwise it will be transformed (probably into strings if
+#' you add a `character' where a `double' is expected). This keeps
+#' the ability to format cell contents with the `colformat_*` functions,
+#' for example [colformat_num()].
+#' @param values a list of name-value pairs of labels or values,
+#' names should be existing col_key values. This argument can be used
+#' instead of `...` for programming purpose (If `values` is
+#' supplied argument `...` is ignored).
+#' @examples
+#' ft <- flextable(head(iris),
+#'   col_keys = c(
+#'     "Species", "Sepal.Length", "Petal.Length",
+#'     "Sepal.Width", "Petal.Width"
+#'   )
+#' )
+#'
+#' ft <- add_body(
+#'   x = ft, Sepal.Length = 1:5,
+#'   Sepal.Width = 1:5 * 2, Petal.Length = 1:5 * 3,
+#'   Petal.Width = 1:5 + 10, Species = "Blah", top = FALSE
+#' )
+#'
+#' ft <- theme_booktabs(ft)
+#' ft
+#' @seealso [flextable()], [add_header()], [add_footer()]
+add_body <- function(x, top = TRUE, ..., values = NULL){
+  if( !inherits(x, "flextable") )
+    stop("add_header supports only flextable objects.")
+  new_data <- as_new_data(x = x, ..., values = values)
+  x$body <- add_rows( x$body, new_data, first = top )
+  x
+}
+
+#' @export
 #' @title Add a rows of labels in header or footer part
 #'
 #' @description Add rows of labels in the flextable's header
@@ -96,15 +142,9 @@ as_new_data <- function(x, ..., values = NULL){
 #'
 #' @note
 #' when repeating values, they can be merged together with
-#' function \code{\link{merge_h}} and \code{\link{merge_v}}.
+#' function [merge_h()] and [merge_v()].
 #'
-#' @param x a \code{flextable} object
-#' @param top should the row be inserted at the top or the bottom.
-#' @param ... a named list (names are data colnames) of strings
-#' specifying corresponding labels to add.
-#' @param values a list of name-value pairs of labels or values,
-#' names should be existing col_key values.
-#' If values is supplied argument \code{...} is ignored.
+#' @inheritParams add_body
 #' @examples
 #' ft <- flextable( head( iris ),
 #'    col_keys = c("Species", "Sepal.Length", "Petal.Length",
@@ -168,7 +208,7 @@ add_footer <- function(x, top = TRUE, ..., values = NULL){
 #' labels are associated with a number of columns to merge. The function
 #' is row oriented. One call allow to add one single row.
 #'
-#' @param x a \code{flextable} object
+#' @param x a `flextable` object
 #' @param top should the row be inserted at the top or the bottom.
 #' @param values values to add as a character vector
 #' @param colwidths the number of columns to merge in the row for each label
@@ -267,7 +307,7 @@ add_footer_row <- function(x, top = TRUE, values = character(0), colwidths = int
 #' context of adding a footnote or adding a title on the top line
 #' of the flextable.
 #'
-#' @param x a \code{flextable} object
+#' @param x a `flextable` object
 #' @param values a character vector, each element will be added a a new
 #' row in the header or footer part.
 #' @param top should the row be inserted at the top or the bottom.
@@ -355,13 +395,13 @@ set_part_df <- function(x, mapping = NULL, key = "col_keys", part){
 #' @description Use a data.frame to specify flextable's header or footer rows.
 #'
 #' The data.frame must contain a column whose values match flextable
-#' \code{col_keys} argument, this column will be used as join key. The
+#' `col_keys` argument, this column will be used as join key. The
 #' other columns will be displayed as header or footer rows. The leftmost column
 #' is used as the top header/footer row and the rightmost column
 #' is used as the bottom header/footer row.
 #'
-#' @param x a \code{flextable} object
-#' @param mapping a \code{data.frame} specyfing for each colname
+#' @param x a `flextable` object
+#' @param mapping a `data.frame` specyfing for each colname
 #' content of the column.
 #' @param key column to use as key when joigning data_mapping.
 #' @examples

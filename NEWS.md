@@ -1,3 +1,31 @@
+# flextable 0.6.2
+
+## changes
+
+* new documentation! See at https://ardata-fr.github.io/flextable-book/
+
+
+## new features
+
+* `merge_v` has a new argument `combine` to let use j columns 
+be used as a single value (all values are pasted).
+* new function `add_body` for adding rows into a flextable body
+* new function `colformat_image` for images in flextable
+* new method `as_flextable` for `gam` models
+* function `set_flextable_defaults` gained 4 new arguments 
+ `post_process_pdf`, `post_process_html`, `post_process_docx` 
+ and `post_process_pptx` to enable flextable post-treatments 
+ conditionned by the output format.
+* new helper functions `fp_text_default` and `fp_border_default`.
+
+
+## Issues
+
+* fix encoding issue with Windows platforms
+* bring back caption into the table
+* fix overlapping issue with hline_top #244
+* fix `\n` and `\t` usage for pdf
+
 # flextable 0.6.1
 
 ## new features
