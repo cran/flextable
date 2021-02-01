@@ -95,6 +95,9 @@ set_formatter_type <- function(x, fmt_double = "%.03f", fmt_integer = "%.0f",
 #'   x = z, j = "Species", suffix = "!")
 #' z <- autofit(z)
 #' z
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_colformat_char_1.png}{options: width=50\%}}
 colformat_char <- function(
   x, i = NULL, j = NULL,
   na_str = get_flextable_defaults()$na_str,
@@ -126,6 +129,9 @@ colformat_char <- function(
 #'   big.mark=",", digits = 2, na_str = "N/A")
 #' autofit(ft)
 #' @importFrom rlang new_function quo get_expr pairlist2
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_colformat_double_1.png}{options: width=70\%}}
 colformat_double <- function(
   x, i = NULL, j = NULL,
   big.mark = get_flextable_defaults()$big.mark,
@@ -152,14 +158,21 @@ colformat_double <- function(
 #' @export
 #' @title format numeric cells
 #' @description Format numeric cells in a flextable.
+#'
+#' The function is different from [colformat_double()] on numeric type
+#' columns. The function uses the [format()] function of R on numeric
+#' type columns. So this is normally what you see on the R console
+#' most of the time (but scientific mode is disabled, NA are replaced, etc.).
 #' @inheritParams colformat_char
-#' @param big.mark,digits,decimal.mark see [format()]
+#' @param big.mark,decimal.mark see [format()]
 #' @family cells formatters
 #' @examples
 #' dat <- mtcars
+#' dat[2,1] <- NA
 #' ft <- flextable(head(dat))
 #' ft <- colformat_num(x = ft,
-#'   big.mark=",", digits = 2, na_str = "N/A")
+#'   big.mark=" ", decimal.mark = ",",
+#'   na_str = "N/A")
 #' ft <- autofit(ft)
 #' ft
 #' @section Illustrations:
@@ -169,7 +182,6 @@ colformat_num <- function(
   x, i = NULL, j = NULL,
   big.mark = get_flextable_defaults()$big.mark,
   decimal.mark = get_flextable_defaults()$decimal.mark,
-  digits = get_flextable_defaults()$digits,
   na_str = get_flextable_defaults()$na_str,
   prefix = "", suffix = ""){
 
@@ -178,11 +190,11 @@ colformat_num <- function(
 
   quo_fun <- quo(format_fun.default(
     x, big.mark = big.mark, decimal.mark = decimal.mark,
-    digits = digits, na_str = na_str, prefix = prefix, suffix = suffix
+    na_str = na_str, prefix = prefix, suffix = suffix
   ))
   fun_ <- new_function(
     pairlist2(x = , big.mark = big.mark, decimal.mark = decimal.mark,
-              digits = digits, na_str = na_str, prefix = prefix, suffix = suffix),
+              na_str = na_str, prefix = prefix, suffix = suffix),
     get_expr(quo_fun))
 
   docall_display(col_keys, fun_, x, i = i)
@@ -201,6 +213,9 @@ colformat_num <- function(
 #' ft <- colformat_date(x = ft)
 #' ft <- autofit(ft)
 #' ft
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_colformat_date_1.png}{options: width=30\%}}
 colformat_date <- function(
   x, i = NULL, j = NULL,
   fmt_date = get_flextable_defaults()$fmt_date,
@@ -233,6 +248,9 @@ colformat_date <- function(
 #' ft <- colformat_datetime(x = ft)
 #' ft <- autofit(ft)
 #' ft
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_colformat_datetime_1.png}{options: width=40\%}}
 colformat_datetime <- function(
   x, i = NULL, j = NULL,
   fmt_datetime = get_flextable_defaults()$fmt_datetime,
@@ -334,6 +352,9 @@ colformat_lgl <- function(
 #'   j = "Species", width = .20, height = .15)
 #' ft <- autofit(myft)
 #' ft
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_colformat_image_1.png}{options: width=70\%}}
 colformat_image <- function(
   x, i = NULL, j = NULL,
   width, height,

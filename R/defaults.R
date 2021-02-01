@@ -7,8 +7,7 @@ def_fonts <- if( Sys.info()["sysname"] == "Windows" ){
 }
 
 flextable_global <- new.env(parent = emptyenv())
-
-flextable_global$defaults <- list(
+default_flextable_settings <- list(
   font.family = def_fonts, font.size = 11, font.color = "black",
   text.align = "left", padding.bottom = 5, padding.top = 5,
   padding.left = 5, padding.right = 5,
@@ -27,7 +26,9 @@ flextable_global$defaults <- list(
   post_process_docx = function(x) x,
   post_process_html = function(x) x,
   post_process_pptx = function(x) x
-  )
+)
+
+flextable_global$defaults <- default_flextable_settings
 
 
 #' @export
@@ -35,7 +36,8 @@ flextable_global$defaults <- list(
 #'
 #' @description The current formatting properties (see [get_flextable_defaults()])
 #' are automatically applied to every flextable you produce.
-#' Use `set_flextable_defaults()` to override them.
+#' Use `set_flextable_defaults()` to override them. Use `init_flextable_defaults()`
+#' to re-init all values with the package defaults.
 #' @param font.family single character value specifying font name.
 #' @param font.size font size (in point) - 0 or positive integer value.
 #' @param font.color font color - a single character value specifying
@@ -49,8 +51,8 @@ flextable_global$defaults <- list(
 #' @param background.color cell background color - a single character value specifying a
 #' valid color (e.g. "#000000" or "black").
 #' @param table.layout 'autofit' or 'fixed' algorithm. Default to 'autofit'.
-#' @param decimal.mark,big.mark,digits,na_str [formatC] arguments used by [colformat_num()]
-#' and [colformat_int()].
+#' @param decimal.mark,big.mark,digits,na_str [formatC] arguments used by [colformat_num()],
+#' [colformat_double()], and [colformat_int()].
 #' @param fmt_date,fmt_datetime formats for date and datetime columns as
 #' documented in [strptime()]. Default to '%Y-%m-%d' and '%Y-%m-%d %H:%M:%S'.
 #' @param fonts_ignore if TRUE, pdf-engine pdflatex can be used instead of
@@ -189,6 +191,15 @@ set_flextable_defaults <- function(
   flextable_new_defaults <- modifyList(flextable_defaults, x)
   flextable_global$defaults <- flextable_new_defaults
   invisible(flextable_defaults)
+}
+
+#' @export
+#' @rdname set_flextable_defaults
+init_flextable_defaults <- function(){
+  x <- default_flextable_settings
+  flextable_global$defaults <- x
+  class(x) <- "flextable_defaults"
+  invisible(x)
 }
 
 

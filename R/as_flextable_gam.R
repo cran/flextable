@@ -17,6 +17,9 @@
 #'   ft <- as_flextable(b)
 #'   ft
 #' }
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_as_flextable.gam_1.png}{options: width=60\%}}
 #' @family as_flextable methods
 as_flextable.gam <- function(x, ...) {
   data_t <- tidy_gam(x)
@@ -38,7 +41,7 @@ as_flextable.gam <- function(x, ...) {
     ft <- add_body(ft, values = setNames(data_t$smooth, names(data_t$parametric)), top = FALSE)
   }
   ft <- compose(ft, j = "p.value", value = as_paragraph(pvalue_format(p.value)))
-  ft <- colformat_num(ft, j = 3:5, digits = 3)
+  ft <- colformat_double(ft, j = 3:5, digits = 3)
 
   if(nrow(data_t$smooth)>0){
     ft <- compose(ft, i = nrow(data_t$parametric) + 1, value = as_paragraph(smooth.head))
@@ -70,7 +73,7 @@ as_flextable.gam <- function(x, ...) {
 
 #' Summarize a(n) gam object
 #' @description summarizes information about the components of a model
-#' @keywords internal
+#' @noRd
 tidy_gam <- function(model) {
   ptab <- data.frame(summary(model)$p.table)
   ptab$term <- rownames(ptab)
@@ -93,7 +96,7 @@ tidy_gam <- function(model) {
 
 #' Summarize a(n) gam object
 #' @description provides model summaries in one line
-#' @keywords internal
+#' @noRd
 #' @importFrom stats AIC BIC logLik df.residual nobs
 glance_gam <- function(model) {
   data.frame(

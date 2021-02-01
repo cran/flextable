@@ -23,6 +23,12 @@ context with Word output format.
 PowerPoint cannot mix images and text in a paragraph, images
 are removed when outputing to PowerPoint format.
 }
+\section{Illustrations}{
+
+
+\if{html}{\figure{fig_gg_chunk_1.png}{options: width=70\%}}
+}
+
 \examples{
 library(data.table)
 library(flextable)
@@ -47,7 +53,7 @@ if(require("ggplot2")){
                value = as_paragraph(
                  gg_chunk(value = gg, width = 1, height = 1)
                ))
-  print(ft)
+  ft
 }
 }
 \seealso{

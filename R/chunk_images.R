@@ -364,6 +364,9 @@ lollipop <- function(value, min = NULL, max = NULL, rangecol = "#CCCCCC",
 #' @importFrom grDevices dev.off png
 #' @importFrom graphics boxplot
 #' @importFrom stats density
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_plot_chunk_1.png}{options: width=70\%}}
 plot_chunk <- function(value, width = 1, height = .2,
                        type = "box", free_scale = FALSE, ...) {
 
@@ -465,8 +468,11 @@ plot_chunk <- function(value, width = 1, height = .2,
 #'                value = as_paragraph(
 #'                  gg_chunk(value = gg, width = 1, height = 1)
 #'                ))
-#'   print(ft)
+#'   ft
 #' }
+#' @section Illustrations:
+#'
+#' \if{html}{\figure{fig_gg_chunk_1.png}{options: width=70\%}}
 gg_chunk <- function(value, width = 1, height = .2) {
 
   width <- as.double(rep(width, length(value)))

@@ -1,3 +1,21 @@
+# flextable 0.6.3
+
+## new features
+
+* `compose` has a new argument `use_dot` to let 
+use `.` and loop over columns 
+* new function `init_flextable_defaults()`
+* inst/mediasrc/man-figures.R can also be used for visual testing 
+with `git diff`
+
+## Issues
+
+* fix line spacing with pdf output
+* Now `colformat_num` calls the `format` function on the numeric values 
+(integer and float) which are therefore displayed as in console R. This function
+is used during the creation of a flextable so that by default the content of the
+cells is the same as that displayed in console R.
+
 # flextable 0.6.2
 
 ## changes
