@@ -97,13 +97,46 @@ caption_docx_bookdown <- function(x){
   if(!is.null(x$caption$value)){
     tab_props$cap <- x$caption$value
   }
+  if(!is.null(x$caption$style)){
+    tab_props$cap.style <- x$caption$style
+  }
 
   has_caption_label <- !is.null(tab_props$cap)
+  has_caption_style <- !is.null(tab_props$cap.style)
+  style_start <- ""
+  style_end <- ""
+
+  if(has_caption_style) {
+    style_start <- sprintf("::: {custom-style=\"%s\"}\n", tab_props$cap.style)
+    style_end <- "\n:::\n"
+  }
 
   caption <- ""
   if(has_caption_label) {
-    caption <- paste("",
-      paste0("<caption>(\\#tab:", tab_props$id, ")", tab_props$cap, "</caption>"),
+    zz <- if(!is.null(tab_props$id)){
+      structure(
+        list(
+          id = paste0(tab_props$tab.lp, tab_props$id),
+          run = list(
+            structure(list(
+              value = tab_props$cap, pr = NULL),
+              class = c("ftext", "cot", "run")))),
+        class = c("run_bookmark", "run")
+        )
+      #TODO: when officer update on cran, run_bookmark(paste0(tab_props$tab.lp, tab_props$id), ftext(tab_props$cap))
+    } else {
+      structure(list(
+        value = tab_props$cap, pr = NULL),
+        class = c("ftext", "cot", "run"))
+    }
+
+    zz <- paste("`", to_wml(zz), "`{=openxml}", sep = "")
+
+    caption <- paste(
+      "",
+      style_start,
+      paste0("<caption>(\\#tab:", tab_props$id, ")", zz, "</caption>"),
+      style_end,
       "", sep = "\n")
   }
   caption

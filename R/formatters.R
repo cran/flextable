@@ -142,7 +142,7 @@ colformat_double <- function(
 
   stopifnot(inherits(x, "flextable"))
 
-  col_keys <- filter_col_keys(x, j, is.double)
+  col_keys <- filter_col_keys(x, j, function(x) is.double(x) && !inherits(x, "POSIXt") && !inherits(x, "Date") )
 
   quo_fun <- quo(format_fun.double(
     x, big.mark = big.mark, decimal.mark = decimal.mark,
@@ -165,6 +165,7 @@ colformat_double <- function(
 #' most of the time (but scientific mode is disabled, NA are replaced, etc.).
 #' @inheritParams colformat_char
 #' @param big.mark,decimal.mark see [format()]
+#' @param ... unused argument.
 #' @family cells formatters
 #' @examples
 #' dat <- mtcars
@@ -183,7 +184,7 @@ colformat_num <- function(
   big.mark = get_flextable_defaults()$big.mark,
   decimal.mark = get_flextable_defaults()$decimal.mark,
   na_str = get_flextable_defaults()$na_str,
-  prefix = "", suffix = ""){
+  prefix = "", suffix = "", ...){
 
   stopifnot(inherits(x, "flextable"))
   col_keys <- filter_col_keys(x, j, is.numeric)
@@ -224,7 +225,7 @@ colformat_date <- function(
 
   stopifnot(inherits(x, "flextable"))
 
-  col_keys <- filter_col_keys(x, j, function(x) inherits(x, c("Date", "POSIXt")) )
+  col_keys <- filter_col_keys(x, j, function(x) inherits(x, "Date") )
 
   quo_fun <- quo(format_fun.Date(
     x, fmt_date = fmt_date, na_str = na_str, prefix = prefix, suffix = suffix))
@@ -259,7 +260,7 @@ colformat_datetime <- function(
 
   stopifnot(inherits(x, "flextable"))
 
-  col_keys <- filter_col_keys(x, j, function(x) inherits(x, c("Date", "POSIXt")) )
+  col_keys <- filter_col_keys(x, j, function(x) inherits(x, "POSIXt") )
 
   quo_fun <- quo(format_fun.POSIXt(
     x, fmt_datetime = fmt_datetime, na_str = na_str, prefix = prefix, suffix = suffix))

@@ -4,9 +4,10 @@ caption_html_str <- function(x, bookdown = FALSE){
   # caption "bookmark"
   bookdown_ref_label <- ref_label()
   if(bookdown && !is.null(x$caption$autonum$bookmark)){
-    bookdown_ref_label <- paste0("(\\#tab:", x$caption$autonum$bookmark, ")")
+    bookdown_ref_label <- paste0("(\\#", x$caption$autonum$seq_id, ":",
+                                 x$caption$autonum$bookmark, ")")
   } else if(bookdown && !is.null(tab_props$id)){
-    bookdown_ref_label <- paste0("(\\#tab:", tab_props$id, ")")
+    bookdown_ref_label <- paste0("(\\#", tab_props$tab.lp, tab_props$id, ")")
   }
 
   caption_style <- tab_props$style
@@ -67,7 +68,7 @@ html_str <- function(x, ft.align = NULL, class = "tabwid", caption = "", shadow 
                    tabwid_css,
                    html,
            "</template>",
-           "\n<div id=\"", uid[2], "\"></div>",
+           "\n<div class=\"flextable-shadow-host\" id=\"", uid[2], "\"></div>",
            to_shadow_dom(uid1 = uid[1], uid2 = uid[2], ft.align = ft.align)
     )
   }

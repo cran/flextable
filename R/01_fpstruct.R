@@ -46,6 +46,7 @@ text_struct <- function( nrow, keys,
                         color = "black", font.size = 10,
                         bold = FALSE, italic = FALSE, underlined = FALSE,
                         font.family = "Arial",
+                        hansi.family = "Arial", eastasia.family = "Arial", cs.family = "Arial",
                         vertical.align = "baseline",
                         shading.color = "transparent", ... ){
   x <- list(
@@ -55,6 +56,9 @@ text_struct <- function( nrow, keys,
     italic = fpstruct(nrow = nrow, keys = keys, default = italic),
     underlined = fpstruct(nrow = nrow, keys = keys, default = underlined),
     font.family = fpstruct(nrow = nrow, keys = keys, default = font.family),
+    hansi.family = fpstruct(nrow = nrow, keys = keys, default = hansi.family),
+    eastasia.family = fpstruct(nrow = nrow, keys = keys, default = eastasia.family),
+    cs.family = fpstruct(nrow = nrow, keys = keys, default = cs.family),
     vertical.align = fpstruct(nrow = nrow, keys = keys, default = vertical.align),
     shading.color = fpstruct(nrow = nrow, keys = keys, default = shading.color)
   )
@@ -516,7 +520,9 @@ print.chunkset_struct <- function(x, ...){
 
 
 replace_missing_fptext_by_default <- function(x, default){
-  by_columns <- c("font.size", "italic", "bold", "underlined", "color", "shading.color", "font.family", "vertical.align")
+  by_columns <- c("font.size", "italic", "bold", "underlined", "color", "shading.color",
+                  "font.family", "hansi.family", "eastasia.family", "cs.family",
+                  "vertical.align")
 
   keys <- default[, setdiff(names(default), by_columns), drop = FALSE]
   values <- default[, by_columns, drop = FALSE]
@@ -529,7 +535,9 @@ replace_missing_fptext_by_default <- function(x, default){
   newx <- newx[defdata, on=names(keys)]
   setDF(newx)
   for( j in by_columns){
-    newx[[j]] <- ifelse(is.na(newx[[j]]), newx[[paste0(j, "_default")]], newx[[j]])
+    if(!is.null(newx[[j]]))
+      newx[[j]] <- ifelse(is.na(newx[[j]]), newx[[paste0(j, "_default")]], newx[[j]])
+    else newx[[j]] <- newx[[paste0(j, "_default")]]
     newx[[paste0(j, "_default")]] <- NULL
   }
   newx
@@ -551,7 +559,7 @@ fortify_content <- function(x, default_chunk_fmt, ...){
   columns = rep( x$content$keys, each = nrow(x$content$data) ),
   x$content$data, SIMPLIFY = FALSE, USE.NAMES = FALSE ) )
 
-  out <- rbindlist( apply(x$content$data, 2, rbindlist))
+  out <- rbindlist( apply(x$content$data, 2, rbindlist), use.names=TRUE, fill=TRUE)
   out$ft_row_id <- row_id
   out$col_id <- col_id
   setDF(out)
@@ -568,9 +576,8 @@ fortify_content <- function(x, default_chunk_fmt, ...){
 add_runstyle_column <- function(x, type = "wml"){
 
   if( type %in% "wml"){
-
     family <- sprintf("<w:rFonts w:ascii=\"%s\" w:hAnsi=\"%s\" w:eastAsia=\"%s\" w:cs=\"%s\"/>",
-                      x$font.family, x$font.family, x$font.family, x$font.family )
+                      x$font.family, x$hansi.family, x$eastasia.family, x$cs.family )
     bold <- ifelse(x$bold, "<w:b/>", "" )
     italic <- ifelse(x$italic, "<w:i/>", "" )
     underline <- ifelse(x$underlined, "<w:u w:val=\"single\"/>", "" )
@@ -592,7 +599,10 @@ add_runstyle_column <- function(x, type = "wml"){
                            color, shading, "</w:rPr>" )
   } else if( type %in% "pml"){
 
-    family <- sprintf("<a:latin typeface=\"%s\"/><a:cs typeface=\"%s\"/>", x$font.family, x$font.family )
+    # family <- sprintf(
+    #   "<a:latin typeface=\"%s\"/><a:cs typeface=\"%s\"/><a:ea typeface=\"%s\"/><a:sym typeface=\"%s\"/>",
+    #   x$font.family, x$cs.family, x$eastasia.family, x$hansi.family)
+    family <- sprintf("<a:latin typeface=\"%s\"/>", x$font.family)
     bold <- ifelse(x$bold, " b=\"1\"", "" )
     italic <- ifelse(x$italic, " i=\"1\"", "" )
     underline <- ifelse(x$underlined, " u=\"1\"", "" )
@@ -656,6 +666,7 @@ add_raster_as_filecolumn <- function(x){
 
 }
 #' @importFrom base64enc dataURI
+#' @importFrom htmltools urlEncodePath
 run_data <- function(x, type){
 
   is_hlink <- !is.na(x$url)
@@ -676,14 +687,16 @@ run_data <- function(x, type){
       paste0(sprintf("<w:r %s>", base_ns), x$style_str, text_nodes_str, "</w:r>"),
       x$img_str )
     # manage hlinks
-    text_nodes_str[is_hlink] <- paste0("<w:hyperlink r:id=\"", htmlEscape(x$url[is_hlink]), "\">", text_nodes_str[is_hlink], "</w:hyperlink>")
+    url_vals <- vapply(x$url[is_hlink], urlEncodePath, FUN.VALUE = "", USE.NAMES = FALSE)
+    text_nodes_str[is_hlink] <- paste0("<w:hyperlink r:id=\"", url_vals, "\">", text_nodes_str[is_hlink], "</w:hyperlink>")
     x$par_nodes_str <- text_nodes_str
 
   } else if( type %in% "pml" ){
     text_nodes_str <- ifelse( !is_raster, paste0("<a:t>", htmlEscape(x$txt), "</a:t>"), "<a:t></a:t>")
 
     # manage hlinks
-    link_pr <- ifelse(is_hlink, paste0("<a:hlinkClick r:id=\"", htmlEscape(x$url), "\"/>"), "" )
+    x$url[is_hlink] <- vapply(x$url[is_hlink], urlEncodePath, FUN.VALUE = "", USE.NAMES = FALSE)
+    link_pr <- ifelse(is_hlink, paste0("<a:hlinkClick r:id=\"", x$url, "\"/>"), "" )
 
     x$par_nodes_str <- paste0("<a:r>", sprintf(x$style_str, link_pr), text_nodes_str, "</a:r>")
   }

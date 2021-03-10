@@ -17,13 +17,6 @@ check_formula_i_and_part <- function(i, part){
   TRUE
 }
 
-nrow_part <- function(x, part){
-  if( is.null(x[[part]]) )
-    0
-  else if( is.null(x[[part]]$dataset) )
-    0
-  else nrow(x[[part]]$dataset)
-}
 
 #' @importFrom xml2 xml_attr<-
 process_url <- function(rel, url, str, pattern, double_esc = TRUE){

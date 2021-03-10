@@ -1,3 +1,62 @@
+#' @export
+#' @title create a chunk representation suitable for flextable
+#' @description This function is to be used by external packages
+#' that want to provide an object that can be inserted as a chunk
+#' object in paragraphs of a flextable object.
+#' @param ... values to set.
+#' @section  text pattern with default values:
+#'
+#' ```
+#' chunk_dataframe(txt = c("any text", "other text"))
+#' ```
+#' @section  text pattern with bold set to TRUE:
+#'
+#' ```
+#' chunk_dataframe(
+#'   txt = c("any text", "other text"),
+#'   bold = c(TRUE, TRUE))
+#' ```
+#' @section  text pattern with control over all formatting properties:
+#'
+#' ```
+#' chunk_dataframe(
+#'   txt = c("any text", "other text"),
+#'   font.size = c(12, 10),
+#'   italic = c(FALSE, TRUE),
+#'   bold = c(FALSE, TRUE),
+#'   underlined = c(FALSE, TRUE),
+#'   color = c("black", "red"),
+#'   shading.color = c("transparent", "yellow"),
+#'   font.family = c("Arial", "Arial"),
+#'   hansi.family = c("Arial", "Arial"),
+#'   eastasia.family = c("Arial", "Arial"),
+#'   cs.family = c("Arial", "Arial"),
+#'   vertical.align = c("top", "bottom") )
+#' ```
+#' @section  text with url pattern:
+#' ```
+#' chunk_dataframe(
+#'   txt = c("any text", "other text"),
+#'   url = rep("https://www.google.fr", 2),
+#'   font.size = c(12, 10),
+#'   italic = c(FALSE, TRUE),
+#'   bold = c(FALSE, TRUE),
+#'   underlined = c(FALSE, TRUE),
+#'   color = c("black", "red"),
+#'   shading.color = c("transparent", "yellow"),
+#'   font.family = c("Arial", "Arial"),
+#'   hansi.family = c("Arial", "Arial"),
+#'   eastasia.family = c("Arial", "Arial"),
+#'   cs.family = c("Arial", "Arial"),
+#'   vertical.align = c("top", "bottom") )
+#' ```
+#' @section  images pattern:
+#' ```
+#' chunk_dataframe(width = width, height = height, img_data = files )
+#' ```
+#' @keywords internal
+#' @return a data.frame with an additional class "chunk" that makes it
+#' suitable for beeing used in [as_paragraph()]
 chunk_dataframe <- function(...){
   x <- list(...)
 
@@ -17,6 +76,9 @@ chunk_dataframe <- function(...){
     color = def_chr,
     shading.color = def_chr,
     font.family = def_chr,
+    hansi.family = def_chr,
+    eastasia.family = def_chr,
+    cs.family = def_chr,
     vertical.align = def_chr,
     width = def_dbl,
     height = def_dbl,
@@ -27,6 +89,7 @@ chunk_dataframe <- function(...){
   data0[names(x)] <- x
   if( !is.null(img_data))
     data0$img_data <- img_data
+  class(data0) <- c("chunk", "data.frame")
   data0
 }
 
@@ -38,6 +101,9 @@ default_fptext_prop <- structure(list(
   color = NA_character_,
   shading.color = NA_character_,
   font.family = NA_character_,
+  hansi.family = NA_character_,
+  eastasia.family = NA_character_,
+  cs.family = NA_character_,
   vertical.align = NA_character_),
   class = "fp_text")
 
@@ -95,7 +161,6 @@ as_chunk <- function(x, props = NULL, formatter = format_fun, ...) {
       stop("props should be a list of length ", length(text) )
     }
   }
-
   data <- chunk_dataframe(txt = text,
                   font.size = sapply(props, function(x) x$font.size),
                   italic = sapply(props, function(x) x$italic),
@@ -104,8 +169,11 @@ as_chunk <- function(x, props = NULL, formatter = format_fun, ...) {
                   color = sapply(props, function(x) x$color),
                   shading.color = sapply(props, function(x) x$shading.color),
                   font.family = sapply(props, function(x) x$font.family),
+                  hansi.family = sapply(props, function(x) x$hansi.family),
+                  eastasia.family = sapply(props, function(x) x$eastasia.family),
+                  cs.family = sapply(props, function(x) x$cs.family),
                   vertical.align = sapply(props, function(x) x$vertical.align) )
-  class(data) <- c("chunk", "data.frame")
+
   data
 }
 
@@ -231,6 +299,63 @@ as_i <- function(x){
     x <- as_chunk(x, formatter = format_fun)
   }
   x$italic = TRUE
+  x
+}
+
+#' @export
+#' @title colorize chunk
+#' @description The function is producing a chunk with
+#' a font in color.
+#' @param color color to use as text highlighting color as character vector.
+#' @note
+#' This is a sugar function that ease the composition of complex
+#' labels made of different formattings. It should be used inside a
+#' call to [as_paragraph()].
+#' @inheritParams as_sub
+#' @family chunk elements for paragraph
+#' @examples
+#' ft <- flextable( head(iris),
+#'   col_keys = c("Sepal.Length", "dummy") )
+#'
+#' ft <- compose(ft, j = "dummy",
+#'   value = as_paragraph(colorize(Sepal.Length, color = "red")) )
+#'
+#' ft
+colorize <- function(x, color){
+
+  if( !inherits(x, "chunk") ){
+    x <- as_chunk(x, formatter = format_fun)
+  }
+
+  x$color <- color
+  x
+}
+
+#' @export
+#' @title highlight chunk
+#' @description The function is producing a chunk with
+#' an highlight chunk.
+#' @param color color to use as text highlighting color as character vector.
+#' @note
+#' This is a sugar function that ease the composition of complex
+#' labels made of different formattings. It should be used inside a
+#' call to [as_paragraph()].
+#' @inheritParams as_sub
+#' @family chunk elements for paragraph
+#' @examples
+#' ft <- flextable( head(iris),
+#'   col_keys = c("Sepal.Length", "dummy") )
+#'
+#' ft <- compose(ft, j = "dummy",
+#'   value = as_paragraph(as_highlight(Sepal.Length, color = "yellow")) )
+#'
+#' ft
+as_highlight <- function(x, color){
+
+  if( !inherits(x, "chunk") ){
+    x <- as_chunk(x, formatter = format_fun)
+  }
+  x$shading.color <- color
   x
 }
 

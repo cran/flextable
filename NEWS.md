@@ -1,3 +1,21 @@
+# flextable 0.6.4
+
+## new features
+
+* export of `chunk_dataframe` for those who want to create functions that work with 
+ `as_paragraph`.
+* in R Markdown for Word, bookmarks are now added to captions when output format is from bookdown
+* shadow hosts HTML elements get the class `flextable-shadow-host`.
+* `set_flextable_defaults` now accept argument `padding` that set values for padding 
+top, bottom, left and right.
+* new functions `colorize`, `as_highlight`
+* functions `nrow_part` and `ncol_keys` are now exported
+
+## Issues
+
+* fix for minibar when all values are equal to zero (thanks to Martin Durian)
+* fix URLs formatted incorrectly in Word and PowerPoint (thanks to David Czihak)
+
 # flextable 0.6.3
 
 ## new features
