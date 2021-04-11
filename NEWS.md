@@ -1,3 +1,11 @@
+# flextable 0.6.5
+
+## new features
+
+* add function `as_equation` for 'MathJax' equations.
+* add argument `text_after` to function `flextable_to_rmd` to let append 
+any text to the produced flextable.
+
 # flextable 0.6.4
 
 ## new features
