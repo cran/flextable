@@ -236,8 +236,11 @@ highlight <- function(x, i = NULL, j = NULL, color = "yellow", part = "body", so
     return(x)
 
   if(is.function(color)){
+    i_index <- i
+    check_formula_i_and_part(i_index, part)
+    i_index <- get_rows_id(x[[part]], i_index )
     source <- get_dataset_columns_id(x[[part]], source )
-    lcolor <- lapply(x[[part]]$dataset[source], color)
+    lcolor <- lapply(x[[part]]$dataset[source][i_index,], color)
     color <- matrix( unlist( lcolor ), ncol = length(lcolor) )
   }
 
@@ -304,8 +307,11 @@ color <- function(x, i = NULL, j = NULL, color, part = "body", source = j ){
     return(x)
 
   if(is.function(color)){
+    i_index <- i
+    check_formula_i_and_part(i_index, part)
+    i_index <- get_rows_id(x[[part]], i_index )
     source <- get_dataset_columns_id(x[[part]], source )
-    lcolor <- lapply(x[[part]]$dataset[source], color)
+    lcolor <- lapply(x[[part]]$dataset[source][i_index,], color)
     color <- matrix( unlist( lcolor ), ncol = length(lcolor) )
   }
 
@@ -325,7 +331,23 @@ color <- function(x, i = NULL, j = NULL, color, part = "body", source = j ){
 #' @param i rows selection
 #' @param j columns selection
 #' @param part partname of the table (one of 'all', 'body', 'header', 'footer')
-#' @param fontname string value, the font name.
+#' @param fontname single character value. With Word and PowerPoint output, the value specifies the font to
+#' be used to format characters in the Unicode range (U+0000-U+007F).
+#' @param cs.family Optional font to be used to format
+#' characters in a complex script Unicode range. For example, Arabic
+#' text might be displayed using the "Arial Unicode MS" font.
+#' Used only with Word and PowerPoint outputs. Its default value is the value
+#' of `fontname`.
+#' @param eastasia.family optional font to be used to
+#' format characters in an East Asian Unicode range. For example,
+#' Japanese text might be displayed using the "MS Mincho" font.
+#' Used only with Word and PowerPoint outputs. Its default value is the value
+#' of `fontname`.
+#' @param hansi.family optional. Specifies the font to be used to format
+#' characters in a Unicode range which does not fall into one of the
+#' other categories.
+#' Used only with Word and PowerPoint outputs. Its default value is the value
+#' of `fontname`.
 #' @family sugar functions for table style
 #' @examples
 #' require("gdtools")
@@ -342,7 +364,7 @@ color <- function(x, i = NULL, j = NULL, color, part = "body", source = j ){
 #' \if{html}{\figure{fig_font_1.png}{options: width=70\%}}
 #'
 #' \if{html}{\figure{fig_font_2.png}{options: width=70\%}}
-font <- function(x, i = NULL, j = NULL, fontname, part = "body" ){
+font <- function(x, i = NULL, j = NULL, fontname, part = "body", cs.family = fontname, hansi.family = fontname, eastasia.family = fontname ){
 
   if( !inherits(x, "flextable") ) stop("font supports only flextable objects.")
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE )
@@ -362,6 +384,9 @@ font <- function(x, i = NULL, j = NULL, fontname, part = "body" ){
   j <- get_columns_id(x[[part]], j )
 
   x[[part]]$styles$text[i, j, "font.family"] <- fontname
+  x[[part]]$styles$text[i, j, "cs.family"] <- cs.family
+  x[[part]]$styles$text[i, j, "hansi.family"] <- hansi.family
+  x[[part]]$styles$text[i, j, "eastasia.family"] <- eastasia.family
   x
 }
 
@@ -576,6 +601,8 @@ align_nottext_col <- function(x, align = "right", header = TRUE, footer = TRUE )
 #' as argument to `bg`. This is only useful if j is colored with values contained in another
 #' (or other) column.
 #' @family sugar functions for table style
+#' @note
+#' Word does not allow you to apply transparency to table cells or paragraph shading.
 #' @examples
 #' ft_1 <- flextable(head(mtcars))
 #' ft_1 <- bg(ft_1, bg = "wheat", part = "header")
@@ -615,8 +642,11 @@ bg <- function(x, i = NULL, j = NULL, bg, part = "body", source = j ){
     return(x)
 
   if(is.function(bg)){
+    i_index <- i
+    check_formula_i_and_part(i_index, part)
+    i_index <- get_rows_id(x[[part]], i_index )
     source <- get_dataset_columns_id(x[[part]], source )
-    lbg <- lapply(x[[part]]$dataset[source], bg)
+    lbg <- lapply(x[[part]]$dataset[source][i_index,], bg)
     bg <- matrix( unlist( lbg ), ncol = length(lbg) )
   }
 
