@@ -1,3 +1,23 @@
+# flextable 0.6.7
+
+## new features
+
+* tab.lp is now a knitr supported chunk option and can be use to change the 
+label prefix for the table sequence id when a caption is used. See 
+https://github.com/davidgohel/officedown/issues/71.
+* support for `tab.topcaption` that let modify the table caption 
+position from "top" (TRUE) to "bottom" (FALSE). 
+* add helper function `before()` to ease addition of `hline()` before some values 
+to match with.
+
+## Issues
+
+* fix issue with white spaces instead of empty borders in HTML output
+* fix issue with missing top or right border in LaTeX output (thanks to huaixv for the fix)
+* Table cells containing square braces were causing errors (thanks to Nick Bart for the fix)
+* fix proc_freq error when include.row_percent, include.table_percent and include.column_percent are 
+all set to FALSE.
+
 # flextable 0.6.6
 
 ## new features

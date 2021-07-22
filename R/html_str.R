@@ -1,8 +1,7 @@
 caption_html_str <- function(x, bookdown = FALSE){
   tab_props <- opts_current_table()
-
   # caption "bookmark"
-  bookdown_ref_label <- ref_label()
+  bookdown_ref_label <- ref_label(tab_props$tab.lp)
   if(bookdown && !is.null(x$caption$autonum$bookmark)){
     bookdown_ref_label <- paste0("(\\#", x$caption$autonum$seq_id, ":",
                                  x$caption$autonum$bookmark, ")")
@@ -29,7 +28,7 @@ caption_html_str <- function(x, bookdown = FALSE){
   }
   caption
 }
-html_str <- function(x, ft.align = NULL, class = "tabwid", caption = "", shadow = TRUE){
+html_str <- function(x, ft.align = NULL, class = "tabwid", caption = "", shadow = TRUE, topcaption = TRUE){
 
   fixed_layout <- x$properties$layout %in% "fixed"
   if(!fixed_layout){
@@ -45,8 +44,10 @@ html_str <- function(x, ft.align = NULL, class = "tabwid", caption = "", shadow 
   classname <- gsub("(^[[:alnum:]]+)(.*)$", "cl-\\1", classname)
   tabcss <- paste0(".", classname, "{", tabcss, "}")
 
-  codes <- sprintf("<style>%s%s%s</style><table class='%s'>%s%s</table>",
-          tabcss, codes$css, flextable_global$defaults$extra_css, classname, caption, codes$html)
+  if(topcaption) str <- paste0(caption, codes$html)
+  else str <- paste0(codes$html, caption)
+  codes <- sprintf("<style>%s%s%s</style><table class='%s'>%s</table>",
+          tabcss, codes$css, flextable_global$defaults$extra_css, classname, str)
 
   if( is.null(ft.align) ) ft.align <- "center"
 
@@ -69,17 +70,22 @@ html_str <- function(x, ft.align = NULL, class = "tabwid", caption = "", shadow 
                    html,
            "</template>",
            "\n<div class=\"flextable-shadow-host\" id=\"", uid[2], "\"></div>",
-           to_shadow_dom(uid1 = uid[1], uid2 = uid[2], ft.align = ft.align)
+           to_shadow_dom(uid1 = uid[1], uid2 = uid[2], ft.align = ft.align, topcaption = topcaption)
     )
   }
   html
 }
 
-to_shadow_dom <- function(uid1, uid2, ft.align = NULL){
+to_shadow_dom <- function(uid1, uid2, ft.align = NULL, topcaption = TRUE){
 
   if( is.null(ft.align) )
     ft.align <- "center"
 
+  if(topcaption){
+    move_inst <- "  dest.parentNode.insertBefore(newcapt, dest.previousSibling);"
+  } else {
+    move_inst <- "  dest.parentNode.insertBefore(newcapt, dest.nextSibling);"
+  }
   script_commands <- c("", "<script>",
     paste0("var dest = document.getElementById(\"", uid2, "\");"),
     paste0("var template = document.getElementById(\"", uid1, "\");"),
@@ -88,7 +94,7 @@ to_shadow_dom <- function(uid1, uid2, ft.align = NULL){
     paste0("  caption.style.cssText = \"display:block;text-align:", ft.align, ";\";"),
     "  var newcapt = document.createElement(\"p\");",
     "  newcapt.appendChild(caption)",
-    "  dest.parentNode.insertBefore(newcapt, dest.previousSibling);",
+    move_inst,
     "}",
     "var fantome = dest.attachShadow({mode: 'open'});",
     "var templateContent = template.content;",
@@ -371,7 +377,7 @@ par_css_styles <- function(x){
 cell_css_styles <- function(x){
 
   background.color <- ifelse( colalpha(x$background.color) > 0,
-                              sprintf("background-clip: padding-box;background-color:%s;", colcodecss(x$background.color) ),
+                              sprintf("background-color:%s;", colcodecss(x$background.color) ),
                               "background-color:transparent;")
 
   width <- ifelse( is.na(x$width), "", sprintf("width:%s;", css_pt(x$width * 72) ) )

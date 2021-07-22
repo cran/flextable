@@ -117,6 +117,8 @@ latex_str <- function(x, ft.align = "center",
     column_sizes_latex <- rep("c", length(dims$widths))
   }
 
+  tab_props <- opts_current_table()
+  topcaption <- tab_props$topcaption
   caption <- latex_caption(x, bookdown = bookdown)
   align_tag <- latex_table_align()
 
@@ -132,10 +134,12 @@ latex_str <- function(x, ft.align = "center",
     sprintf("\\setlength{\\tabcolsep}{%spt}", format_double(ft.tabcolsep, 0)),
     sprintf("\\renewcommand*{\\arraystretch}{%s}", format_double(ft.arraystretch, 2)),
     # "\\begin{table}",
-    table_start, caption,
+    table_start, if(topcaption) caption,
     paste(txt_data$txt[txt_data$part %in% "header"], collapse = ""),
     "\\endfirsthead",
-    latex, table_end,
+    latex,
+    if(!topcaption) caption,
+    table_end,
     # "\\end{table}",
     sep = "\n\n"
   )
@@ -233,10 +237,9 @@ augment_part_separators <- function(z) {
 }
 
 augment_top_borders <- function(properties_df) {
-  first_level <- head(levels(properties_df$part), 1)
-
   hhline_top_data <- properties_df[
-    properties_df$ft_row_id %in% 1 & properties_df$part %in% first_level,
+    properties_df$ft_row_id %in% 1 &
+      as.integer(properties_df$part) == min(as.integer(properties_df$part)),
     list(
       hhline_top = paste0("\\hhline{", paste0(.SD$hhlines_top, collapse = ""), "}")
     ),
@@ -254,13 +257,13 @@ augment_borders <- function(properties_df) {
   properties_df[, c("vborder_left", "vborder_right", "hhlines_bottom", "hhlines_top") :=
     list(
       latex_vborder(w = .SD$border.width.left, cols = .SD$border.color.left),
-      fcase(.SD$col_id %in% tail(levels(.SD$col_id), 1),
+      fcase((as.integer(.SD$col_id) + .SD$rowspan) == (nlevels(.SD$col_id) + 1L),
         latex_vborder(w = .SD$border.width.right, cols = .SD$border.color.right),
         default = ""
       ),
       latex_hhline(w = .SD$border.width.bottom, cols = .SD$border.color.bottom),
       fcase(.SD$ft_row_id %in% 1 &
-        .SD$part %in% head(levels(.SD$part), 1),
+              as.integer(.SD$part) == min(as.integer(.SD$part)),
       latex_hhline(w = .SD$border.width.top, cols = .SD$border.color.top),
       default = ""
       )
@@ -487,10 +490,10 @@ latex_caption <- function(x, bookdown) {
   std_ref_label <- NULL
   if(bookdown && !is.null(x$caption$autonum$bookmark)){
     std_ref_label <- x$caption$autonum$bookmark
-    bookdown_ref_label <- paste0("(\\#tab:", x$caption$autonum$bookmark, ")")
+    bookdown_ref_label <- paste0("(\\#", tab_props$tab.lp, x$caption$autonum$bookmark, ")")
   } else if(bookdown && !is.null(tab_props$id)){
     std_ref_label <- tab_props$id
-    bookdown_ref_label <- paste0("(\\#tab:", tab_props$id, ")")
+    bookdown_ref_label <- paste0("(\\#", tab_props$tab.lp, tab_props$id, ")")
   }
 
 
@@ -506,7 +509,7 @@ latex_caption <- function(x, bookdown) {
       if (bookdown) {
         bookdown_ref_label
       } else if (!is.null(std_ref_label)) {
-        sprintf("\\label{tab:%s}", std_ref_label)
+        sprintf("\\label{", tab_props$tab.lp, "%s}", std_ref_label)
       },
       "\\\\"
     )

@@ -1,7 +1,7 @@
 Package: flextable
 Type: Package
 Title: Functions for Tabular Reporting
-Version: 0.6.6
+Version: 0.6.7
 Authors@R: c(
     person("David", "Gohel", role = c("aut", "cre"),
     email = "david.gohel@ardata.fr"),
@@ -19,7 +19,7 @@ Description: Create pretty tables for 'HTML', 'PDF', 'Microsoft Word' and 'Micro
   their content. It also extends package 'officer' that does not contain any feature for customized 
   tabular reporting.
 License: GPL-3
-Imports: stats, utils, grDevices, graphics, officer (>= 0.3.17),
+Imports: stats, utils, grDevices, graphics, officer (>= 0.3.19),
         rmarkdown, knitr, htmltools, xml2, data.table (>= 1.13.0), uuid
         (>= 0.1-4), gdtools (>= 0.1.6), rlang, base64enc
 RoxygenNote: 7.1.1
@@ -31,7 +31,7 @@ URL: https://ardata-fr.github.io/flextable-book/,
 BugReports: https://github.com/davidgohel/flextable/issues
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2021-05-17 16:18:35 UTC; davidgohel
+Packaged: 2021-07-22 08:56:22 UTC; davidgohel
 Author: David Gohel [aut, cre],
   Clementine Jager [ctb],
   Quentin Fazilleau [ctb],
@@ -42,4 +42,4 @@ Author: David Gohel [aut, cre],
   Paul Julian [ctb] (support for gam objects)
 Maintainer: David Gohel <david.gohel@ardata.fr>
 Repository: CRAN
-Date/Publication: 2021-05-17 17:50:02 UTC
+Date/Publication: 2021-07-22 09:30:02 UTC
