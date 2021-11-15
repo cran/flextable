@@ -434,20 +434,29 @@ print.flextable <- function(x, preview = "html", ...){
 #' read from knitr's chunk option `tab.id` or `label` if in a bookdown
 #' (this is to respect the bookdown standards).
 #'
-#' `tab.id='my_id'` or `label='my_id'`
+#' `tab.id='my_id'` or `label='my_id'`.
+#'
+#' Some options are available to customise captions for any output:
+#'
+#' | **label**                                        |    **name**     | **value**  |
+#' |:-------------------------------------------------|:---------------:|:----------:|
+#' | caption id/bookmark                              | tab.id          |    NULL    |
+#' | caption                                          | tab.cap         |    NULL    |
+#' | display table caption on top of the table or not | tab.topcaption  |    TRUE    |
+#' | caption table sequence identifier.               | tab.lp          |   "tab:"   |
 #'
 #' Word output provide more options such as ability to choose the prefix for numbering chunk for
 #' example. The table below expose these options:
 #'
-#' \tabular{llll}{
-#'   **chunk option** \tab **purpose** \tab **rmarkdown** \tab **bookdown** \cr
-#'   tab.cap.style \tab (Word only) style name to use for table captions            \tab yes \tab yes\cr
-#'   tab.cap.pre   \tab (Word only) Prefix for numbering chunk (default to "Table") \tab yes \tab yes\cr
-#'   tab.cap.sep   \tab (Word only) Suffix for numbering chunk (default to ": ")    \tab yes \tab yes\cr
-#'   tab.cap       \tab **Caption label**                                      \tab yes \tab yes\cr
-#'   tab.id        \tab **Caption reference unique identifier**                \tab yes \tab no \cr
-#'   label         \tab **Caption reference unique identifier**                \tab no  \tab yes
-#' }
+#' | **label**                                               |    **name**     | **value**  |
+#' |:--------------------------------------------------------|:---------------:|:----------:|
+#' | Word stylename to use for table captions.               | tab.cap.style   |    NULL    |
+#' | prefix for numbering chunk (default to   "Table ").     | tab.cap.pre     |   Table    |
+#' | suffix for numbering chunk (default to   ": ").         | tab.cap.sep     |    " :"    |
+#' | title number depth                                      | tab.cap.tnd     |      0     |
+#' | caption prefix formatting properties                    | tab.cap.fp_text | fp_text_lite(bold = TRUE) |
+#' | separator to use between title number and table number. | tab.cap.tns     |     "-"    |
+#'
 #' @section HTML output:
 #'
 #' HTML output is using shadow dom to encapsule the table
@@ -456,17 +465,24 @@ print.flextable <- function(x, preview = "html", ...){
 #' knowledge, only the pagedown output is concerned.
 #' Use knitr chunk option `ft.shadow=FALSE` to disable shadow dom.
 #'
+#' If `ft.shadow=TRUE` some global CSS rules may change the
+#' desired output of flextables.
+#'
 #' @section PDF output:
 #'
 #' Some features are not implemented in PDF due to technical
 #' infeasibility. These are the padding, line_spacing and
 #' height properties.
 #'
+#' Background color and merged cells are also sources of trouble
+#' with PDF format. Authors are hoping to fix these issues in
+#' the future.
+#'
 #' @section PowerPoint output:
 #'
 #' Auto-adjust Layout is not available for PowerPoint.
 #'
-#' Also images cannot be integrated into tables with the PowerPoint format.
+#' Images cannot be integrated into tables with the PowerPoint format.
 #'
 #' @param x a `flextable` object
 #' @param ... further arguments, not used.

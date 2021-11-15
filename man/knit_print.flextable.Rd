@@ -71,19 +71,26 @@ If \code{set_caption} function is not used, caption identifier will be
 read from knitr's chunk option \code{tab.id} or \code{label} if in a bookdown
 (this is to respect the bookdown standards).
 
-\code{tab.id='my_id'} or \code{label='my_id'}
+\code{tab.id='my_id'} or \code{label='my_id'}.
+
+Some options are available to customise captions for any output:\tabular{lcc}{
+   \strong{label} \tab \strong{name} \tab \strong{value} \cr
+   caption id/bookmark \tab tab.id \tab NULL \cr
+   caption \tab tab.cap \tab NULL \cr
+   display table caption on top of the table or not \tab tab.topcaption \tab TRUE \cr
+   caption table sequence identifier. \tab tab.lp \tab "tab:" \cr
+}
+
 
 Word output provide more options such as ability to choose the prefix for numbering chunk for
-example. The table below expose these options:
-
-\tabular{llll}{
-\strong{chunk option} \tab \strong{purpose} \tab \strong{rmarkdown} \tab \strong{bookdown} \cr
-tab.cap.style \tab (Word only) style name to use for table captions            \tab yes \tab yes\cr
-tab.cap.pre   \tab (Word only) Prefix for numbering chunk (default to "Table") \tab yes \tab yes\cr
-tab.cap.sep   \tab (Word only) Suffix for numbering chunk (default to ": ")    \tab yes \tab yes\cr
-tab.cap       \tab \strong{Caption label}                                      \tab yes \tab yes\cr
-tab.id        \tab \strong{Caption reference unique identifier}                \tab yes \tab no \cr
-label         \tab \strong{Caption reference unique identifier}                \tab no  \tab yes
+example. The table below expose these options:\tabular{lcc}{
+   \strong{label} \tab \strong{name} \tab \strong{value} \cr
+   Word stylename to use for table captions. \tab tab.cap.style \tab NULL \cr
+   prefix for numbering chunk (default to   "Table "). \tab tab.cap.pre \tab Table \cr
+   suffix for numbering chunk (default to   ": "). \tab tab.cap.sep \tab " :" \cr
+   title number depth \tab tab.cap.tnd \tab 0 \cr
+   caption prefix formatting properties \tab tab.cap.fp_text \tab fp_text_lite(bold = TRUE) \cr
+   separator to use between title number and table number. \tab tab.cap.tns \tab "-" \cr
 }
 }
 
@@ -95,6 +102,9 @@ into an isolated part of the page so that no clash happens
 with styles. Some output may not support this feature. To our
 knowledge, only the pagedown output is concerned.
 Use knitr chunk option \code{ft.shadow=FALSE} to disable shadow dom.
+
+If \code{ft.shadow=TRUE} some global CSS rules may change the
+desired output of flextables.
 }
 
 \section{PDF output}{
@@ -103,6 +113,10 @@ Use knitr chunk option \code{ft.shadow=FALSE} to disable shadow dom.
 Some features are not implemented in PDF due to technical
 infeasibility. These are the padding, line_spacing and
 height properties.
+
+Background color and merged cells are also sources of trouble
+with PDF format. Authors are hoping to fix these issues in
+the future.
 }
 
 \section{PowerPoint output}{
@@ -110,7 +124,7 @@ height properties.
 
 Auto-adjust Layout is not available for PowerPoint.
 
-Also images cannot be integrated into tables with the PowerPoint format.
+Images cannot be integrated into tables with the PowerPoint format.
 }
 
 \examples{
@@ -181,6 +195,7 @@ if(require("rmarkdown", quietly = TRUE)){
 \seealso{
 Other flextable print function: 
 \code{\link{as_raster}()},
+\code{\link{df_printer}()},
 \code{\link{flextable_to_rmd}()},
 \code{\link{htmltools_value}()},
 \code{\link{plot.flextable}()},

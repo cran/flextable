@@ -17,6 +17,10 @@
 #'
 #' Most functions have an argument named `part` that will be used
 #' to specify what part of of the table should be modified.
+#'
+#' If working with R Markdown document, you should read about knitr
+#' chunk options in [knit_print.flextable()] and about setting
+#' default values with [set_flextable_defaults()].
 #' @param data dataset
 #' @param col_keys columns names/keys to display. If some column names are not in
 #' the dataset, they will be added as blank columns by default.
@@ -94,11 +98,30 @@ qflextable <- function(data){
 #' @description Set caption value in a flextable.
 #'
 #' * The caption will be associated with a paragraph style when
-#' the output is Word. Also it can be numbered as a auto-numbered
+#' the output is Word. It can also be numbered as a auto-numbered
 #' Word computed value.
-#' * In HTML and PDF, the style of the caption
-#' is managed at the document level and not with flextable.
 #' * The PowerPoint format ignores captions.
+#'
+#' @section R Markdown:
+#'
+#' flextable captions can be defined from R Markdown documents by using
+#' `knitr::opts_chunk$set()`. The following options are available:
+#'
+#' | **label**                                               |    **name**     | **value**  |
+#' |:--------------------------------------------------------|:---------------:|:----------:|
+#' | Word stylename to use for table captions.               | tab.cap.style   |    NULL    |
+#' | prefix for numbering chunk (default to   "Table ").     | tab.cap.pre     |   Table    |
+#' | suffix for numbering chunk (default to   ": ").         | tab.cap.sep     |    " :"    |
+#' | title number depth                                      | tab.cap.tnd     |      0     |
+#' | separator to use between title number and table number. | tab.cap.tns     |     "-"    |
+#' | caption prefix formatting properties                    | tab.cap.fp_text | fp_text_lite(bold = TRUE) |
+#' | caption id/bookmark                                     | tab.id          |    NULL    |
+#' | caption                                                 | tab.cap         |    NULL    |
+#' | display table caption on top of the table or not        | tab.topcaption  |    TRUE    |
+#' | caption table sequence identifier.                      | tab.lp          |   "tab:"   |
+#'
+#' See [knit_print.flextable] for more details.
+#'
 #' @param x flextable object
 #' @param caption caption value
 #' @param autonum an autonum representation. See [officer::run_autonum()].

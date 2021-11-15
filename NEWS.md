@@ -1,3 +1,23 @@
+# flextable 0.6.10
+
+## new features
+
+* add function `df_printer` that can be used via the `df_print` option 
+of R Markdown documents or by calling `use_df_printer()`.
+* add support to knitr table options `tab.cap.fp_text` to let format caption prefix 
+in function `opts_current_table()`.
+* Applies existing formatting properties to new header/footer lines
+
+## Issues
+
+* fix convertion when unit = "mm"
+* fix regression with captions when bookdown generate a 'Word' document #354
+* fix highlight for PowerPoint
+
+## Enhancement
+
+* Theme functions behavior is now more detailed in the manual.
+
 # flextable 0.6.9
 
 ## new features
@@ -6,16 +26,14 @@
 `colformat_*` and `set_flextable_defaults`.
 * new function `surround()` to ease the highlighting 
 of specific cells with borders.
+* add "pdf" option for previewing a flextable in PDF 
+with `print(x, preview ="pdf")`.
 
 ## Issues
 
 * fix width with border overlaps in pdf
 * chunks are now ordered as expected in pdf
 * markdown can be used in table captions in R Markdown documents
-
-## new features
-
-* add "pdf" option for previewing a flextable in PDF with `print(x, preview ="pdf")`.
 
 # flextable 0.6.8
 
