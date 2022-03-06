@@ -18,7 +18,7 @@ generalized additive model produced by function \code{mgcv::gam}.
 \section{Illustrations}{
 
 
-\if{html}{\figure{fig_as_flextable.gam_1.png}{options: width=60\%}}
+\if{html}{\figure{fig_as_flextable.gam_1.png}{options: width="400"}}
 }
 
 \examples{
@@ -41,6 +41,7 @@ Other as_flextable methods:
 \code{\link{as_flextable.grouped_data}()},
 \code{\link{as_flextable.htest}()},
 \code{\link{as_flextable.lm}()},
+\code{\link{as_flextable.tabulator}()},
 \code{\link{as_flextable.xtable}()},
 \code{\link{as_flextable}()}
 }

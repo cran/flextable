@@ -18,7 +18,7 @@ generalized linear model produced by function \code{glm}.
 \section{Illustrations}{
 
 
-\if{html}{\figure{fig_as_flextable.glm_1.png}{options: width=60\%}}
+\if{html}{\figure{fig_as_flextable.glm_1.png}{options: width="500"}}
 }
 
 \examples{
@@ -37,6 +37,7 @@ Other as_flextable methods:
 \code{\link{as_flextable.grouped_data}()},
 \code{\link{as_flextable.htest}()},
 \code{\link{as_flextable.lm}()},
+\code{\link{as_flextable.tabulator}()},
 \code{\link{as_flextable.xtable}()},
 \code{\link{as_flextable}()}
 }

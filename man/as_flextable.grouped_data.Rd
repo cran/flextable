@@ -24,7 +24,7 @@ produced by function \code{\link[=as_grouped_data]{as_grouped_data()}}.
 \section{Illustrations}{
 
 
-\if{html}{\figure{fig_as_flextable.grouped_data_1.png}{options: width=40\%}}
+\if{html}{\figure{fig_as_flextable.grouped_data_1.png}{options: width="400"}}
 }
 
 \examples{
@@ -53,6 +53,7 @@ Other as_flextable methods:
 \code{\link{as_flextable.glm}()},
 \code{\link{as_flextable.htest}()},
 \code{\link{as_flextable.lm}()},
+\code{\link{as_flextable.tabulator}()},
 \code{\link{as_flextable.xtable}()},
 \code{\link{as_flextable}()}
 }

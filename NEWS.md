@@ -1,3 +1,40 @@
+# flextable 0.7.0
+
+## new features
+
+* new function `append_chunks()` to append chunks of content
+in flextable cells as with `as_paragraph()` but without 
+replacing the whole content.
+* new function `tabulator()` and its method 
+`as_flextable.tabulator()` that help the creation 
+of tables used in life science industry. It also 
+comes with function `summarizor()` and sugar function 
+`fmt_2stats()`.
+* `empty_blanks()` gained arguments `width` so that users can also 
+set blank columns' width.
+* pass `...` to `format()` function when using `colformat_num()`. It 
+makes possible to use arguments for `format()`, for example 
+`colformat_num(drop0trailing = TRUE)`.
+* add knitr chunk option `ft.keepnext` and parameter `keepnext` 
+to function `body_add_flextable()` that enable the Word option 
+'keep rows together', so that page break within a table is 
+avoided when possible.
+* new function `add_latex_dep()` to manually add flextable latex 
+dependencies to the knitr session.
+
+## Issues
+
+* fix Rd files which when converted to HTML had `<img>` entries with
+invalid width attributes e.g. `width=40\%`.
+
+## Changes
+
+* In a bookdown context and without package officedown, it is not possible to keep 
+the cross-references as they are provided by bookdown and to provide a
+real Word cross-reference on table captions (the reference number only is displayed).
+That's why when using bookdown without package officedown : 1. Word auto-numbering is 
+desactivated and 2. caption prefix formatting feature.
+
 # flextable 0.6.10
 
 ## new features

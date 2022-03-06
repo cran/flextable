@@ -59,11 +59,11 @@ a \code{xtable} object.
 \section{Illustrations}{
 
 
-\if{html}{\figure{fig_as_flextable.xtable_1.png}{options: width=30\%}}
+\if{html}{\figure{fig_as_flextable.xtable_1.png}{options: width="300"}}
 
-\if{html}{\figure{fig_as_flextable.xtable_2.png}{options: width=30\%}}
+\if{html}{\figure{fig_as_flextable.xtable_2.png}{options: width="300"}}
 
-\if{html}{\figure{fig_as_flextable.xtable_3.png}{options: width=100\%}}
+\if{html}{\figure{fig_as_flextable.xtable_3.png}{options: width="500"}}
 }
 
 \examples{
@@ -113,6 +113,7 @@ Other as_flextable methods:
 \code{\link{as_flextable.grouped_data}()},
 \code{\link{as_flextable.htest}()},
 \code{\link{as_flextable.lm}()},
+\code{\link{as_flextable.tabulator}()},
 \code{\link{as_flextable}()}
 }
 \concept{as_flextable methods}

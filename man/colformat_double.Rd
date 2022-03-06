@@ -24,7 +24,7 @@ colformat_double(
 
 \item{j}{columns selection.}
 
-\item{big.mark, digits, decimal.mark}{see \code{\link[=format]{format()}}}
+\item{big.mark, digits, decimal.mark}{see \code{\link[=formatC]{formatC()}}}
 
 \item{na_str}{string to be used for NA and NaN values}
 
@@ -40,7 +40,7 @@ Format numeric cells in a flextable.
 \section{Illustrations}{
 
 
-\if{html}{\figure{fig_colformat_double_1.png}{options: width=70\%}}
+\if{html}{\figure{fig_colformat_double_1.png}{options: width="400"}}
 }
 
 \examples{

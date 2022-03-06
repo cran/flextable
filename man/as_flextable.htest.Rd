@@ -18,7 +18,7 @@ object oof class \code{htest}.
 \section{Illustrations}{
 
 
-\if{html}{\figure{fig_as_flextable.htest_1.png}{options: width=60\%}}
+\if{html}{\figure{fig_as_flextable.htest_1.png}{options: width="500"}}
 }
 
 \examples{
@@ -36,6 +36,7 @@ Other as_flextable methods:
 \code{\link{as_flextable.glm}()},
 \code{\link{as_flextable.grouped_data}()},
 \code{\link{as_flextable.lm}()},
+\code{\link{as_flextable.tabulator}()},
 \code{\link{as_flextable.xtable}()},
 \code{\link{as_flextable}()}
 }

@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{a \code{flextable} object}
 
-\item{...}{further arguments, not used.}
+\item{...}{arguments passed to \code{\link[=flextable_to_rmd]{flextable_to_rmd()}}.}
 }
 \description{
 Function used to render flextable in knitr/rmarkdown documents.
@@ -19,12 +19,23 @@ package to automatically display a flextable in an "R Markdown" document from
 a chunk. However, it is recommended to read its documentation in order to get
 familiar with the different options available.
 
-\if{html}{\figure{fig_formats.png}{options: width=200px}} HTML, Word, PowerPoint and PDF outputs are supported.
+R Markdown outputs can be :
+\itemize{
+\item HTML
+\item 'Microsoft Word'
+\item 'Microsoft PowerPoint'
+\item PDF
+}
+
+\if{html}{\figure{fig_formats.png}{options: width="200"}}
 
 Table captioning is a flextable feature compatible with R Markdown
 documents. The feature is available for HTML, PDF and Word documents.
 Compatibility with the "bookdown" package is also ensured, including the
 ability to produce captions so that they can be used in cross-referencing.
+
+For Word, it's recommanded to work with package 'officedown' that supports
+all features of flextable.
 }
 \note{
 Supported formats require some
@@ -50,6 +61,7 @@ are to be used to change the default settings:
 ft.align        \tab flextable alignment, supported values are 'left', 'center' and 'right'    \tab 'center' \tab yes \tab yes \tab yes \tab no \cr
 ft.shadow       \tab HTML option, disable shadow dom (set to \code{FALSE}) for pagedown. \tab TRUE    \tab yes  \tab no \tab no  \tab no \cr
 ft.split        \tab Word option 'Allow row to break across pages' can be activated when TRUE. \tab FALSE    \tab no  \tab yes \tab no  \tab no \cr
+ft.keepnext     \tab Word option 'keep rows together' can be activated when TRUE. \tab TRUE    \tab no  \tab yes \tab no  \tab no \cr
 ft.tabcolsep    \tab space between the text and the left/right border of its containing cell   \tab 8.0      \tab no  \tab no  \tab yes \tab no \cr
 ft.arraystretch \tab height of each row relative to its default height                         \tab 1.5      \tab no  \tab no  \tab yes \tab no \cr
 ft.left         \tab left coordinates in inches                                                \tab 1.0      \tab no  \tab no  \tab no  \tab yes\cr
@@ -68,13 +80,15 @@ knitr chunk option \code{tab.cap}.\preformatted{set_caption(x, caption = "my cap
 }
 
 If \code{set_caption} function is not used, caption identifier will be
-read from knitr's chunk option \code{tab.id} or \code{label} if in a bookdown
-(this is to respect the bookdown standards).
+read from knitr's chunk option \code{tab.id}. Note that in a bookdown and
+when not using \code{officedown::rdocx_document()}, the usual numbering
+feature of bookdown is used.
 
-\code{tab.id='my_id'} or \code{label='my_id'}.
+\code{tab.id='my_id'}.
 
 Some options are available to customise captions for any output:\tabular{lcc}{
    \strong{label} \tab \strong{name} \tab \strong{value} \cr
+   Word stylename to use for table captions. \tab tab.cap.style \tab NULL \cr
    caption id/bookmark \tab tab.id \tab NULL \cr
    caption \tab tab.cap \tab NULL \cr
    display table caption on top of the table or not \tab tab.topcaption \tab TRUE \cr
@@ -82,10 +96,10 @@ Some options are available to customise captions for any output:\tabular{lcc}{
 }
 
 
-Word output provide more options such as ability to choose the prefix for numbering chunk for
+Word output when \code{officedown::rdocx_document()} is used is coming with
+more options such as ability to choose the prefix for numbering chunk for
 example. The table below expose these options:\tabular{lcc}{
    \strong{label} \tab \strong{name} \tab \strong{value} \cr
-   Word stylename to use for table captions. \tab tab.cap.style \tab NULL \cr
    prefix for numbering chunk (default to   "Table "). \tab tab.cap.pre \tab Table \cr
    suffix for numbering chunk (default to   ": "). \tab tab.cap.sep \tab " :" \cr
    title number depth \tab tab.cap.tnd \tab 0 \cr
@@ -117,12 +131,17 @@ height properties.
 Background color and merged cells are also sources of trouble
 with PDF format. Authors are hoping to fix these issues in
 the future.
+
+See \code{\link[=add_latex_dep]{add_latex_dep()}} if caching flextable results in 'R Markdown'
+documents.
 }
 
 \section{PowerPoint output}{
 
 
-Auto-adjust Layout is not available for PowerPoint.
+Auto-adjust Layout is not available for PowerPoint, PowerPoint only support
+fixed layout. It's then often necessary to call function \code{\link[=autofit]{autofit()}} so
+that the columns' widths are adjusted if user does not provide the withs.
 
 Images cannot be integrated into tables with the PowerPoint format.
 }

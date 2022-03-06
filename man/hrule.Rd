@@ -20,15 +20,15 @@ are "atleast" (height should be at least the value specified), "exact"
 }
 \description{
 control rules of each height for a part
-of the flextable, this is only for Word and HTML outputs, it
-will not have any effect when output is PowerPoint.
+of the flextable, this is only for Word and PowerPoint outputs, it
+will not have any effect when output is HTML.
 }
 \section{Illustrations}{
 
 
-\if{html}{\figure{fig_hrule_1.png}{options: width=70\%}}
+\if{html}{\figure{fig_hrule_1.png}{options: width="400"}}
 
-\if{html}{\figure{fig_hrule_2.png}{options: width=70\%}}
+\if{html}{\figure{fig_hrule_2.png}{options: width="400"}}
 }
 
 \examples{

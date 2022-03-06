@@ -46,6 +46,8 @@ htmltools_value <- function(x, ft.align = "center", ft.shadow = TRUE){
 #' @param ft.align flextable alignment, supported values are 'left', 'center' and 'right'.
 #' @param ft.split Word option 'Allow row to break across pages' can be
 #' activated when TRUE.
+#' @param ft.keepnext Word option 'keep rows together' can be
+#' activated when TRUE. It avoids page break within tables.
 #' @param ft.tabcolsep space between the text and the left/right border of its containing
 #' cell, the default value is 8 points.
 #' @param ft.arraystretch height of each row relative to its default
@@ -61,6 +63,7 @@ htmltools_value <- function(x, ft.align = "center", ft.shadow = TRUE){
 #' @param bookdown `TRUE` or `FALSE` (default) to support cross referencing with bookdown.
 #' @param pandoc2 `TRUE` (default) or `FALSE` to get the string in a pandoc raw HTML attribute
 #' (only valid when pandoc version is `>= 2`.
+#' @param ... unused arguments
 #' @param print print output if TRUE
 #' @family flextable print function
 #' @examples
@@ -82,13 +85,15 @@ flextable_to_rmd <- function(
                              x,
                              ft.align = opts_current$get("ft.align"),
                              ft.split = opts_current$get("ft.split"),
+                             ft.keepnext = opts_current$get("ft.keepnext"),
                              ft.tabcolsep = opts_current$get("ft.tabcolsep"),
                              ft.arraystretch = opts_current$get("ft.arraystretch"),
                              ft.left = opts_current$get("ft.left"),
                              ft.top = opts_current$get("ft.top"),
                              text_after = "",
                              webshot = opts_current$get("webshot"),
-                             bookdown = FALSE, pandoc2 = TRUE, print = TRUE) {
+                             bookdown = FALSE, pandoc2 = TRUE, print = TRUE,
+                             ...) {
   str <- ""
   is_xaringan <- !is.null(getOption("xaringan.page_number.offset"))
 
@@ -119,7 +124,7 @@ flextable_to_rmd <- function(
     if (pandoc2) {
       str <- docx_value(x,
         bookdown = bookdown, ft.align = ft.align,
-        ft.split = ft.split
+        ft.split = ft.split, ft.keepnext = ft.keepnext
       )
     } else {
       stop("pandoc version >= 2.0 required for flextable rendering in docx")
@@ -206,6 +211,8 @@ html_value <- function(x, ft.align = opts_current$get("ft.align"), ft.shadow = o
 #' @param ft.align flextable alignment, supported values are 'left', 'center' and 'right'.
 #' @param ft.split Word option 'Allow row to break across pages' can be
 #' activated when TRUE.
+#' @param ft.keepnext Word option 'keep rows together' can be
+#' activated when TRUE. It avoids page break within tables.
 #' @param bookdown `TRUE` or `FALSE` (default) to support cross referencing with bookdown.
 #' @examples
 #' docx_value(flextable(iris[1:5,]))
@@ -213,12 +220,14 @@ html_value <- function(x, ft.align = opts_current$get("ft.align"), ft.shadow = o
 docx_value <- function(x,
                        ft.align = opts_current$get("ft.align"),
                        ft.split = opts_current$get("ft.split"),
+                       ft.keepnext = opts_current$get("ft.keepnext"),
                        bookdown = FALSE){
 
   x <- flextable_global$defaults$post_process_docx(x)
 
   if( is.null(ft.align) ) ft.align <- "center"
   if( is.null(ft.split) ) ft.split <- FALSE
+  if( is.null(ft.keepnext) ) ft.keepnext <- TRUE
 
   caption <- caption_docx_str(x, bookdown = bookdown)
   tab_props <- opts_current_table()
@@ -226,7 +235,8 @@ docx_value <- function(x,
 
   out <- paste(if(topcaption) caption,
       "```{=openxml}",
-      docx_str(x, align = ft.align, split = ft.split),
+      docx_str(x, align = ft.align, split = ft.split,
+               keep_with_next = ft.keepnext),
       "```\n\n",
       if(!topcaption) caption,
       "\n\n",
@@ -261,28 +271,7 @@ latex_value <- function(x,
 
   x <- flextable_global$defaults$post_process_pdf(x)
 
-  fonts_ignore <- flextable_global$defaults$fonts_ignore
-  fontspec_compat <- get_pdf_engine() %in% c("xelatex", "lualatex")
-  if (!fonts_ignore && !fontspec_compat) {
-    warning("Warning: fonts used in `flextable` are ignored because ",
-      "the `pdflatex` engine is used and not `xelatex` or ",
-      "`lualatex`. You can avoid this warning by using the ",
-      "`set_flextable_defaults(fonts_ignore=TRUE)` command or ",
-      "use a compatible engine by defining `latex_engine: xelatex` ",
-      "in the YAML header of the R Markdown document.",
-      call. = FALSE
-    )
-  }
-  if (fontspec_compat) {
-    usepackage_latex("fontspec")
-  }
-  usepackage_latex("multirow")
-  usepackage_latex("multicol")
-  usepackage_latex("colortbl")
-  usepackage_latex("hhline")
-  usepackage_latex("longtable")
-  usepackage_latex("array")
-  usepackage_latex("hyperref")
+  add_latex_dep()
 
   out <- paste(
     cline_cmd,
@@ -383,13 +372,24 @@ print.flextable <- function(x, preview = "html", ...){
 #' a chunk. However, it is recommended to read its documentation in order to get
 #' familiar with the different options available.
 #'
-#' \if{html}{\figure{fig_formats.png}{options: width=200px}} HTML, Word, PowerPoint and PDF outputs are supported.
+#' R Markdown outputs can be :
+#'
+#' * HTML
+#' * 'Microsoft Word'
+#' * 'Microsoft PowerPoint'
+#' * PDF
+#'
+#' \if{html}{\figure{fig_formats.png}{options: width="200"}}
 #'
 #'
 #' Table captioning is a flextable feature compatible with R Markdown
 #' documents. The feature is available for HTML, PDF and Word documents.
 #' Compatibility with the "bookdown" package is also ensured, including the
 #' ability to produce captions so that they can be used in cross-referencing.
+#'
+#' For Word, it's recommanded to work with package 'officedown' that supports
+#' all features of flextable.
+#'
 #' @note
 #' Supported formats require some
 #' minimum [pandoc](https://pandoc.org/installing.html) versions:
@@ -412,6 +412,7 @@ print.flextable <- function(x, preview = "html", ...){
 #'   ft.align        \tab flextable alignment, supported values are 'left', 'center' and 'right'    \tab 'center' \tab yes \tab yes \tab yes \tab no \cr
 #'   ft.shadow       \tab HTML option, disable shadow dom (set to `FALSE`) for pagedown. \tab TRUE    \tab yes  \tab no \tab no  \tab no \cr
 #'   ft.split        \tab Word option 'Allow row to break across pages' can be activated when TRUE. \tab FALSE    \tab no  \tab yes \tab no  \tab no \cr
+#'   ft.keepnext     \tab Word option 'keep rows together' can be activated when TRUE. \tab TRUE    \tab no  \tab yes \tab no  \tab no \cr
 #'   ft.tabcolsep    \tab space between the text and the left/right border of its containing cell   \tab 8.0      \tab no  \tab no  \tab yes \tab no \cr
 #'   ft.arraystretch \tab height of each row relative to its default height                         \tab 1.5      \tab no  \tab no  \tab yes \tab no \cr
 #'   ft.left         \tab left coordinates in inches                                                \tab 1.0      \tab no  \tab no  \tab no  \tab yes\cr
@@ -431,26 +432,28 @@ print.flextable <- function(x, preview = "html", ...){
 #'
 #'
 #' If `set_caption` function is not used, caption identifier will be
-#' read from knitr's chunk option `tab.id` or `label` if in a bookdown
-#' (this is to respect the bookdown standards).
+#' read from knitr's chunk option `tab.id`. Note that in a bookdown and
+#' when not using `officedown::rdocx_document()`, the usual numbering
+#' feature of bookdown is used.
 #'
-#' `tab.id='my_id'` or `label='my_id'`.
+#' `tab.id='my_id'`.
 #'
 #' Some options are available to customise captions for any output:
 #'
 #' | **label**                                        |    **name**     | **value**  |
 #' |:-------------------------------------------------|:---------------:|:----------:|
+#' | Word stylename to use for table captions.        | tab.cap.style   |    NULL    |
 #' | caption id/bookmark                              | tab.id          |    NULL    |
 #' | caption                                          | tab.cap         |    NULL    |
 #' | display table caption on top of the table or not | tab.topcaption  |    TRUE    |
 #' | caption table sequence identifier.               | tab.lp          |   "tab:"   |
 #'
-#' Word output provide more options such as ability to choose the prefix for numbering chunk for
+#' Word output when `officedown::rdocx_document()` is used is coming with
+#' more options such as ability to choose the prefix for numbering chunk for
 #' example. The table below expose these options:
 #'
 #' | **label**                                               |    **name**     | **value**  |
 #' |:--------------------------------------------------------|:---------------:|:----------:|
-#' | Word stylename to use for table captions.               | tab.cap.style   |    NULL    |
 #' | prefix for numbering chunk (default to   "Table ").     | tab.cap.pre     |   Table    |
 #' | suffix for numbering chunk (default to   ": ").         | tab.cap.sep     |    " :"    |
 #' | title number depth                                      | tab.cap.tnd     |      0     |
@@ -478,14 +481,19 @@ print.flextable <- function(x, preview = "html", ...){
 #' with PDF format. Authors are hoping to fix these issues in
 #' the future.
 #'
+#' See [add_latex_dep()] if caching flextable results in 'R Markdown'
+#' documents.
+#'
 #' @section PowerPoint output:
 #'
-#' Auto-adjust Layout is not available for PowerPoint.
+#' Auto-adjust Layout is not available for PowerPoint, PowerPoint only support
+#' fixed layout. It's then often necessary to call function [autofit()] so
+#' that the columns' widths are adjusted if user does not provide the withs.
 #'
 #' Images cannot be integrated into tables with the PowerPoint format.
 #'
 #' @param x a `flextable` object
-#' @param ... further arguments, not used.
+#' @param ... arguments passed to [flextable_to_rmd()].
 #' @export
 #' @importFrom utils getFromNamespace
 #' @importFrom htmltools HTML div
@@ -560,9 +568,15 @@ print.flextable <- function(x, preview = "html", ...){
 #'
 knit_print.flextable <- function(x, ...){
 
-  is_bookdown <- isTRUE(opts_knit$get('bookdown.internal.label'))
+
+  is_rdocx_document <- opts_current$get('is_rdocx_document')
+  if(is.null(is_rdocx_document)) is_rdocx_document <- FALSE
+
+  is_bookdown <- isTRUE(opts_knit$get('bookdown.internal.label')) &&
+    isTRUE(!is_rdocx_document)
   pandoc2 <- pandoc_version() >= numeric_version("2.0")
-  str <- flextable_to_rmd(x, bookdown = is_bookdown, pandoc2 = pandoc2, print = FALSE)
+  str <- flextable_to_rmd(x, bookdown = is_bookdown, pandoc2 = pandoc2,
+                          print = FALSE)
   knit_print(asis_output(str))
 }
 

@@ -18,7 +18,7 @@
 #' @export
 #' @section Illustrations:
 #'
-#' \if{html}{\figure{fig_set_formatter_1.png}{options: width=50\%}}
+#' \if{html}{\figure{fig_set_formatter_1.png}{options: width="400"}}
 #' @family cells formatters
 set_formatter <- function(x, ..., values = NULL, part = "body"){
 
@@ -97,7 +97,7 @@ set_formatter_type <- function(x, fmt_double = "%.03f", fmt_integer = "%.0f",
 #' z
 #' @section Illustrations:
 #'
-#' \if{html}{\figure{fig_colformat_char_1.png}{options: width=50\%}}
+#' \if{html}{\figure{fig_colformat_char_1.png}{options: width="400"}}
 colformat_char <- function(
   x, i = NULL, j = NULL,
   na_str = get_flextable_defaults()$na_str,
@@ -121,7 +121,7 @@ colformat_char <- function(
 #' @title format numeric cells
 #' @description Format numeric cells in a flextable.
 #' @inheritParams colformat_char
-#' @param big.mark,digits,decimal.mark see [format()]
+#' @param big.mark,digits,decimal.mark see [formatC()]
 #' @family cells formatters
 #' @examples
 #' dat <- mtcars
@@ -132,7 +132,7 @@ colformat_char <- function(
 #' @importFrom rlang new_function quo get_expr pairlist2
 #' @section Illustrations:
 #'
-#' \if{html}{\figure{fig_colformat_double_1.png}{options: width=70\%}}
+#' \if{html}{\figure{fig_colformat_double_1.png}{options: width="400"}}
 colformat_double <- function(
   x, i = NULL, j = NULL,
   big.mark = get_flextable_defaults()$big.mark,
@@ -165,9 +165,31 @@ colformat_double <- function(
 #' columns. The function uses the [format()] function of R on numeric
 #' type columns. So this is normally what you see on the R console
 #' most of the time (but scientific mode is disabled, NA are replaced, etc.).
+#'
+#' @section format call:
+#'
+#' Function [format()] is called with the following values:
+#'
+#' * `trim` is set to TRUE,
+#' * `scientific` is set to FALSE,
+#' * `big.mark` is set to the value of `big.mark` argument,
+#' * `decimal.mark` is set to the value of `decimal.mark` argument,
+#' * other arguments are passed 'as is' to the format function.
+#'
+#' argument `digits` is ignored as it is not the same `digits` that users
+#' want, this one will be used by [format()] and not [formatC()].
+#' To change the digit argument use `options(digits=4)` instead.
+#'
+#' This argument will not be changed because `colformat_num()`
+#' is supposed to format things roughly as what you see on the R console.
+#'
+#' If you are not happy with these choices, use [set_formatter()]
+#' and define your own format.
+#'
 #' @inheritParams colformat_char
 #' @param big.mark,decimal.mark see [format()]
-#' @param ... unused argument.
+#' @param ... additional argument for function [format()], `scientific`
+#' and `digits` can not be used.
 #' @family cells formatters
 #' @examples
 #' dat <- mtcars
@@ -180,7 +202,7 @@ colformat_double <- function(
 #' ft
 #' @section Illustrations:
 #'
-#' \if{html}{\figure{fig_colformat_num_1.png}{options: width=50\%}}
+#' \if{html}{\figure{fig_colformat_num_1.png}{options: width="400"}}
 colformat_num <- function(
   x, i = NULL, j = NULL,
   big.mark = get_flextable_defaults()$big.mark,
@@ -194,11 +216,14 @@ colformat_num <- function(
 
   quo_fun <- quo(format_fun.default(
     x, big.mark = big.mark, decimal.mark = decimal.mark,
-    na_str = na_str, nan_str = nan_str, prefix = prefix, suffix = suffix
+    na_str = na_str, nan_str = nan_str,
+    prefix = prefix, suffix = suffix,
+    ...
   ))
   fun_ <- new_function(
     pairlist2(x = , big.mark = big.mark, decimal.mark = decimal.mark,
-              na_str = na_str, nan_str = nan_str, prefix = prefix, suffix = suffix),
+              na_str = na_str, nan_str = nan_str, prefix = prefix, suffix = suffix,
+              ...),
     get_expr(quo_fun))
 
   docall_display(col_keys, fun_, x, i = i)
@@ -219,7 +244,7 @@ colformat_num <- function(
 #' ft
 #' @section Illustrations:
 #'
-#' \if{html}{\figure{fig_colformat_date_1.png}{options: width=30\%}}
+#' \if{html}{\figure{fig_colformat_date_1.png}{options: width="300"}}
 colformat_date <- function(
   x, i = NULL, j = NULL,
   fmt_date = get_flextable_defaults()$fmt_date,
@@ -255,7 +280,7 @@ colformat_date <- function(
 #' ft
 #' @section Illustrations:
 #'
-#' \if{html}{\figure{fig_colformat_datetime_1.png}{options: width=40\%}}
+#' \if{html}{\figure{fig_colformat_datetime_1.png}{options: width="300"}}
 colformat_datetime <- function(
   x, i = NULL, j = NULL,
   fmt_datetime = get_flextable_defaults()$fmt_datetime,
@@ -363,7 +388,7 @@ colformat_lgl <- function(
 #' ft
 #' @section Illustrations:
 #'
-#' \if{html}{\figure{fig_colformat_image_1.png}{options: width=70\%}}
+#' \if{html}{\figure{fig_colformat_image_1.png}{options: width="400"}}
 colformat_image <- function(
   x, i = NULL, j = NULL,
   width, height,
