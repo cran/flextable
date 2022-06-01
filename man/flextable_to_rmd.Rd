@@ -11,6 +11,7 @@ flextable_to_rmd(
   ft.keepnext = opts_current$get("ft.keepnext"),
   ft.tabcolsep = opts_current$get("ft.tabcolsep"),
   ft.arraystretch = opts_current$get("ft.arraystretch"),
+  ft.latex.float = opts_current$get("ft.latex.float"),
   ft.left = opts_current$get("ft.left"),
   ft.top = opts_current$get("ft.top"),
   text_after = "",
@@ -29,14 +30,33 @@ flextable_to_rmd(
 \item{ft.split}{Word option 'Allow row to break across pages' can be
 activated when TRUE.}
 
-\item{ft.keepnext}{Word option 'keep rows together' can be
-activated when TRUE. It avoids page break within tables.}
+\item{ft.keepnext}{default \code{TRUE}. Word option 'keep rows
+together' is activated when TRUE. It avoids page break
+within tables. This is handy for small tables, i.e. less than
+a page height.
+
+Be careful, if you print long tables, you should
+rather set its value to \code{FALSE} to avoid that the tables
+also generate a page break before being placed in the
+Word document. Since Word will try to keep it with the \strong{next
+paragraphs that follow the tables}.}
 
 \item{ft.tabcolsep}{space between the text and the left/right border of its containing
 cell, the default value is 8 points.}
 
 \item{ft.arraystretch}{height of each row relative to its default
 height, the default value is 1.5.}
+
+\item{ft.latex.float}{type of floating placement in the document, one of:
+\itemize{
+\item 'none' (the default value), table is placed after the preceding
+paragraph.
+\item 'float', table can float to a place in the text where it fits best
+\item 'wrap-r', wrap text around the table positioned to the right side of the text
+\item 'wrap-l', wrap text around the table positioned to the left side of the text
+\item 'wrap-i', wrap text around the table positioned inside edge-near the binding
+\item 'wrap-o', wrap text around the table positioned outside edge-far from the binding
+}}
 
 \item{ft.left, ft.top}{Position should be defined with options \code{ft.left}
 and \code{ft.top}. Theses are the top left coordinates in inches

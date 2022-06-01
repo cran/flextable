@@ -43,12 +43,6 @@ Define formatter functions associated to each column key.
 Functions have a single argument (the vector) and are returning the formatted
 values as a character vector.
 }
-\section{Illustrations}{
-
-
-\if{html}{\figure{fig_set_formatter_1.png}{options: width="400"}}
-}
-
 \section{set_formatter_type}{
 
 \code{set_formatter_type} is an helper function to quickly define
@@ -76,8 +70,7 @@ Other cells formatters:
 \code{\link{colformat_image}()},
 \code{\link{colformat_int}()},
 \code{\link{colformat_lgl}()},
-\code{\link{colformat_num}()},
-\code{\link{compose}()}
+\code{\link{colformat_num}()}
 
 Other cells formatters: 
 \code{\link{colformat_char}()},
@@ -87,7 +80,6 @@ Other cells formatters:
 \code{\link{colformat_image}()},
 \code{\link{colformat_int}()},
 \code{\link{colformat_lgl}()},
-\code{\link{colformat_num}()},
-\code{\link{compose}()}
+\code{\link{colformat_num}()}
 }
 \concept{cells formatters}

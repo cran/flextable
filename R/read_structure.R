@@ -1,3 +1,65 @@
+expand_special_char <- function(x, what = "\n", with = "<br>"){
+  if(!any(grepl(what, x$txt))){
+    return(x)
+  }
+  str <- x$txt
+  str[str %in% what] <- with
+  tmp_txt <- strsplit(str, split = what)
+  tmp_x <- split(x, seq_len(nrow(x)))
+  tmp_txt <- mapply(function(z, str, dat) {
+    if(length(z) > 1) {
+      add <- rep(with, length(z))
+      if(!grepl(paste0(what, "$"), str)) {
+        add[length(add)] <- NA_character_
+      }
+      z <- as.character(t(matrix(c(z, add), ncol = 2)))
+      z <- z[!is.na(z) & !z %in% ""]
+    }
+    dat <- rbind.match.columns(rep(list(dat), length(z)))
+    dat$txt <- z
+
+    dat
+  }, tmp_txt, str, tmp_x, SIMPLIFY = FALSE)
+
+  x <- rbind.match.columns(tmp_txt)
+  x$seq_index <- seq_len(nrow(x))
+  x
+}
+
+fortify_content <- function(x, default_chunk_fmt, ...){
+
+  x$content$data[] <- lapply(x$content$data, expand_special_char,
+                             what = "\n", with = "<br>")
+  x$content$data[] <- lapply(x$content$data, expand_special_char,
+                             what = "\t", with = "<tab>")
+
+  row_id <- unlist( mapply( function(rows, data){
+    rep(rows, nrow(data) )
+  },
+  rows = rep( seq_len(nrow(x$content$data)), ncol(x$content$data) ),
+  x$content$data, SIMPLIFY = FALSE, USE.NAMES = FALSE ) )
+
+  col_id <- unlist( mapply( function(columns, data){
+    rep(columns, nrow(data) )
+  },
+  columns = rep( x$content$keys, each = nrow(x$content$data) ),
+  x$content$data, SIMPLIFY = FALSE, USE.NAMES = FALSE ) )
+
+  out <- rbindlist( apply(x$content$data, 2, rbindlist), use.names=TRUE, fill=TRUE)
+  out$ft_row_id <- row_id
+  out$col_id <- col_id
+  setDF(out)
+
+  default_props <- as.data.frame(default_chunk_fmt, stringsAsFactors = FALSE)
+  out <- replace_missing_fptext_by_default(out, default_props)
+
+  out$col_id <- factor( out$col_id, levels = default_chunk_fmt$color$keys )
+  out <- out[order(out$col_id, out$ft_row_id, out$seq_index) ,]
+  out
+
+}
+
+
 #' @importFrom data.table rbindlist setDF
 as_table_text <- function(x){
   dat <- list()
@@ -87,9 +149,9 @@ fortify_hrule <- function(x){
   dat
 }
 
-fortify_span <- function(x){
+fortify_span <- function(x, parts = c("header", "body", "footer")){
   rows <- list()
-  for(part in c("header", "body", "footer")){
+  for(part in parts){
     if( nrow_part(x, part) > 0 ){
       nr <- nrow(x[[part]]$spans$rows)
       rows[[part]] <- data.frame(
@@ -168,7 +230,11 @@ part_style_list <- function(x, fun = NULL, more_args = list()){
 par_style_list <- function(x){
 
   fp_columns <- intersect(names(formals(officer::fp_par)), colnames(x))
-  dat <- as.data.frame(x)[c(fp_columns, "text.direction", "vertical.align",
+
+  also <- c("text.direction", "vertical.align")
+  also <- also[also %in% colnames(x)]
+
+  dat <- as.data.frame(x)[c(fp_columns, also,
              grep("^border\\.", colnames(x), value = TRUE))]
   setDT(dat)
   uid <- unique(dat)
@@ -209,7 +275,9 @@ cell_style_list <- function(x){
   fp_columns <- intersect(names(formals(officer::fp_cell)), colnames(x))
 
   dat <- as.data.frame(x)
-  dat <- dat[c(fp_columns, "text.align", "width", "height", "hrule", grep("^border\\.", colnames(dat), value = TRUE))]
+  also <- c("text.align", "width", "height", "hrule")
+  also <- also[also %in% colnames(x)]
+  dat <- dat[c(fp_columns, also, grep("^border\\.", colnames(dat), value = TRUE))]
 
   uid <- unique(dat)
   classname <- UUIDgenerate(n = nrow(uid), use.time = TRUE)

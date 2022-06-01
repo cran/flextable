@@ -7,10 +7,12 @@
 #' the flextable cached result is used directly. Call `add_latex_dep()` in a
 #' non cached chunk so that flextable latex dependencies are added
 #' to knitr metadata.
+#' @param float load package 'float'
+#' @param wrapfig load package 'wrapfig'
 #' @return NULL
 #' @examples
 #' add_latex_dep()
-add_latex_dep <- function(){
+add_latex_dep <- function(float = FALSE, wrapfig = FALSE){
 
   pandoc_to <- opts_knit$get("rmarkdown.pandoc.to")
   if(is.null(pandoc_to)) pandoc_to <- ""
@@ -38,14 +40,18 @@ add_latex_dep <- function(){
   usepackage_latex("colortbl")
   usepackage_latex("hhline")
   usepackage_latex("longtable")
+  if(float) usepackage_latex("float")
+  if(wrapfig) usepackage_latex("wrapfig")
   usepackage_latex("array")
   usepackage_latex("hyperref")
   invisible(NULL)
 }
 
+
 latex_str <- function(x, ft.align = "center",
                       ft.tabcolsep = 8,
                       ft.arraystretch = 1.5,
+                      lat_container = latex_container_none(),
                       bookdown = FALSE) {
   dims <- dim(x)
   column_sizes <- dims$widths
@@ -58,7 +64,7 @@ latex_str <- function(x, ft.align = "center",
 
   properties_df <- merge_table_properties(x)
   linespacing_df <- properties_df[, c("part", "ft_row_id", "col_id", "line_spacing")]
-  dat <- get_text_data(x, linespacing_df)
+  dat <- latex_text_dataset(x, linespacing_df)
 
   # hhlines and vborders ----
   properties_df <- augment_borders(properties_df)
@@ -93,7 +99,7 @@ latex_str <- function(x, ft.align = "center",
   }
 
   # latex for multirow ----
-  augment_multirow(cell_properties_df)
+  augment_multirow_fixed(cell_properties_df)
 
   # paste everything ----
   cell_properties_df[, c("txt") := list(
@@ -169,25 +175,31 @@ latex_str <- function(x, ft.align = "center",
   table_end <- "\\end{longtable}"
   latex <- paste0(txt_data$txt, txt_data$part_sep, collapse = "\n\n")
 
+  container_str <- latex_container_str(
+    x = x, latex_container = lat_container)
+
+  if (inherits(lat_container, "latex_container_wrap")) {
+    topcaption <- FALSE
+  }
 
   latex <- paste(
     sprintf("\\setlength{\\tabcolsep}{%spt}", format_double(ft.tabcolsep, 0)),
     sprintf("\\renewcommand*{\\arraystretch}{%s}", format_double(ft.arraystretch, 2)),
-    # "\\begin{table}",
+    container_str[1],
     table_start, if(topcaption) caption,
     paste(txt_data$txt[txt_data$part %in% "header"], collapse = ""),
     "\\endfirsthead",
     latex,
     if(!topcaption) caption,
     table_end,
-    # "\\end{table}",
+    container_str[2],
     sep = "\n\n"
   )
 
   latex
 }
 #' @importFrom data.table fcase
-augment_multirow <- function(properties_df) {
+augment_multirow_fixed <- function(properties_df) {
   properties_df[, c("multirow_left", "multirow_right") :=
     list(
       fcase(
@@ -197,11 +209,11 @@ augment_multirow <- function(properties_df) {
           substr(.SD$vertical.align, 1, 1),
           "]{-",
           format_double(.SD$colspan, digits = 0),
-          "}{*}{"
+          "}{*}{\\parbox{", format_double(.SD$width, digits = 2), "in}{"
         ),
         default = ""
       ),
-      fcase(.SD$colspan > 1, "}", default = "")
+      fcase(.SD$colspan > 1, "}}", default = "")
     )]
   properties_df
 }
@@ -597,4 +609,48 @@ latex_table_align <- function() {
     align_tag <- "c"
   }
   align_tag
+}
+
+# latex_container -----
+latex_container_none <- function(){
+  x <- list()
+  class(x) <- c("latex_container_none", "latex_container")
+  x
+}
+latex_container_float <- function(){
+  x <- list()
+  class(x) <- c("latex_container_float", "latex_container")
+  x
+}
+latex_container_wrap <- function(placement = "l"){
+  stopifnot(
+    length(placement) == 1,
+    placement %in% c("l", "r", "i", "o")
+  )
+  x <- list(placement = placement)
+  class(x) <- c("latex_container_wrap", "latex_container")
+  x
+}
+latex_container_str <- function(x, latex_container, ...){
+  UseMethod("latex_container_str", latex_container)
+}
+latex_container_str.latex_container_none <- function(x, latex_container, ...) {
+  c("", "")
+}
+latex_container_str.latex_container_float <- function(x, latex_container, ...) {
+  c("\\begin{table}", "\\end{table}")
+}
+latex_container_str.latex_container_wrap <- function(x, latex_container, ...) {
+
+  str <- paste0("\\begin{wraptable}{", latex_container$placement, "}")
+
+  if (x$properties$layout %in% "fixed") {
+    w <- sprintf("%.02fin", flextable_dim(x)$widths)
+  } else {
+    w <- "0pt"
+  }
+  c(
+    paste0(str, "{", w, "}"),
+    "\\end{wraptable}"
+  )
 }

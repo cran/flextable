@@ -28,12 +28,6 @@ colformat_char(
 \description{
 Format character cells in a flextable.
 }
-\section{Illustrations}{
-
-
-\if{html}{\figure{fig_colformat_char_1.png}{options: width="400"}}
-}
-
 \examples{
 dat <- iris
 z <- flextable(head(dat))
@@ -51,7 +45,6 @@ Other cells formatters:
 \code{\link{colformat_int}()},
 \code{\link{colformat_lgl}()},
 \code{\link{colformat_num}()},
-\code{\link{compose}()},
 \code{\link{set_formatter}()}
 }
 \concept{cells formatters}

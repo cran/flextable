@@ -60,13 +60,22 @@ are to be used to change the default settings:
 \strong{chunk option} \tab \strong{property} \tab \strong{default value} \tab \strong{HTML} \tab \strong{docx} \tab \strong{PDF} \tab \strong{pptx} \cr
 ft.align        \tab flextable alignment, supported values are 'left', 'center' and 'right'    \tab 'center' \tab yes \tab yes \tab yes \tab no \cr
 ft.shadow       \tab HTML option, disable shadow dom (set to \code{FALSE}) for pagedown. \tab TRUE    \tab yes  \tab no \tab no  \tab no \cr
+ft.htmlscroll   \tab HTML option, add a scroll if table is too big to fit into its HTML container. \tab TRUE    \tab yes  \tab no \tab no  \tab no \cr
 ft.split        \tab Word option 'Allow row to break across pages' can be activated when TRUE. \tab FALSE    \tab no  \tab yes \tab no  \tab no \cr
-ft.keepnext     \tab Word option 'keep rows together' can be activated when TRUE. \tab TRUE    \tab no  \tab yes \tab no  \tab no \cr
+ft.keepnext     \tab Word option 'keep rows together' can be desactivated when FALSE \tab TRUE    \tab no  \tab yes \tab no  \tab no \cr
 ft.tabcolsep    \tab space between the text and the left/right border of its containing cell   \tab 8.0      \tab no  \tab no  \tab yes \tab no \cr
 ft.arraystretch \tab height of each row relative to its default height                         \tab 1.5      \tab no  \tab no  \tab yes \tab no \cr
+ft.latex.float  \tab type of floating placement in the document, one of 'none', 'float', 'wrap-r', 'wrap-l', 'wrap-i', 'wrap-o' \tab 'none'      \tab no  \tab no  \tab yes \tab no \cr
 ft.left         \tab left coordinates in inches                                                \tab 1.0      \tab no  \tab no  \tab no  \tab yes\cr
 ft.top          \tab top coordinates in inches                                                 \tab 2.0      \tab no  \tab no  \tab no  \tab yes
 }
+
+If some values are to be used all the time in the same
+document, it is recommended to set these values in a
+'knitr r chunk' by using function
+\code{knitr::opts_chunk$set(ft.split=FALSE, ft.keepnext = FALSE, ...)}.
+
+See \code{\link[=flextable_to_rmd]{flextable_to_rmd()}} for more details about these options.
 }
 
 \section{Table caption}{
@@ -76,8 +85,10 @@ Captions can be defined in two ways.
 
 The first is with the \code{set_caption} function. If it is used,
 the other method will be ignored. The second method is by using
-knitr chunk option \code{tab.cap}.\preformatted{set_caption(x, caption = "my caption")
-}
+knitr chunk option \code{tab.cap}.
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{set_caption(x, caption = "my caption")
+}\if{html}{\out{</div>}}
 
 If \code{set_caption} function is not used, caption identifier will be
 read from knitr's chunk option \code{tab.id}. Note that in a bookdown and
@@ -128,8 +139,13 @@ Some features are not implemented in PDF due to technical
 infeasibility. These are the padding, line_spacing and
 height properties.
 
-Background color and merged cells are also sources of trouble
-with PDF format. Authors are hoping to fix these issues in
+It is recommended to set theses values in a
+'knitr r chunk' so that they are permanent
+all along the document:
+\code{knitr::opts_chunk$set(ft.tabcolsep=0, ft.latex.float = "none")}.
+
+Background color and merged cells does not work well together
+with PDF format. Authors are hoping to fix this issue in
 the future.
 
 See \code{\link[=add_latex_dep]{add_latex_dep()}} if caching flextable results in 'R Markdown'

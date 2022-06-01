@@ -28,7 +28,8 @@ caption_html_str <- function(x, bookdown = FALSE){
   }
   caption
 }
-html_str <- function(x, ft.align = NULL, class = "tabwid", caption = "", shadow = TRUE, topcaption = TRUE){
+html_str <- function(x, ft.align = NULL, class = "tabwid",
+                     caption = "", shadow = TRUE, topcaption = TRUE){
 
   fixed_layout <- x$properties$layout %in% "fixed"
   if(!fixed_layout){
@@ -63,7 +64,7 @@ html_str <- function(x, ft.align = NULL, class = "tabwid", caption = "", shadow 
   if(shadow){
     uid <- UUIDgenerate(n = 2L)
 
-    tabwid_css <- paste(c("<style>", readLines(system.file(package="flextable", "web_1.0.0", "tabwid.css"), encoding = "UTF-8"), "</style>"), collapse = "\n")
+    tabwid_css <- paste(c("<style>", readLines(system.file(package="flextable", "web_1.1.0", "tabwid.css"), encoding = "UTF-8"), "</style>"), collapse = "\n")
 
     html <- paste0("<template id=\"", uid[1], "\">",
                    tabwid_css,
@@ -107,13 +108,18 @@ to_shadow_dom <- function(uid1, uid2, ft.align = NULL, topcaption = TRUE){
 #' @importFrom data.table setnames setorderv := setcolorder setDT setDF dcast
 html_gen <- function(x){
 
+  cell_data_f <- fortify_style(x, "cells")
+  cell_data_f$col_id <- factor(cell_data_f$col_id, levels = x$col_keys)
+  cell_data_f$part <- factor(cell_data_f$part, levels = c("header", "body", "footer"))
+
+  par_data_f <- fortify_style(x, "pars")
+  par_data_f$col_id <- factor(par_data_f$col_id, levels = x$col_keys)
+
   fixed_layout <- x$properties$layout %in% "fixed"
 
   cell_heights <- fortify_height(x)
   cell_widths <- fortify_width(x)
   cell_hrule <- fortify_hrule(x)
-  par_data_f <- fortify_style(x, "pars")
-  cell_data_f <- fortify_style(x, "cells")
 
   txt_data <- as_table_text(x)
 
@@ -143,16 +149,21 @@ html_gen <- function(x){
   txt_data <- merge(txt_data, data_ref_text, by = by_columns)
   setorderv(txt_data, c("ft_row_id", "col_id", "seq_index"))
 
+  is_soft_return <- txt_data$txt %in% "<br>"
+  is_tab <- txt_data$txt %in% "<tab>"
   is_eq <- !is.na(txt_data$eq_data)
   is_hlink <- !is.na(txt_data$url)
   is_raster <- sapply(txt_data$img_data, function(x) {
     inherits(x, "raster") || is.character(x)
   })
 
+
   # manage raster
   txt_data[is_raster==TRUE, c("txt") := list(img_as_html(img_data = .SD$img_data, width = .SD$width, height = .SD$height))]
   # manage txt
   txt_data[is_raster==FALSE, c("txt") := list(sprintf("<span class=\"%s\">%s</span>", .SD$classname, htmlize(.SD$txt)))]
+  txt_data[is_soft_return==TRUE, c("txt") := list("<br>")]
+  txt_data[is_tab==TRUE, c("txt") := list("&emsp;")]
 
   if (requireNamespace("equatags", quietly = TRUE) && any(is_eq)) {
     transform_mathjax <- getFromNamespace("transform_mathjax", "equatags")
@@ -238,11 +249,12 @@ html_gen <- function(x){
 
 # html chunks ----
 htmlize <- function(x){
-  x <-  gsub("\n", "<br>", htmlEscape(x))
+  x <-  htmlEscape(x)
   x <-  gsub("\t", "&emsp;", x)
   x
 }
 
+#' @importFrom base64enc dataURI
 img_as_html <- function(img_data, width, height){
   str_raster <- mapply(function(img_raster, width, height ){
 
@@ -290,6 +302,26 @@ img_as_html <- function(img_data, width, height){
 }
 
 # css ----
+
+css_pt <- function(x, digits = 1){
+  x <- ifelse( is.na(x), "inherit",
+               ifelse( x < 0.001, "0",
+                       paste0(format_double(x, digits = digits),"pt")))
+  x
+}
+css_no_unit <- function(x, digits = 0){
+  x <- ifelse( is.na(x), "inherit",
+               ifelse( x < 0.001, "0",
+                       format_double(x, digits = digits)))
+  x
+}
+
+border_css <- function(color, width, style, side){
+  style[!style %in% c("dotted", "dashed", "solid")] <- "solid"
+  x <- sprintf("border-%s: %s %s %s;", side, css_pt(width, 2), style, colcodecss(color))
+  x
+}
+
 text_css_styles <- function(x){
 
   shading <- ifelse(
@@ -329,24 +361,33 @@ text_css_styles <- function(x){
   paste0(".", x$classname, "{", style_column, "}", collapse = "")
 }
 
+css_align <- function(text.direction, align) {
+
+  textdir <- rep("", length(text.direction))
+  textdir[text.direction %in% "btlr"] <- "writing-mode: vertical-rl;transform: rotate(180deg);-ms-writing-mode:bt-lr;-webkit-writing-mode:vertical-rl;"
+  textdir[text.direction %in% "tbrl"] <- "writing-mode: vertical-rl;-ms-writing-mode:tb-rl;-webkit-writing-mode:vertical-rl;"
+
+  textalign <- sprintf("text-align:%s;", align )
+
+  textalign_margins <- rep("", length(text.direction))
+  textalign_margins[text.direction %in% "tbrl" & align %in% "center"] <- "margin-left:auto;margin-right:auto;"
+  textalign_margins[text.direction %in% "tbrl" & align %in% "left"] <-"margin-right:auto;"
+  textalign_margins[text.direction %in% "tbrl" & align %in% "right"] <- "margin-left:auto;"
+
+  textalign_margins[text.direction %in% "btlr" & align %in% "center"] <- "margin-left:auto;margin-right:auto;"
+  textalign_margins[text.direction %in% "btlr" & align %in% "left"] <- "margin-right:auto;"
+  textalign_margins[text.direction %in% "btlr" & align %in% "right"] <- "margin-left:auto;"
+
+  paste0(textalign, textalign_margins, textdir)
+}
+
 par_css_styles <- function(x){
-  shading <- ifelse( colalpha(x$shading.color) > 0,
-                     sprintf("background-color:%s;", colcodecss(x$shading.color) ),
-                     "background-color:transparent;")
 
-  textdir <- ifelse(x$text.direction %in% "tbrl", "writing-mode:vertical-rl;",
-                    ifelse(x$text.direction %in% "btlr", "writing-mode:vertical-lr;transform: rotate(180deg);", "")
-  )
-  textalign <- sprintf("text-align:%s;", x$text.align )
-  textalign_margins <- rep("", nrow(x))
+  shading <- rep("background-color:transparent;", nrow(x))
+  has_shading <- colalpha(x$shading.color) > 0
+  shading[has_shading] <- sprintf("background-color:%s;", colcodecss(x$shading.color[has_shading]))
 
-  textalign_margins[x$text.direction %in% "tbrl" & x$vertical.align %in% "center"] <- "margin-left:auto;margin-right:auto;"
-  textalign_margins[x$text.direction %in% "tbrl" & x$vertical.align %in% "top"] <- "margin-left:auto;"
-  textalign_margins[x$text.direction %in% "tbrl" & x$vertical.align %in% "bottom"] <- "margin-right:auto;"
-  textalign_margins[x$text.direction %in% "btlr" & x$vertical.align %in% "center"] <- "margin-left:auto;margin-right:auto;"
-  textalign_margins[x$text.direction %in% "btlr" & x$vertical.align %in% "top"] <- "margin-right:auto;"
-  textalign_margins[x$text.direction %in% "btlr" & x$vertical.align %in% "bottom"] <- "margin-left:auto;"
-  textalign <- paste0(textalign, textalign_margins)
+  textalign <- css_align(x$text.direction, x$text.align)
 
   bb <- border_css(
     color = x$border.color.bottom, width = x$border.width.bottom,
@@ -368,7 +409,7 @@ par_css_styles <- function(x){
 
   line_spacing <- sprintf("line-height: %s;", css_no_unit(x$line_spacing, 2) )
 
-  style_column <- paste0("margin:0;", textalign, textdir, bb, bt, bl, br,
+  style_column <- paste0("margin:0;", textalign, bb, bt, bl, br,
                          padding.bottom, padding.top, padding.left, padding.right,
                          line_spacing, shading )
   paste0(".", x$classname, "{", style_column, "}", collapse = "")
@@ -383,12 +424,9 @@ cell_css_styles <- function(x){
   width <- ifelse( is.na(x$width), "", sprintf("width:%s;", css_pt(x$width * 72) ) )
   height <- ifelse( !is.na(x$height) & x$hrule %in% c("exact", "atleast"), sprintf("height:%s;", css_pt(x$height * 72 ) ), "" )
 
-  vertical.align <- ifelse(
-    x$vertical.align %in% "center", "vertical-align: middle;",
-    ifelse(x$vertical.align %in% "top", "vertical-align: top;", "vertical-align: bottom;") )
-  vertical.align[x$text.direction %in% "tbrl" & x$text.align %in% "center"] <- "vertical-align:middle;"
-  vertical.align[x$text.direction %in% "tbrl" & x$text.align %in% "left"] <- "vertical-align:top;"
-  vertical.align[x$text.direction %in% "tbrl" & x$text.align %in% "right"] <- "vertical-align:bottom;"
+  vertical.align <- rep("vertical-align: middle;", nrow(x))
+  vertical.align[x$vertical.align %in% "top"] <- "vertical-align: top;"
+  vertical.align[x$vertical.align %in% "bottom"] <- "vertical-align: bottom;"
 
   bb <- border_css(
     color = x$border.color.bottom, width = x$border.width.bottom,
@@ -419,14 +457,21 @@ cell_css_styles <- function(x){
 #' @title htmlDependency for flextable objects
 #' @description When using loops in an R Markdown for HTML document, the
 #' htmlDependency object for flextable must also be added at least once.
+#' @param htmlscroll add a scroll if table is too big to fit
+#' into its HTML container, default to TRUE.
 #' @examples
 #' if(require("htmltools"))
 #'   div(flextable_html_dependency())
-flextable_html_dependency <- function(){
+flextable_html_dependency <- function(htmlscroll = TRUE){
+  if (isTRUE(htmlscroll)) {
+    stylesheet <- c("tabwid.css", "scrool.css")
+  } else {
+    stylesheet <- "tabwid.css"
+  }
   htmlDependency("tabwid",
                  "1.0.0",
-                 src = system.file(package="flextable", "web_1.0.0"),
-                 stylesheet = "tabwid.css")
+                 src = system.file(package="flextable", "web_1.1.0"),
+                 stylesheet = stylesheet)
 
 }
 

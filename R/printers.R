@@ -9,19 +9,24 @@
 #' @param x a flextable object
 #' @param ft.align flextable alignment, supported values are 'left', 'center' and 'right'.
 #' @param ft.shadow use shadow dom, this option is existing
-#' to disable shadow dom (set to `FALSE`) for pagedown that can not support it for now.
+#' to disable shadow dom (set to `FALSE`) for pagedown that
+#' can not support it for now.
+#' @param ft.htmlscroll add a scroll if table is too big to fit
+#' into its HTML container, default to TRUE.
 #' @family flextable print function
 #' @examples
 #' htmltools_value(flextable(iris[1:5,]))
 #' @importFrom htmltools tagList
-htmltools_value <- function(x, ft.align = "center", ft.shadow = TRUE){
-
+htmltools_value <- function(x, ft.align = "center", ft.shadow = TRUE, ft.htmlscroll = TRUE) {
   x <- flextable_global$defaults$post_process_html(x)
 
-  html_o <- tagList(flextable_html_dependency(),
-                    HTML(html_str(x, ft.align = ft.align, class = "tabwid",
-                                  caption = caption_html_str(x, bookdown = FALSE),
-                                  shadow = ft.shadow))
+  html_o <- tagList(
+    flextable_html_dependency(htmlscroll = ft.htmlscroll),
+    HTML(html_str(x,
+      ft.align = ft.align, class = "tabwid",
+      caption = caption_html_str(x, bookdown = FALSE),
+      shadow = ft.shadow
+    ))
   )
   html_o
 }
@@ -46,12 +51,28 @@ htmltools_value <- function(x, ft.align = "center", ft.shadow = TRUE){
 #' @param ft.align flextable alignment, supported values are 'left', 'center' and 'right'.
 #' @param ft.split Word option 'Allow row to break across pages' can be
 #' activated when TRUE.
-#' @param ft.keepnext Word option 'keep rows together' can be
-#' activated when TRUE. It avoids page break within tables.
+#' @param ft.keepnext default `TRUE`. Word option 'keep rows
+#' together' is activated when TRUE. It avoids page break
+#' within tables. This is handy for small tables, i.e. less than
+#' a page height.
+#'
+#' Be careful, if you print long tables, you should
+#' rather set its value to `FALSE` to avoid that the tables
+#' also generate a page break before being placed in the
+#' Word document. Since Word will try to keep it with the **next
+#' paragraphs that follow the tables**.
 #' @param ft.tabcolsep space between the text and the left/right border of its containing
 #' cell, the default value is 8 points.
 #' @param ft.arraystretch height of each row relative to its default
 #' height, the default value is 1.5.
+#' @param ft.latex.float type of floating placement in the document, one of:
+#' * 'none' (the default value), table is placed after the preceding
+#' paragraph.
+#' * 'float', table can float to a place in the text where it fits best
+#' * 'wrap-r', wrap text around the table positioned to the right side of the text
+#' * 'wrap-l', wrap text around the table positioned to the left side of the text
+#' * 'wrap-i', wrap text around the table positioned inside edge-near the binding
+#' * 'wrap-o', wrap text around the table positioned outside edge-far from the binding
 #' @param ft.left,ft.top Position should be defined with options `ft.left`
 #' and `ft.top`. Theses are the top left coordinates in inches
 #' of the placeholder that will contain the table. Their
@@ -88,6 +109,7 @@ flextable_to_rmd <- function(
                              ft.keepnext = opts_current$get("ft.keepnext"),
                              ft.tabcolsep = opts_current$get("ft.tabcolsep"),
                              ft.arraystretch = opts_current$get("ft.arraystretch"),
+                             ft.latex.float = opts_current$get("ft.latex.float"),
                              ft.left = opts_current$get("ft.left"),
                              ft.top = opts_current$get("ft.top"),
                              text_after = "",
@@ -117,7 +139,8 @@ flextable_to_rmd <- function(
     # latex ----
     str <- latex_value(x,
       ft.tabcolsep = ft.tabcolsep, ft.align = ft.align,
-      ft.arraystretch = ft.arraystretch, bookdown = bookdown
+      ft.arraystretch = ft.arraystretch, bookdown = bookdown,
+      ft.latex.float = ft.latex.float
     )
   } else if (grepl("docx", opts_knit$get("rmarkdown.pandoc.to"))) {
     # docx ----
@@ -170,16 +193,22 @@ flextable_to_rmd <- function(
 #' @param ft.align flextable alignment, supported values are 'left', 'center' and 'right'.
 #' @param ft.shadow use shadow dom, this option is existing mainly
 #' to disable shadow dom (set to `FALSE`) for pagedown that can not support it for now.
+#' @param ft.htmlscroll add a scroll if table is too big to fit
+#' into its HTML container, default to TRUE.
 #' @param bookdown `TRUE` or `FALSE` (default) to support cross referencing with bookdown.
 #' @param pandoc2 `TRUE` (default) or `FALSE` to get the string in a pandoc raw HTML attribute.
 #' @examples
 #' html_value(flextable(iris[1:5,]))
-html_value <- function(x, ft.align = opts_current$get("ft.align"), ft.shadow = opts_current$get("ft.shadow"), bookdown = FALSE, pandoc2 = TRUE){
+html_value <- function(x, ft.align = opts_current$get("ft.align"), ft.shadow = opts_current$get("ft.shadow"),
+                       ft.htmlscroll = opts_current$get("ft.htmlscroll"), bookdown = FALSE, pandoc2 = TRUE){
 
   x <- flextable_global$defaults$post_process_html(x)
 
   if(is.null(ft.shadow)){
     ft.shadow <- TRUE
+  }
+  if(is.null(ft.htmlscroll)){
+    ft.htmlscroll <- TRUE
   }
 
   caption_str <- caption_html_str(x, bookdown = bookdown)
@@ -197,7 +226,7 @@ html_value <- function(x, ft.align = opts_current$get("ft.align"), ft.shadow = o
     if(pandoc2) "```",
     "", "",
     sep = "\n")
-  knit_meta_add(list(flextable_html_dependency()))
+  knit_meta_add(list(flextable_html_dependency(htmlscroll = ft.htmlscroll)))
 
   out
 }
@@ -211,8 +240,16 @@ html_value <- function(x, ft.align = opts_current$get("ft.align"), ft.shadow = o
 #' @param ft.align flextable alignment, supported values are 'left', 'center' and 'right'.
 #' @param ft.split Word option 'Allow row to break across pages' can be
 #' activated when TRUE.
-#' @param ft.keepnext Word option 'keep rows together' can be
-#' activated when TRUE. It avoids page break within tables.
+#' @param ft.keepnext default `TRUE`. Word option 'keep rows
+#' together' is activated when TRUE. It avoids page break
+#' within tables. This is handy for small tables, i.e. less than
+#' a page height.
+#'
+#' Be careful, if you print long tables, you should
+#' rather set its value to `FALSE` to avoid that the tables
+#' also generate a page break before being placed in the
+#' Word document. Since Word will try to keep it with the **next
+#' paragraphs that follow the tables**.
 #' @param bookdown `TRUE` or `FALSE` (default) to support cross referencing with bookdown.
 #' @examples
 #' docx_value(flextable(iris[1:5,]))
@@ -256,6 +293,8 @@ docx_value <- function(x,
 #' cell, the default value is 8 points.
 #' @param ft.arraystretch height of each row relative to its default
 #' height, the default value is 1.5.
+#' @param ft.latex.float 'none' (the default value), 'float', 'wrap-r',
+#' 'wrap-l', 'wrap-i', 'wrap-o'.
 #' @param bookdown `TRUE` or `FALSE` (default) to support cross referencing with bookdown.
 #' @examples
 #' latex_value(flextable(airquality[1:5,]))
@@ -264,14 +303,35 @@ latex_value <- function(x,
                         ft.align = opts_current$get("ft.align"),
                         ft.tabcolsep = opts_current$get("ft.tabcolsep"),
                         ft.arraystretch = opts_current$get("ft.arraystretch"),
+                        ft.latex.float = opts_current$get("ft.latex.float"),
                         bookdown) {
   if (is.null(ft.align)) ft.align <- "center"
   if (is.null(ft.tabcolsep)) ft.tabcolsep <- 2
   if (is.null(ft.arraystretch)) ft.arraystretch <- 1.5
+  if (is.null(ft.latex.float)) ft.latex.float <- "none"
 
   x <- flextable_global$defaults$post_process_pdf(x)
 
-  add_latex_dep()
+  add_latex_dep(
+    float = "float" %in% ft.latex.float,
+    wrapfig = grepl("^wrap", ft.latex.float)
+  )
+
+  if ("none" %in% ft.latex.float) {
+    lat_container <- latex_container_none()
+  } else if ("float" %in% ft.latex.float) {
+    lat_container <- latex_container_float()
+  } else if ("wrap-l" %in% ft.latex.float) {
+    lat_container <- latex_container_wrap(placement = "l")
+  } else if ("wrap-r" %in% ft.latex.float) {
+    lat_container <- latex_container_wrap(placement = "r")
+  } else if ("wrap-i" %in% ft.latex.float) {
+    lat_container <- latex_container_wrap(placement = "i")
+  } else if ("wrap-o" %in% ft.latex.float) {
+    lat_container <- latex_container_wrap(placement = "o")
+  } else {
+    lat_container <- latex_container_none()
+  }
 
   out <- paste(
     cline_cmd,
@@ -279,6 +339,7 @@ latex_value <- function(x,
       ft.align = ft.align,
       ft.tabcolsep = ft.tabcolsep,
       ft.arraystretch = ft.arraystretch,
+      lat_container = lat_container,
       bookdown = bookdown
     ),
     sep = "\n\n"
@@ -297,7 +358,7 @@ pptx_value <- function(x, ft.left = opts_current$get("ft.left"),
 
   uid <- as.integer(runif(n=1) * 10^9)
 
-  str <- pml_flextable(x, uid = uid, offx = ft.left, offy = ft.top, cx = 10, cy = 6)
+  str <- pptx_str(x, uid = uid, offx = ft.left, offy = ft.top, cx = 10, cy = 6)
 
   caption <- caption_html_str(x, bookdown = bookdown)
 
@@ -349,6 +410,7 @@ print.flextable <- function(x, preview = "html", ...){
     file_out <- print(doc, target = tempfile(fileext = ".pptx"))
     browseURL(file_out)
   } else if( preview == "docx" ){
+    x <- flextable_global$defaults$post_process_docx(x)
     doc <- read_docx()
     doc <- body_add_flextable(doc, value = x, align = "center")
     file_out <- print(doc, target = tempfile(fileext = ".docx"))
@@ -411,13 +473,23 @@ print.flextable <- function(x, preview = "html", ...){
 #'   **chunk option** \tab **property** \tab **default value** \tab **HTML** \tab **docx** \tab **PDF** \tab **pptx** \cr
 #'   ft.align        \tab flextable alignment, supported values are 'left', 'center' and 'right'    \tab 'center' \tab yes \tab yes \tab yes \tab no \cr
 #'   ft.shadow       \tab HTML option, disable shadow dom (set to `FALSE`) for pagedown. \tab TRUE    \tab yes  \tab no \tab no  \tab no \cr
+#'   ft.htmlscroll   \tab HTML option, add a scroll if table is too big to fit into its HTML container. \tab TRUE    \tab yes  \tab no \tab no  \tab no \cr
 #'   ft.split        \tab Word option 'Allow row to break across pages' can be activated when TRUE. \tab FALSE    \tab no  \tab yes \tab no  \tab no \cr
-#'   ft.keepnext     \tab Word option 'keep rows together' can be activated when TRUE. \tab TRUE    \tab no  \tab yes \tab no  \tab no \cr
+#'   ft.keepnext     \tab Word option 'keep rows together' can be desactivated when FALSE \tab TRUE    \tab no  \tab yes \tab no  \tab no \cr
 #'   ft.tabcolsep    \tab space between the text and the left/right border of its containing cell   \tab 8.0      \tab no  \tab no  \tab yes \tab no \cr
 #'   ft.arraystretch \tab height of each row relative to its default height                         \tab 1.5      \tab no  \tab no  \tab yes \tab no \cr
+#'   ft.latex.float  \tab type of floating placement in the document, one of 'none', 'float', 'wrap-r', 'wrap-l', 'wrap-i', 'wrap-o' \tab 'none'      \tab no  \tab no  \tab yes \tab no \cr
 #'   ft.left         \tab left coordinates in inches                                                \tab 1.0      \tab no  \tab no  \tab no  \tab yes\cr
 #'   ft.top          \tab top coordinates in inches                                                 \tab 2.0      \tab no  \tab no  \tab no  \tab yes
 #' }
+#'
+#' If some values are to be used all the time in the same
+#' document, it is recommended to set these values in a
+#' 'knitr r chunk' by using function
+#' `knitr::opts_chunk$set(ft.split=FALSE, ft.keepnext = FALSE, ...)`.
+#'
+#' See [flextable_to_rmd()] for more details about these options.
+#'
 #' @section Table caption:
 #'
 #' Captions can be defined in two ways.
@@ -477,8 +549,13 @@ print.flextable <- function(x, preview = "html", ...){
 #' infeasibility. These are the padding, line_spacing and
 #' height properties.
 #'
-#' Background color and merged cells are also sources of trouble
-#' with PDF format. Authors are hoping to fix these issues in
+#' It is recommended to set theses values in a
+#' 'knitr r chunk' so that they are permanent
+#' all along the document:
+#' `knitr::opts_chunk$set(ft.tabcolsep=0, ft.latex.float = "none")`.
+#'
+#' Background color and merged cells does not work well together
+#' with PDF format. Authors are hoping to fix this issue in
 #' the future.
 #'
 #' See [add_latex_dep()] if caching flextable results in 'R Markdown'
@@ -632,7 +709,7 @@ save_as_html <- function(..., values = NULL, path, encoding = "utf-8", title = d
 
     val[i] <- paste(txt, collapse = "")
   }
-  tabwid_css <- paste(c("<style>", readLines(system.file(package="flextable", "web_1.0.0", "tabwid.css"), encoding = "UTF-8"), "</style>"), collapse = "\n")
+  tabwid_css <- paste(c("<style>", readLines(system.file(package="flextable", "web_1.1.0", "tabwid.css"), encoding = "UTF-8"), "</style>"), collapse = "\n")
 
   str <- c('<!DOCTYPE htm><html><head>',
   sprintf('<meta http-equiv="Content-Type" content="text/html; charset=%s"/>', encoding),
@@ -726,6 +803,8 @@ save_as_docx <- function(..., values = NULL, path, pr_section = NULL){
   }
 
   values <- Filter(function(x) inherits(x, "flextable"), values)
+  values <- lapply(values, flextable_global$defaults$post_process_docx)
+
   titles <- names(values)
   show_names <- !is.null(titles)
 
@@ -763,7 +842,21 @@ save_as_docx <- function(..., values = NULL, path, pr_section = NULL){
 #' Image generated with package 'webshot' or package 'webshot2'.
 #' **Package 'webshot2' should be prefered** as 'webshot' can have
 #' issues with some properties (i.e. bold are not rendered for some users).
+#'
+#' The image is coming from a screenshot of the 'HTML' output.
+#' `save_as_image()` is a tool to make life easier for users.
+#' Nevertheless, the features have some limitations that can't
+#' be solved with flextable because they are not related to
+#' flextable:
+#'
+#' * `png` does support transparency,
+#' * `jpeg` does not support transparency,
+#' * webshot2 does not allow transparent background,
+#' * webshot does allow transparent background.
+#'
 #' @note This function requires package webshot or webshot2.
+#' The screenshot process is rather slow because it is managed by
+#' an external program (see webshot or webshot2 documentation).
 #' @param x a flextable object
 #' @param path image file to be created. It should end with .png, .pdf, or .jpeg.
 #' @param zoom,expand parameters used by `webshot` function.

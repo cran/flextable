@@ -1,4 +1,4 @@
-get_text_data <- function(x, ls_df){
+latex_text_dataset <- function(x, ls_df){
 
   txt_data <- as_table_text(x)
   txt_data$col_id <- factor(txt_data$col_id, levels = x$col_keys)
@@ -23,6 +23,8 @@ get_text_data <- function(x, ls_df){
   dat <- merge(txt_data, span_style_str, by =  "classname")
   dat[, c("txt") := list(sanitize_latex_str(.SD$txt))]
 
+  is_soft_return <- dat$txt %in% "<br>"
+  is_tab <- dat$txt %in% "<tab>"
   is_eq <- !is.na(dat$eq_data)
   dat[is_eq==TRUE, c("txt") := list(paste0('$', .SD$eq_data, '$'))]
   is_hlink <- !is.na(dat$url)
@@ -31,8 +33,8 @@ get_text_data <- function(x, ls_df){
   })
   dat[is_hlink, c("txt") := list(paste0("\\href{", sanitize_latex_str(.SD$url), "}{", .SD$txt, "}"))]
   dat[is_raster==TRUE, c("txt") := list(img_to_latex(.SD$img_data, .SD$width, .SD$height))]
-  dat[is_raster==FALSE, c("txt") := list(gsub("\n", "\\linebreak ", .SD$txt, fixed = TRUE))]
-  dat[is_raster==FALSE, c("txt") := list(gsub("\t", "\\quad ", .SD$txt, fixed = TRUE))]
+  dat[is_soft_return==TRUE, c("txt") := list("\\linebreak ")]
+  dat[is_tab==TRUE, c("txt") := list("\\quad ")]
   dat[is_raster==FALSE, c("txt") := list(sprintf("%s%s%s", .SD$left, .SD$txt, .SD$right))]
 
   dat[, c("left", "right") := NULL]
@@ -42,10 +44,12 @@ get_text_data <- function(x, ls_df){
   dat
 }
 
-#  https://stackoverflow.com/questions/5406071/r-sweave-latex-escape-variables-to-be-printed-in-latex
 sanitize_latex_str <- function(str) {
-  z <- gsub('([#$%&~_\\^\\\\{}])', '\\\\\\1', str, perl = TRUE)
-  gsub(" ", "\\ ", z, , fixed = TRUE)
+  z <- gsub("[\\\\]", "\\\\textbackslash", str)
+  z <- gsub("([&%$#_{} ]{1})", "\\\\\\1", z)
+  z <- gsub("[~]", "\\\\textasciitilde", z)
+  z <- gsub("^", "\\\\\\textasciicircum", z, fixed = TRUE)
+  z
 }
 
 text_latex_styles <- function(x){

@@ -1,3 +1,60 @@
+# flextable 0.7.1
+
+## new features
+
+* function `as_flextable()` has now methods for 
+lm, glm, models from package 'lme' and 'lme4',
+htest (t.test, chisq.test, ...), gam, kmeans and pam.
+* new function `use_model_printer()` to set model automatic 
+printing as a flextable in an R Markdown document.
+* new function `add_body_row()` to add a row in the body part 
+with eventually merged/spanned columns.  
+* new function `tabulator_colnames()` to get column names 
+of a `tabulator` object.
+* new function `prepend_chunks()` to prepend chunks of content
+in flextable cells as with `as_paragraph()` but without 
+replacing the whole content.
+* addition of chunk function `as_word_field()` to let add 'Word' computed
+values into a flextable, as `as_word_field(x = "Page")` for a page number.
+* new function `separate_header()` to Separate collapsed 
+colnames into multiple rows.
+* Functions `autofit()` and `dim_pretty()` now support newlines.
+* `autofit()` and `dim_pretty()` now have an argument `hspans` 
+to help specify how horizontally spanned cells should affect 
+the results.
+* PDF output now supports various floating placement options with 
+knitr option `ft.latex.float`, supported values are 'none' 
+(the default value), 'float', 'wrap-r', 'wrap-l', 
+'wrap-i' and 'wrap-o'.
+* HTML output have now a scrool bar if width does not fit in the 
+container. This can be switch off by using the knitr 
+option `ft.htmlscroll = FALSE`.
+* `tabulator()` can display any columns before and 
+after the columns of displayed aggregations.
+
+## Issues
+
+* fix append_chunks usage by adding `i`, `j` and `part` 
+at the end of the function arguments, after the `...`.
+* add forgotten `supp_data` in the result table of `tabulator()`
+* merged horizontal borders are now visible in PowerPoint (#378)
+* PowerPoint 'soft returns' are now real 'soft returns'. (#379)
+* mapping between argument `j` and `source` when color is a function 
+(in `bg()`, `highlight()` and `color()`) is now based on colnames 
+to avoid mistake while mapping. #395
+* Fix issue with footnotes forcing rectangular extent for selection; 
+thanks to Sean Browning
+* fix horizontal and vertical alignements when rotating paragraphs for 
+pptx, docx and html outputs
+* links in pptx and docx are not transformed anymore.
+* fix handling of special characters in latex
+* vertically merged cells now wrap text into the paragraph 
+
+
+## Changes
+
+* refactor the code for pptx and docx output
+
 # flextable 0.7.0
 
 ## new features

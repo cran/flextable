@@ -14,9 +14,11 @@
 #' @param x an aggregated data.frame
 #' @param rows column names to use in rows dimensions
 #' @param columns column names to use in columns dimensions
-#' @param supp_data additional data that will be merged with
-#' table and presented after the columns presenting
+#' @param datasup_first additional data that will be merged with
+#' table and placed after the columns presenting
 #' the row dimensions.
+#' @param datasup_last additional data that will be merged with
+#' table and placed at the end of the table.
 #' @param hidden_data additional data that will be merged with
 #' table, the columns are not presented but can be used
 #' with [compose()] or [mk_par()] function.
@@ -132,9 +134,11 @@
 #' \if{html}{\figure{fig_tabulator_2.png}{options: width="500"}}
 #' @importFrom rlang enquos enquo call_args
 #' @importFrom data.table rleidv as.data.table
-#' @seealso [as_flextable.tabulator()], [summarizor()], [as_grouped_data()]
+#' @seealso [as_flextable.tabulator()], [summarizor()],
+#' [as_grouped_data()], [tabulator_colnames()]
 tabulator <- function(x, rows, columns,
-                      supp_data = NULL,
+                      datasup_first = NULL,
+                      datasup_last = NULL,
                       hidden_data = NULL,
                       row_compose = list(),
                       ...){
@@ -157,9 +161,12 @@ tabulator <- function(x, rows, columns,
     rows = rows)
 
   x <- add_fake_columns(x, col_expr_names)
-
+  supp_colnames <- setdiff(colnames(datasup_first), rows)
+  supp_colnames_last <- setdiff(colnames(datasup_last), rows)
   visible_columns <- map_visible_columns(
     dat = x, columns = columns, rows = rows,
+    supp_colnames = supp_colnames,
+    supp_colnames_last = supp_colnames_last,
     value_names = col_expr_names)
 
   # check dimensions
@@ -175,13 +182,16 @@ tabulator <- function(x, rows, columns,
   .formula <- paste(paste0("`", rows, "`", collapse = "+"),
                     "~", paste0("`", columns, "`", collapse = "+"))
   value_vars <- c(data_colnames, col_expr_names)
+
   dat <- dcast(
     data = as.data.table(x),
     formula = .formula,
     value.var = value_vars, sep = "@")
+  setDF(dat)
 
-  dat <- merge_additional_dataset(dat, supp_data, rows = rows)
+  dat <- merge_additional_dataset(dat, datasup_first, rows = rows)
   dat <- merge_additional_dataset(dat, hidden_data, rows = rows)
+  dat <- merge_additional_dataset(dat, datasup_last, rows = rows)
   setDF(dat)
 
   z <- list(
@@ -324,7 +334,6 @@ as_flextable.tabulator <- function(
   for(j in names(visible_columns_mapping)){
     visible_columns_mapping_j <- visible_columns_mapping[[j]]
     replication_info <- hidden_columns_mapping[[j]]
-
     ft$body$dataset[as.character(replication_info$.user_columns)] <- ft$body$dataset[replication_info$col_keys]
 
     for(i in seq_len(nrow(visible_columns_mapping_j))){
@@ -341,8 +350,6 @@ as_flextable.tabulator <- function(
     ft <- mk_par(ft, j = j, value = !!x$row_exprs[[j]])
   }
 
-  ft <- autofit(ft, part = "all", add_w = .2, add_h = .0, unit = "cm")
-
   for(column in rev(columns)){
     rel_ <- rle(visible_columns[[column]])
     rel_$values[rel_$values %in% "dummy"] <- ""
@@ -356,15 +363,19 @@ as_flextable.tabulator <- function(
 
   }
 
+  rows_supp <- visible_columns$col_keys[
+    visible_columns$type %in% c("rows_supp", "rows_supp_last") &
+      !visible_columns$.tab_columns %in% "dummy"
+      ]
   ft <- merge_v(
     x = ft,
-    j = rows, part = "header")
+    j = c(rows, rows_supp), part = "header")
 
-  ft <- valign(ft, valign = "bottom", j = rows, part = "header")
-  ft <- valign(ft, valign = "top", j = rows)
+  ft <- valign(ft, valign = "bottom", j = c(rows, rows_supp), part = "header")
+  ft <- valign(ft, valign = "top", part = "body")
 
   ft <- align(x = ft, j = visible_columns_keys, align = columns_alignment, part = "all")
-  ft <- align(x = ft, j = rows, align = rows_alignment, part = "all")
+  ft <- align(x = ft, j = c(rows, rows_supp), align = rows_alignment, part = "all")
 
   if(sep_w > 0){
     ft <- padding(ft, j = blank_columns, padding = 0, part = "all")
@@ -388,7 +399,7 @@ as_flextable.tabulator <- function(
     ft <- void(ft, j = blank_columns, part = "all")
     ft <- width(ft, j = blank_columns, width = sep_w, unit = unit)
   }
-
+  ft <- autofit(ft, part = "all", add_w = .2, add_h = .0, unit = "cm")
   ft <- fix_border_issues(ft, part = "all")
   ft
 }
@@ -404,8 +415,121 @@ as_flextable.tabulator <- function(
 #' @param object an object returned by function
 #' `tabulator()`.
 summary.tabulator <- function(object, ...){
-  object$visible_columns
+
+  hidden_columns <- object$hidden_columns
+  names(hidden_columns)[names(hidden_columns) %in% ".user_columns"] <- "column"
+  hidden_columns$type <- "hidden"
+
+  visible_columns <- object$visible_columns
+  names(visible_columns)[names(visible_columns) %in% ".tab_columns"] <- "column"
+  dat <- rbind(visible_columns, hidden_columns)
+  dat
 }
+
+#' @export
+#' @importFrom rlang quo_text
+#' @title column keys of tabulator objects
+#' @description The function provides a way to get column keys
+#' associated with the flextable corresponding to a [tabulator()]
+#' object. It helps in customizing or programing with `tabulator`.
+#'
+#' The function is using column names from the original
+#' dataset, eventually filters and returns the names
+#' corresponding to the selection.
+#' @param x a [tabulator()] object
+#' @param columns column names to look for
+#' @param type the type of column to look for, it can be:
+#'
+#' * 'columns': visible columns, corresponding to names provided
+#' in the '...' arguments of your call to 'tabulator()'.
+#' * 'hidden': unvisible columns, corresponding to names of
+#' the original dataset columns.
+#' * 'rows': visible columns used as 'row' content
+#' * 'rows_supp': visible columns used as 'rows_supp' content
+#' * NULL: any type of column
+#' @param ... any filter conditions that use variables
+#' names, the same than the argument `columns` of function [tabulator()]
+#' (`tabulator(columns = c("col1", "col2"))`).
+#' @seealso [tabulator()], [as_flextable.tabulator()]
+#' @examples
+#' library(flextable)
+#'
+#' cancer_dat <- data.frame(
+#'   count = c(
+#'     9L, 5L, 1L, 2L, 2L, 1L, 9L, 3L, 1L, 10L, 2L, 1L, 1L, 2L, 0L, 3L,
+#'     2L, 1L, 1L, 2L, 0L, 12L, 4L, 1L, 7L, 3L, 1L, 5L, 5L, 3L, 10L,
+#'     4L, 1L, 4L, 2L, 0L, 3L, 1L, 0L, 4L, 4L, 2L, 42L, 28L, 19L, 26L,
+#'     19L, 11L, 12L, 10L, 7L, 10L, 5L, 6L, 5L, 0L, 3L, 4L, 3L, 3L,
+#'     1L, 2L, 3L
+#'   ),
+#'   risktime = c(
+#'     157L, 77L, 21L, 139L, 68L, 17L, 126L, 63L, 14L, 102L, 55L,
+#'     12L, 88L, 50L, 10L, 82L, 45L, 8L, 76L, 42L, 6L, 134L, 71L,
+#'     22L, 110L, 63L, 18L, 96L, 58L, 14L, 86L, 42L, 10L, 66L,
+#'     35L, 8L, 59L, 32L, 8L, 51L, 28L, 6L, 212L, 130L, 101L,
+#'     136L, 72L, 63L, 90L, 42L, 43L, 64L, 21L, 32L, 47L, 14L,
+#'     21L, 39L, 13L, 14L, 29L, 7L, 10L
+#'   ),
+#'   time = rep(as.character(1:7), 3),
+#'   histology = rep(as.character(1:3), 21),
+#'   stage = rep(as.character(1:3), each = 21)
+#' )
+#'
+#' datasup_first <- data.frame(
+#'   time = factor(1:7, levels = 1:7),
+#'   zzz = runif(7)
+#' )
+#'
+#' z <- tabulator(cancer_dat,
+#'   rows = "time",
+#'   columns = c("histology", "stage"),
+#'   datasup_first = datasup_first,
+#'   n = as_paragraph(as_chunk(count))
+#' )
+#'
+#' j <- tabulator_colnames(
+#'   x = z, type = "columns",
+#'   columns = c("n"),
+#'   stage %in% 1
+#' )
+#'
+#' src <- tabulator_colnames(
+#'   x = z, type = "hidden",
+#'   columns = c("count"),
+#'   stage %in% 1
+#' )
+#'
+#' if (require("scales")) {
+#'   colourer <- col_numeric(
+#'     palette = c("wheat", "red"),
+#'     domain = c(0, 45)
+#'   )
+#'   ft_1 <- as_flextable(z)
+#'   ft_1 <- bg(
+#'     ft_1,
+#'     bg = colourer, part = "body",
+#'     j = j, source = src
+#'   )
+#'   ft_1
+#' }
+tabulator_colnames <- function(x, columns, type = NULL, ...){
+  dat <- summary(x)
+
+  if (!is.null(type)) {
+    dat <- dat[dat$type %in% type,]
+  }
+
+  exprs <- enquos(...)
+  exprs_evals <- lapply(exprs, function(expr_filter, dat){
+    check_filter_expr(expr_filter, dat)
+    eval_tidy({{expr_filter}}, data = dat)
+  }, dat = dat)
+  exprs_evals <- append(exprs_evals, list(dat$column %in% columns))
+  keep <- Reduce(`&`, exprs_evals)
+
+  dat["col_keys"][keep,]
+}
+
 
 #' @export
 print.tabulator <- function(x, ...){
@@ -431,23 +555,42 @@ print.tabulator <- function(x, ...){
 
 
 # utils -----
+#' @importFrom rlang quo_text
+check_filter_expr <- function(filter_expr, x){
+  filter_varnames <- all.vars(filter_expr)
+  missing_varnames <- setdiff(filter_varnames, colnames(x))
+
+  if(length(missing_varnames) > 0){
+    stop(quo_text(filter_expr), " is using unknown variable(s): ",
+         paste0("`", missing_varnames, "`", collapse = ","),
+         call. = FALSE)
+  }
+}
 
 add_fake_columns <- function(x, fake_columns){
   x[fake_columns] <- rep(list(character(nrow(x))), length(fake_columns))
   x
 }
 
-
+#' @importFrom data.table copy
 merge_additional_dataset <- function(a, b, rows){
   if(!is.null(b)){
     by <- intersect(rows, colnames(b))
-    a <- merge(a, b, by = by, all.x = TRUE, all.y = FALSE)
+    a$.keep_order_a <- seq_len(nrow(a))
+    b$.keep_order_b <- seq_len(nrow(b))
+    z <- merge(a, b, by = by, all.x = TRUE, all.y = FALSE)
+    z <- z[order(z$.keep_order_a, z$.keep_order_b), ]
+    z[c(".keep_order_a", ".keep_order_b")] <- list(NULL, NULL)
+    a <- z
   }
   a
 }
 
 #' @importFrom data.table setorderv
-map_visible_columns <- function(dat, columns, rows, value_names = character(0)){
+map_visible_columns <- function(dat, columns, rows, value_names = character(0),
+                                supp_colnames = character(0),
+                                supp_colnames_last = character(0)
+                                ){
 
   dat <- dat[c(columns, rows)]
   dat[value_names] <- lapply(value_names, function(x, n) character(n), n = nrow(dat))
@@ -472,6 +615,7 @@ map_visible_columns <- function(dat, columns, rows, value_names = character(0)){
   ldims <- do.call(rbind, ldims)
 
   sel_columns <- columns[seq_len(length(columns) - 2)]
+
   for(j in rev(seq_along(sel_columns))){
     ldims <- split(ldims, rleid(ldims[[j]]))
     ldims <- lapply(ldims, function(x, j){
@@ -491,23 +635,46 @@ map_visible_columns <- function(dat, columns, rows, value_names = character(0)){
   colnames(rdims) <- names(ldims)
   rdims <- as.data.frame(rdims, row.names = FALSE)
 
+  rdims_supp <- NULL
+  if(length(supp_colnames) > 0){
+    rdims_supp <- lapply(supp_colnames, function(x, n) rep(x, n), n = ncol(ldims))
+    rdims_supp <- do.call(rbind, rdims_supp)
+    x1 <- rdims_supp[1,]
+    x1[] <- "dummy"
+    rdims_supp <- rbind(rdims_supp, x1)
+    colnames(rdims_supp) <- names(ldims)
+    rdims_supp <- as.data.frame(rdims_supp, row.names = FALSE)
+    rdims_supp$type <- "rows_supp"
+  }
+
+  rdims_supp_last <- NULL
+  if(length(supp_colnames_last) > 0){
+    rdims_supp_last <- lapply(supp_colnames_last, function(x, n) rep(x, n), n = ncol(ldims))
+    rdims_supp_last <- do.call(rbind, rdims_supp_last)
+    x1 <- rdims_supp_last[1,]
+    x1[] <- "dummy"
+    rdims_supp_last <- rbind(x1, rdims_supp_last)
+    colnames(rdims_supp_last) <- names(ldims)
+    rdims_supp_last <- as.data.frame(rdims_supp_last, row.names = FALSE)
+    rdims_supp_last$type <- "rows_supp_last"
+  }
+
 
   ldims$type <- "columns"
   rdims$type <- "rows"
   last_column <- columns[length(columns)]
-  dims <- rbind(rdims, ldims)
-
+  dims <- rbind(rdims, rdims_supp, ldims, rdims_supp_last)
 
   is_dummy <- dims[[last_column]] %in% "dummy"
-
   dims$col_keys <- do.call(paste, append(as.list(dims[uid_cols]), list(sep = "@")))
-
   if(length(value_names) > 1){
     dims$col_keys <- paste0(dims$.stat_name, "@", dims$col_keys)
   }
-
   dims$col_keys[is_dummy] <- paste0("dummy", seq_len(sum(is_dummy)))
-  dims$col_keys[dims$type %in% "rows"] <- dims[[last_column]][dims$type %in% "rows"]
+
+  dims$col_keys[dims$type %in% "rows" & !is_dummy] <- dims[[last_column]][dims$type %in% "rows" & !is_dummy]
+  dims$col_keys[dims$type %in% "rows_supp" & !is_dummy] <- dims[[last_column]][dims$type %in% "rows_supp" & !is_dummy]
+  dims$col_keys[dims$type %in% "rows_supp_last" & !is_dummy] <- dims[[last_column]][dims$type %in% "rows_supp_last" & !is_dummy]
   setDF(dims)
   dims
 }
@@ -521,6 +688,7 @@ map_hidden_columns <- function(dat, columns, rows){
               measure.vars = user_columns, variable.name = ".user_columns")
   columns <- c(columns, ".user_columns")
   dims <- dat[, .SD, .SDcols = columns]
+  setDF(dat)
   dims <- unique(dims)
   dims$col_keys <- do.call(paste, append(as.list(dims[, .SD, .SDcols = columns[-length(columns)]]), list(sep = "@")))
   dims$col_keys <- paste0(dims$.user_columns, "@", dims$col_keys)
