@@ -1,6 +1,6 @@
-ff4d1b14107c7c6638747970941fe3cc *DESCRIPTION
+ff92d5a05f4afc6866d6807a97895fe1 *DESCRIPTION
 b63e3ca61af9e3d7203a22327d39c627 *NAMESPACE
-7595a61c56eaf6d40509d02951025bac *NEWS.md
+a0348cbe377d276b3999a8d1ed3e2a89 *NEWS.md
 422a44939a914fbe6b8978e6d789e353 *R/00_utils.R
 e79d7b110752fab7bca33c12d69dbafd *R/01_fpstruct.R
 9f061fced25f0596f798ed8806138e1e *R/05_content.R
@@ -10,7 +10,7 @@ b3e2064f15629b69e10bcd49e8c4887c *R/as_flextable.R
 85f7b8a082361105aa995e2f265f5e55 *R/as_flextable_gam.R
 9421a5f9cd0cc28424b9f3bb27f27fa6 *R/as_flextable_tabulator.R
 3eb35975ef87aab5e5830f0533a0eddc *R/augment_rows.R
-bf18f4fcfa82ca44bb8a8a72287322bc *R/body_add_flextable.R
+f958f72931e2f3a13f21e74593ff4df6 *R/body_add_flextable.R
 b4359e423b658cb9caeadf4cc4ed0071 *R/border_fix.R
 c182e615c61be662cf53708b7322182f *R/borders.R
 90325d81e6a198fd882cc3fb193156c4 *R/chunk_images.R
@@ -35,7 +35,7 @@ d85a1aa287d29210226d6594f4b0cceb *R/pptx_str.R
 009af110baaeb63874beb42c03ba5129 *R/printers.R
 0818094b4a3ac354e687de5cea6afc9e *R/proc_freq.R
 a4ae9217767fd06102a60bd7ae0b6a0b *R/read_structure.R
-3f693f53bcfc61cb7786e3af785ffccb *R/styles.R
+5b781d023086c014b204cded29a6fa1b *R/styles.R
 d2667d95668e899bb7b42d0345aaeae8 *R/summarizor.R
 32a22aa4e8a0eaa5b0b8d29ebca30aa7 *R/tabpart_add_rows.R
 160ee214220fad6fa5d49514441f8ae4 *R/tabpart_mains.R
@@ -91,7 +91,7 @@ ee253b51d0161ed2a94bff776df44d4b *man/as_word_field.Rd
 c3df11a5ca658eaa5932eca54ab3873c *man/autofit.Rd
 b715170cba8de7f379c98c9ca333c728 *man/before.Rd
 0853bc4169945bf16e4f0800f5686daa *man/bg.Rd
-e05f896b746e3ae1f9aae6101b07ed73 *man/body_add_flextable.Rd
+4288c05410c653498693865d8d11a6bd *man/body_add_flextable.Rd
 66cad5f9cf112dc377523a1836518970 *man/bold.Rd
 9a80e08459c678d79e36a905b76fbaf3 *man/border.Rd
 5c005ff9c878e8919f6a91447caddf6c *man/border_inner.Rd
@@ -311,7 +311,7 @@ b5cde2f0386fda617c61d1acec04a605 *tests/testthat/test-images.R
 568049b6c3b2e266e3cd9cbdf051ea5d *tests/testthat/test-latex.R
 608f0db594d10e2b58e1ce01b65fb7c2 *tests/testthat/test-link.R
 741be11bae65e9f4065347f71bb6cbf2 *tests/testthat/test-merge.R
-a81f30335f633c7f16587d39b7e7d41c *tests/testthat/test-misc.R
+b995da6599db4606fcfd434accdcb564 *tests/testthat/test-misc.R
 df9eb1ad8e1bc281a9bb218c805a5151 *tests/testthat/test-padding.R
 467fc1a3009ada0e3004c3de8c7ddb8b *tests/testthat/test-pptx-tables.R
 b1abe47c2b3fb9fc5bf074e38b68f81e *tests/testthat/test-proc-freq.R

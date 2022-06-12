@@ -1,7 +1,7 @@
 Package: flextable
 Type: Package
 Title: Functions for Tabular Reporting
-Version: 0.7.1
+Version: 0.7.2
 Authors@R: c(
     person("David", "Gohel", role = c("aut", "cre"),
     email = "david.gohel@ardata.fr"),
@@ -32,7 +32,7 @@ URL: https://ardata-fr.github.io/flextable-book/,
 BugReports: https://github.com/davidgohel/flextable/issues
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2022-06-01 22:22:40 UTC; davidgohel
+Packaged: 2022-06-12 14:21:51 UTC; davidgohel
 Author: David Gohel [aut, cre],
   Clementine Jager [ctb],
   Quentin Fazilleau [ctb],
@@ -44,4 +44,4 @@ Author: David Gohel [aut, cre],
   Sean Browning [ctb] (work on footnote positioning system)
 Maintainer: David Gohel <david.gohel@ardata.fr>
 Repository: CRAN
-Date/Publication: 2022-06-01 22:50:02 UTC
+Date/Publication: 2022-06-12 15:40:02 UTC
