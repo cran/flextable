@@ -72,7 +72,8 @@ flextable <- function(data, col_keys = names(data),
 
   stopifnot(is.data.frame(data), ncol(data) > 0 )
   if( any( duplicated(col_keys) ) ){
-    stop("duplicated col_keys")
+    stop("duplicated col_keys: ",
+         paste0(unique(col_keys[duplicated(col_keys)]), collapse = ", "))
   }
   if( inherits(data, "data.table") || inherits(data, "tbl_df") || inherits(data, "tbl") )
     data <- as.data.frame(data, stringsAsFactors = FALSE)
@@ -128,7 +129,11 @@ qflextable <- function(data){
 #' * The caption will be associated with a paragraph style when
 #' the output is Word. It can also be numbered as a auto-numbered
 #' Word computed value.
-#' * The PowerPoint format ignores captions.
+#' * The PowerPoint format ignores captions. PowerPoint documents are not
+#' structured and do not behave as HTML documents and paginated documents
+#' (word, pdf), and it's not possible to know where we should create
+#' a shape to contain the caption (technically it can't be in the
+#' PowerPoint shape containing the table).
 #'
 #' @section R Markdown:
 #'

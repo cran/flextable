@@ -258,7 +258,7 @@ highlight <- function(x, i = NULL, j = NULL, color = "yellow", part = "body", so
   check_formula_i_and_part(i, part)
 
   if (is.function(color)) {
-    source <- as_col_keys(x[[part]], source)
+    source <- as_col_keys(x[[part]], source, blanks = x$blanks)
     source_dataset <- x[[part]]$dataset[source]
     source_dataset <- source_dataset[get_rows_id(x[[part]], i), ]
     color <- data_colors(source_dataset, color)
@@ -347,7 +347,7 @@ color <- function(x, i = NULL, j = NULL, color, part = "body", source = j) {
   check_formula_i_and_part(i, part)
 
   if (is.function(color)) {
-    source <- as_col_keys(x[[part]], source)
+    source <- as_col_keys(x[[part]], source, blanks = x$blanks)
     source_dataset <- x[[part]]$dataset[source]
     source_dataset <- source_dataset[get_rows_id(x[[part]], i), ]
     color <- data_colors(source_dataset, color)
@@ -743,7 +743,7 @@ bg <- function(x, i = NULL, j = NULL, bg, part = "body", source = j) {
   check_formula_i_and_part(i, part)
 
   if (is.function(bg)) {
-    source <- as_col_keys(x[[part]], source)
+    source <- as_col_keys(x[[part]], source, blanks = x$blanks)
     source_dataset <- x[[part]]$dataset[source]
     source_dataset <- source_dataset[get_rows_id(x[[part]], i), ]
     bg <- data_colors(source_dataset, bg)
@@ -761,26 +761,6 @@ bg <- function(x, i = NULL, j = NULL, bg, part = "body", source = j) {
   x
 }
 
-#' @param x a complex_tabpart object
-#' @noRd
-as_col_keys <- function(x, j = NULL) {
-  if (is.null(j)) {
-    j <- x$col_keys
-  } else if (inherits(j, "formula")) {
-    j <- get_j_from_formula(j, x$dataset)
-  } else if (is.logical(j)) {
-    if (length(j) != length(x$col_keys)) {
-      stop("j (as logical) is expected to have the same length than 'col_keys'.")
-    }
-    j <- x$col_keys[j]
-  } else if (is.character(j)) {
-    j <- intersect(colnames(x$dataset), j)
-  } else if (is.numeric(j)) {
-    j <- x$col_keys[intersect(seq_len(ncol(x$dataset)), j)]
-  }
-
-  j
-}
 
 data_colors <- function(dataset, fun) {
   out <- tryCatch(
@@ -794,15 +774,11 @@ data_colors <- function(dataset, fun) {
         cond$message
       )
       stop(msg, call. = FALSE)
-    },
-    warning = function(cond) {
-      msg <- paste0(
-        "a warning occured while using color function: ",
-        cond$message
-      )
-      stop(msg, call. = FALSE)
     }
   )
+  if(anyNA(out)) {
+    stop("colors can not contain missing values")
+  }
   return(out)
 }
 
@@ -872,8 +848,10 @@ valign <- function(x, i = NULL, j = NULL, valign = "center", part = "body") {
 #' otherwise Word and PowerPoint outputs will have small height
 #' not corresponding to the necessary height to display the text.
 #'
-#' Note that PDF does not yet support vertical alignments when
-#' text is rotated.
+#' flextable doesn't do the rotation by any angle. It only
+#' rotates by a number of right angles. This choice is made
+#' to ensure the same rendering between Word, PowerPoint
+#' (limited to angles 0, 270 and 90) HTML and PDF.
 #'
 #' @param x a flextable object
 #' @param i rows selection

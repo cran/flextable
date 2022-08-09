@@ -33,7 +33,12 @@ html_str <- function(x, ft.align = NULL, class = "tabwid",
 
   fixed_layout <- x$properties$layout %in% "fixed"
   if(!fixed_layout){
-    tbl_width <- paste0("width:", formatC(x$properties$width*100), "%;")
+    if (x$properties$width > 0) {
+      # setting width will contraint columns'widths and make word breaks
+      tbl_width <- paste0("width:", formatC(x$properties$width*100), "%;")
+    } else {
+      tbl_width <- ""
+    }
     tabcss <- paste0("table-layout:auto;", tbl_width)
   } else {
     tabcss <- ""
@@ -167,7 +172,9 @@ html_gen <- function(x){
 
   if (requireNamespace("equatags", quietly = TRUE) && any(is_eq)) {
     transform_mathjax <- getFromNamespace("transform_mathjax", "equatags")
-    txt_data[is_eq==TRUE, c("txt") := list(transform_mathjax(.SD$eq_data, to = "svg"))]
+    txt_data[is_eq==TRUE, c("txt") := list(transform_mathjax(.SD$eq_data, to = "html"))]
+    katex_link <- "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://cdn.jsdelivr.net/npm/katex@0.15.2/dist/katex.min.css\" data-external=\"1\">"
+    txt_data[which(is_eq==TRUE)[1], c("txt") := list(paste0(katex_link, .SD$txt))]
   }
 
   # manage hlinks
@@ -295,7 +302,7 @@ img_as_html <- function(img_data, width, height){
     } else  {
       stop("unknown image format")
     }
-    sprintf("<img style=\"vertical-align:middle;width:%.0fpt;height:%.0fpt;\" src=\"%s\" />", width*72, height*72, img_raster)
+    sprintf("<img style=\"vertical-align:baseline;width:%.0fpx;height:%.0fpx;\" src=\"%s\" />", width*72, height*72, img_raster)
   }, img_data, width, height, SIMPLIFY = FALSE, USE.NAMES = FALSE)
   str_raster <- as.character(unlist(str_raster))
   str_raster

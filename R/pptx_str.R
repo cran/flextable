@@ -1,6 +1,9 @@
 dummy_fp_text_fun <- function(color = "black", font.size = 10,
                               bold = FALSE, italic = FALSE, underlined = FALSE,
                               font.family = "Arial",
+                              hansi.family = "Arial",
+                              eastasia.family = "Arial",
+                              cs.family = "Arial",
                               vertical.align = "baseline",
                               shading.color = "transparent", line_spacing = 2) {
 
@@ -156,14 +159,6 @@ pml_cells <- function(value, cell_data){
 
   setDT(cell_data)
   setorderv(cell_data, cols = c("part", "ft_row_id", "col_id"))
-  cell_data[!(cell_data$part %in% "header" & cell_data$ft_row_id %in% 1),
-            c("border.width.top", "border.color.top", "border.style.top" ) :=
-              list(
-                fcoalesce(shift(.SD$border.width.bottom, 1L, type="lag"), .SD$border.width.bottom),
-                fcoalesce(shift(.SD$border.color.bottom, 1L, type="lag"), .SD$border.color.bottom),
-                fcoalesce(shift(.SD$border.style.bottom, 1L, type="lag"), .SD$border.style.bottom)
-              ),
-            by = "col_id"]
 
   data_ref_cells <- cell_style_list(cell_data)
 
@@ -210,7 +205,7 @@ pptx_str <- function(value, uid = 99999L, offx = 0, offy = 0, cx = 0, cy = 0){
 
   par_attributes <- fortify_style(value, "pars")
   par_attributes$col_id <- factor(par_attributes$col_id, levels = value$col_keys)
-
+  # cell_attributes and par_attributes must be ordered identically
   new_pos <- ooxml_rotation_alignments(
     rotation = cell_attributes$text.direction,
     valign = cell_attributes$vertical.align,
@@ -218,6 +213,19 @@ pptx_str <- function(value, uid = 99999L, offx = 0, offy = 0, cx = 0, cy = 0){
 
   par_attributes$text.align <- new_pos$align
   cell_attributes$vertical.align <- new_pos$valign
+
+  setDT(cell_attributes)
+  cell_attributes <- merge(
+    cell_attributes,
+    par_attributes[, c("part", "ft_row_id", "col_id", "padding.bottom", "padding.top")],
+    by = c("part", "ft_row_id", "col_id"))
+  cell_attributes[, c("margin.bottom", "margin.top") :=
+                    list(
+                      .SD$padding.bottom, .SD$padding.top
+                    )]
+  cell_attributes[, c("padding.bottom", "padding.top") := NULL]
+  setDF(cell_attributes)
+
 
   txt_data <- pml_runs(value)
   par_data <- pml_pars(value, par_attributes)

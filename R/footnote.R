@@ -85,6 +85,14 @@ footnote <- function(x, i = NULL, j = NULL, value, ref_symbols = NULL, part = "b
   } else {
     symbols_str <- ref_symbols
   }
+
+  if(any(ref_symbols %in% "")) {
+    message("Usage of empty symbol '' with footnote should not happen, ",
+         "use `add_footer_lines()` instead, it does not require any symbol. ",
+         "This usage will be forbidden in the next release. Please, wait for 10 seconds!")
+    Sys.sleep(10)
+  }
+
   sep_str <- rep(sep, length(value))
   sep_str[length(sep_str)] <- ""
 

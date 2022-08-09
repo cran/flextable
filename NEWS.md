@@ -1,3 +1,33 @@
+# flextable 0.7.3
+
+## new features
+
+- function `as_flextable.tabulator()` gained an argument `label_rows` used for 
+labels to display in the first column names, i.e. the *row* column names.
+- new function `shift_table()` to produce Shift Tables used used in 
+clinical trial analysis ready to be used by `tabulator()`.
+- `as_image()` don't need anymore parameters `width` and 
+`height` if package 'magick' is available.
+
+## Issues
+
+- fix top borders correction (for docx and pptx)
+- check that used colors do not contain NA
+- fix HTML scrolling that is always visible to Windows users
+- fix "cs.family", "hansi.family" and "eastasia.family" for Word
+- fix anti-selectors for bg/color/highlight, a regression from version 0.7.2
+- when HTML and layout "autofit", output width is not set when width has been 
+defined to 0 to avoid unnecessary word breaks (#429).
+
+
+## Changes
+
+- pptx output is constructed with top and bottom margins whose value is 
+  top and bottom padding of the paragraph and there is no more borders copies 
+  while rendering. 
+- add visual tests with doconv
+- footnote can not be used with "" symbols, use `add_footer_lines()` instead.
+
 # flextable 0.7.2
 
 ## Issues
