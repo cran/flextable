@@ -20,9 +20,11 @@ add_latex_dep <- function(float = FALSE, wrapfig = FALSE){
     return(invisible(NULL))
   }
 
+  is_quarto <- isTRUE(knitr::opts_knit$get("quarto.version") > numeric_version("0"))
+
   fonts_ignore <- flextable_global$defaults$fonts_ignore
   fontspec_compat <- get_pdf_engine() %in% c("xelatex", "lualatex")
-  if (!fonts_ignore && !fontspec_compat) {
+  if (!is_quarto && !fonts_ignore && !fontspec_compat) {
     warning("Warning: fonts used in `flextable` are ignored because ",
             "the `pdflatex` engine is used and not `xelatex` or ",
             "`lualatex`. You can avoid this warning by using the ",
@@ -32,7 +34,7 @@ add_latex_dep <- function(float = FALSE, wrapfig = FALSE){
             call. = FALSE
     )
   }
-  if (fontspec_compat) {
+  if (fontspec_compat || is_quarto) {
     usepackage_latex("fontspec")
   }
   usepackage_latex("multirow")
@@ -49,10 +51,10 @@ add_latex_dep <- function(float = FALSE, wrapfig = FALSE){
 
 
 latex_str <- function(x, ft.align = "center",
-                      ft.tabcolsep = 8,
+                      ft.tabcolsep = 0,
                       ft.arraystretch = 1.5,
                       lat_container = latex_container_none(),
-                      bookdown = FALSE) {
+                      caption = "", topcaption = TRUE, quarto = FALSE) {
   dims <- dim(x)
   column_sizes <- dims$widths
   column_sizes_df <- data.frame(
@@ -64,7 +66,10 @@ latex_str <- function(x, ft.align = "center",
 
   properties_df <- merge_table_properties(x)
   linespacing_df <- properties_df[, c("part", "ft_row_id", "col_id", "line_spacing")]
-  dat <- latex_text_dataset(x, linespacing_df)
+  dat <- runs_as_latex(
+    x = x,
+    chunk_data = fortify_run(x),
+    ls_df = linespacing_df)
 
   # hhlines and vborders ----
   properties_df <- augment_borders(properties_df)
@@ -143,7 +148,7 @@ latex_str <- function(x, ft.align = "center",
 
   txt_data <- merge(txt_data, hhline_data, by = c("part", "ft_row_id"), all.x = TRUE, all.y = TRUE)
   setorderv(txt_data, cols = c("part", "ft_row_id"))
-  txt_data <- augment_part_separators(txt_data)
+  txt_data <- augment_part_separators(txt_data, inherits(lat_container, "latex_container_none") && !quarto)
 
 
   txt_data[, c("txt") := list(paste(
@@ -151,9 +156,16 @@ latex_str <- function(x, ft.align = "center",
     .SD$txt, .SD$hhline,
     sep = "\n\n"
   ))]
-  txt_data$part <- factor(as.character(txt_data$part),
-    levels = c("header", "footer", "body")
-  )
+
+  if (inherits(lat_container, "latex_container_none") && !quarto) {
+    txt_data$part <- factor(as.character(txt_data$part),
+                            levels = c("header", "footer", "body")
+    )
+  } else {
+    txt_data$part <- factor(as.character(txt_data$part),
+                            levels = c("header", "body", "footer")
+    )
+  }
   setorderv(txt_data, c("part", "ft_row_id"))
 
   # finalize ----
@@ -163,9 +175,6 @@ latex_str <- function(x, ft.align = "center",
     column_sizes_latex <- rep("c", length(dims$widths))
   }
 
-  tab_props <- opts_current_table()
-  topcaption <- tab_props$topcaption
-  caption <- latex_caption(x, bookdown = bookdown)
   align_tag <- latex_table_align()
 
   table_start <- sprintf(
@@ -175,24 +184,19 @@ latex_str <- function(x, ft.align = "center",
   table_end <- "\\end{longtable}"
   latex <- paste0(txt_data$txt, txt_data$part_sep, collapse = "\n\n")
 
-  container_str <- latex_container_str(
-    x = x, latex_container = lat_container)
-
   if (inherits(lat_container, "latex_container_wrap")) {
     topcaption <- FALSE
   }
 
   latex <- paste(
+    cline_cmd,
     sprintf("\\setlength{\\tabcolsep}{%spt}", format_double(ft.tabcolsep, 0)),
     sprintf("\\renewcommand*{\\arraystretch}{%s}", format_double(ft.arraystretch, 2)),
-    container_str[1],
-    table_start, if(topcaption) caption,
-    paste(txt_data$txt[txt_data$part %in% "header"], collapse = ""),
-    "\\endfirsthead",
+    table_start,
+    if(topcaption) caption,
     latex,
     if(!topcaption) caption,
     table_end,
-    container_str[2],
     sep = "\n\n"
   )
 
@@ -230,7 +234,7 @@ latex_colwidth <- function(x) {
 }
 
 
-augment_multicolumn_autofit <- function(properties_df) {
+  augment_multicolumn_autofit <- function(properties_df) {
   stopifnot(is.data.table(properties_df))
 
   properties_df[, c("multicolumn_left", "multicolumn_right") :=
@@ -269,12 +273,13 @@ augment_multicolumn_fixed <- function(properties_df) {
   properties_df
 }
 
-augment_part_separators <- function(z) {
+augment_part_separators <- function(z, no_container = TRUE) {
+
   part_separators <- merge(z[, c("part", "ft_row_id")],
     merge(z[, list(ft_row_id = max(.SD$ft_row_id)), by = "part"],
       data.frame(
         part = factor(c("header", "body", "footer"), levels = c("header", "body", "footer")),
-        part_sep = c("\\endhead", "", "\\endfoot"),
+        part_sep = if(no_container) c("\\endhead", "", "\\endfoot") else c("\\endhead", "", ""),
         stringsAsFactors = FALSE
       ),
       by = c("part")
@@ -538,6 +543,7 @@ merge_table_properties <- function(x) {
 
 #' @importFrom utils compareVersion packageVersion
 get_pdf_engine <- function() {
+
   if (compareVersion(as.character(packageVersion("rmarkdown")), "1.10.14") < 0) {
     stop("package rmarkdown >= 1.10.14 is required to use this function")
   }
@@ -552,52 +558,6 @@ get_pdf_engine <- function() {
   engine
 }
 
-
-latex_caption <- function(x, bookdown) {
-  tab_props <- opts_current_table()
-  # caption str value
-  bookdown_ref_label <- ref_label()
-  std_ref_label <- NULL
-  if(bookdown && !is.null(x$caption$autonum$bookmark)){
-    std_ref_label <- x$caption$autonum$bookmark
-    bookdown_ref_label <- paste0("(\\#", tab_props$tab.lp, x$caption$autonum$bookmark, ")")
-  } else if(bookdown && !is.null(tab_props$id)){
-    std_ref_label <- tab_props$id
-    bookdown_ref_label <- paste0("(\\#", tab_props$tab.lp, tab_props$id, ")")
-  }
-
-
-  caption_label <- tab_props$cap
-  if (!is.null(x$caption$value)) {
-    caption_label <- x$caption$value
-  }
-  caption <- ""
-  if (!is.null(caption_label)) {
-
-    if (requireNamespace("commonmark", quietly = TRUE)) {
-      gmatch <- gregexpr(pattern = "\\$[^\\$]+\\$", caption_label)
-      equations <- regmatches(caption_label, gmatch)[[1]]
-      names(equations) <- sprintf("EQUATIONN%.0f", seq_along(equations))
-      regmatches(caption_label, gmatch) <- list(names(equations))
-      caption_label <- commonmark::markdown_latex(caption_label)
-      for(eq in names(equations)){
-        caption_label <- gsub(eq, equations[eq], caption_label)
-      }
-    }
-
-    caption <- paste0(
-      "\\caption{",
-      caption_label, "}",
-      if (bookdown) {
-        bookdown_ref_label
-      } else if (!is.null(std_ref_label)) {
-        sprintf("\\label{", tab_props$tab.lp, "%s}", std_ref_label)
-      },
-      "\\\\"
-    )
-  }
-  caption
-}
 
 latex_table_align <- function() {
   ft.align <- opts_current$get("ft.align")
@@ -631,16 +591,21 @@ latex_container_wrap <- function(placement = "l"){
   class(x) <- c("latex_container_wrap", "latex_container")
   x
 }
-latex_container_str <- function(x, latex_container, ...){
+latex_container_str <- function(x, latex_container, quarto = FALSE, ...){
   UseMethod("latex_container_str", latex_container)
 }
-latex_container_str.latex_container_none <- function(x, latex_container, ...) {
-  c("", "")
+latex_container_str.latex_container_none <- function(x, latex_container, quarto = FALSE, ...) {
+  if (quarto) {
+    c("\\begin{table}[H]", "\\end{table}")
+  } else {
+    c("", "")
+  }
 }
-latex_container_str.latex_container_float <- function(x, latex_container, ...) {
+
+latex_container_str.latex_container_float <- function(x, latex_container, quarto = FALSE, ...) {
   c("\\begin{table}", "\\end{table}")
 }
-latex_container_str.latex_container_wrap <- function(x, latex_container, ...) {
+latex_container_str.latex_container_wrap <- function(x, latex_container, quarto = FALSE, ...) {
 
   str <- paste0("\\begin{wraptable}{", latex_container$placement, "}")
 

@@ -19,13 +19,15 @@
 #' @importFrom htmltools tagList
 htmltools_value <- function(x, ft.align = "center", ft.shadow = TRUE, ft.htmlscroll = TRUE) {
   x <- flextable_global$defaults$post_process_html(x)
-
+  caption <- caption_default_html(x, align = ft.align)
+  manual_css <- attr(caption, "css")
   html_o <- tagList(
     flextable_html_dependency(htmlscroll = ft.htmlscroll),
     HTML(html_str(x,
       ft.align = ft.align, class = "tabwid",
-      caption = caption_html_str(x, bookdown = FALSE),
-      shadow = ft.shadow
+      caption = caption,
+      shadow = ft.shadow,
+      manual_css = manual_css
     ))
   )
   html_o
@@ -62,7 +64,7 @@ htmltools_value <- function(x, ft.align = "center", ft.shadow = TRUE, ft.htmlscr
 #' Word document. Since Word will try to keep it with the **next
 #' paragraphs that follow the tables**.
 #' @param ft.tabcolsep space between the text and the left/right border of its containing
-#' cell, the default value is 8 points.
+#' cell, the default value is 0 points.
 #' @param ft.arraystretch height of each row relative to its default
 #' height, the default value is 1.5.
 #' @param ft.latex.float type of floating placement in the document, one of:
@@ -82,6 +84,8 @@ htmltools_value <- function(x, ft.align = "center", ft.shadow = TRUE, ft.htmlscr
 #' @param webshot webshot package as a scalar character, one of "webshot" or
 #' "webshot2".
 #' @param bookdown `TRUE` or `FALSE` (default) to support cross referencing with bookdown.
+#' @param quarto `TRUE` or `FALSE` (default) to indicate the source document is a 'Quarto'
+#' file (ending with `*.qmd`).
 #' @param pandoc2 `TRUE` (default) or `FALSE` to get the string in a pandoc raw HTML attribute
 #' (only valid when pandoc version is `>= 2`.
 #' @param ... unused arguments
@@ -109,12 +113,13 @@ flextable_to_rmd <- function(
                              ft.keepnext = opts_current$get("ft.keepnext"),
                              ft.tabcolsep = opts_current$get("ft.tabcolsep"),
                              ft.arraystretch = opts_current$get("ft.arraystretch"),
-                             ft.latex.float = opts_current$get("ft.latex.float"),
+                             ft.latex.float = mcoalesce_options(opts_current$get("ft.latex.float"), opts_current$get("ft-latex-float")),
                              ft.left = opts_current$get("ft.left"),
                              ft.top = opts_current$get("ft.top"),
                              text_after = "",
                              webshot = opts_current$get("webshot"),
-                             bookdown = FALSE, pandoc2 = TRUE, print = TRUE,
+                             bookdown = FALSE, quarto = FALSE,
+                             pandoc2 = TRUE, print = TRUE,
                              ...) {
   str <- ""
   is_xaringan <- !is.null(getOption("xaringan.page_number.offset"))
@@ -129,25 +134,29 @@ flextable_to_rmd <- function(
     # xaringan ----
     str <- html_value(x,
       ft.align = ft.align, bookdown = FALSE,
-      pandoc2 = FALSE, ft.shadow = TRUE
+      pandoc2 = FALSE, ft.shadow = TRUE,
+      quarto = FALSE
     )
     # return(htmltools_value(x, ft.align = ft.align))
   } else if (grepl("(html|slidy)", opts_knit$get("rmarkdown.pandoc.to"))) {
     #  html ----
-    str <- html_value(x, ft.align = ft.align, bookdown = bookdown, pandoc2 = pandoc2)
+    str <- html_value(x, ft.align = ft.align, bookdown = bookdown, pandoc2 = pandoc2,
+                      quarto = quarto)
   } else if (grepl("latex", opts_knit$get("rmarkdown.pandoc.to"))) {
     # latex ----
     str <- latex_value(x,
       ft.tabcolsep = ft.tabcolsep, ft.align = ft.align,
       ft.arraystretch = ft.arraystretch, bookdown = bookdown,
-      ft.latex.float = ft.latex.float
+      ft.latex.float = ft.latex.float,
+      quarto = quarto
     )
   } else if (grepl("docx", opts_knit$get("rmarkdown.pandoc.to"))) {
     # docx ----
     if (pandoc2) {
       str <- docx_value(x,
         bookdown = bookdown, ft.align = ft.align,
-        ft.split = ft.split, ft.keepnext = ft.keepnext
+        ft.split = ft.split, ft.keepnext = ft.keepnext,
+        quarto = quarto
       )
     } else {
       stop("pandoc version >= 2.0 required for flextable rendering in docx")
@@ -200,7 +209,9 @@ flextable_to_rmd <- function(
 #' @examples
 #' html_value(flextable(iris[1:5,]))
 html_value <- function(x, ft.align = opts_current$get("ft.align"), ft.shadow = opts_current$get("ft.shadow"),
-                       ft.htmlscroll = opts_current$get("ft.htmlscroll"), bookdown = FALSE, pandoc2 = TRUE){
+                       ft.htmlscroll = opts_current$get("ft.htmlscroll"),
+                       bookdown = FALSE, quarto = FALSE,
+                       pandoc2 = TRUE){
 
   x <- flextable_global$defaults$post_process_html(x)
 
@@ -210,26 +221,37 @@ html_value <- function(x, ft.align = opts_current$get("ft.align"), ft.shadow = o
   if(is.null(ft.htmlscroll)){
     ft.htmlscroll <- TRUE
   }
-
-  caption_str <- caption_html_str(x, bookdown = bookdown)
-  if(pandoc2) {
-    # This is unfortunate but mandatory to let the caption be converted by pandoc...
-    caption_str <- paste0("\n```\n", caption_str, "\n```{=html}\n")
+  if(is.null(ft.align)){
+    ft.align <- "center"
   }
 
   tab_props <- opts_current_table()
   topcaption <- tab_props$topcaption
+  manual_css <- ""
+  if (bookdown) {
+    caption_str <- caption_bookdown_html(x, tab_props = tab_props)
+    manual_css <- attr(caption_str, "css")
+  } else if (quarto) {
+    caption_str <- caption_quarto_html(x, align = ft.align, tab_props = tab_props)
+  } else {
+    caption_str <- caption_default_html(x, align = ft.align, tab_props = tab_props)
+    manual_css <- attr(caption_str, "css")
+  }
 
-  out <- paste(
-    if(pandoc2) "```{=html}",
-    html_str(x, ft.align = ft.align, caption = caption_str, shadow = ft.shadow, topcaption = topcaption),
-    if(pandoc2) "```",
-    "", "",
-    sep = "\n")
+  table_str <- html_str(x,
+                        ft.align = ft.align,
+                        caption = caption_str,
+                        shadow = ft.shadow,
+                        topcaption = topcaption,
+                        manual_css = manual_css)
+  if (pandoc2) {
+    table_str <- with_html_quotes(table_str)
+  }
   knit_meta_add(list(flextable_html_dependency(htmlscroll = ft.htmlscroll)))
 
-  out
+  paste0(table_str, "\n", "\n")
 }
+
 
 #' @noRd
 #' @title flextable Office Open XML string for Word
@@ -258,12 +280,12 @@ html_value <- function(x, ft.align = opts_current$get("ft.align"), ft.shadow = o
 #' @param bookdown `TRUE` or `FALSE` (default) to support cross referencing with bookdown.
 #' @examples
 #' docx_value(flextable(iris[1:5,]))
-#' @importFrom officer opts_current_table block_caption styles_info run_autonum to_wml
+#' @importFrom officer opts_current_table run_autonum to_wml
 docx_value <- function(x,
                        ft.align = opts_current$get("ft.align"),
                        ft.split = opts_current$get("ft.split"),
                        ft.keepnext = opts_current$get("ft.keepnext"),
-                       bookdown = FALSE){
+                       bookdown = FALSE, quarto = FALSE){
 
   x <- flextable_global$defaults$post_process_docx(x)
 
@@ -271,18 +293,58 @@ docx_value <- function(x,
   if( is.null(ft.split) ) ft.split <- FALSE
   if( is.null(ft.keepnext) ) ft.keepnext <- TRUE
 
-  caption <- caption_docx_str(x, bookdown = bookdown)
+  is_rdocx_document <- opts_current$get("is_rdocx_document")
+  if (is.null(is_rdocx_document)) is_rdocx_document <- FALSE
+
   tab_props <- opts_current_table()
   topcaption <- tab_props$topcaption
 
-  out <- paste(if(topcaption) caption,
-      "```{=openxml}",
-      docx_str(x, align = ft.align, split = ft.split,
-               keep_with_next = ft.keepnext),
-      "```\n\n",
-      if(!topcaption) caption,
-      "\n\n",
-      sep = "\n")
+  if (!is.null(tab_props$alt.title)) {
+    x$properties$word_title <- tab_props$alt.title
+  }
+  if (!is.null(tab_props$alt.description)) {
+    x$properties$word_description <- tab_props$alt.description
+  }
+
+  if (topcaption) {
+    apply_cap_kwn <- TRUE
+  } else {
+    x <- keep_wn(x, part = "all", keep_with_next = TRUE)
+    apply_cap_kwn <- FALSE
+  }
+
+
+  if (is_rdocx_document) {
+    caption <- caption_default_rdocx_md(x, tab_props = tab_props)
+  } else if (bookdown) {
+    caption <- caption_bookdown_docx_md(x, tab_props = tab_props)
+  } else if (quarto) {
+    caption <- caption_default_docx_openxml(x, align = ft.align,
+                                            tab_props = tab_props,
+                                            keep_with_next = apply_cap_kwn,
+                                            allow_autonum = TRUE)
+  } else {
+    caption <- caption_default_docx_openxml(x, align = ft.align, keep_with_next = apply_cap_kwn, allow_autonum = FALSE)
+  }
+
+  table_str <-
+    docx_str(
+      x = x, align = ft.align, split = ft.split,
+      keep_with_next = ft.keepnext)
+  if (bookdown) {
+    out <- c(
+      if(topcaption) caption,
+      with_openxml_quotes(table_str),
+      if(!topcaption) caption)
+  } else {
+    out <- with_openxml_quotes(
+      c(
+        if(topcaption) caption,
+        table_str,
+        if(!topcaption) caption)
+    )
+  }
+
 
   out
 }
@@ -303,23 +365,24 @@ docx_value <- function(x,
 #' @param bookdown `TRUE` or `FALSE` (default) to support cross referencing with bookdown.
 #' @examples
 #' latex_value(flextable(airquality[1:5,]))
-#' @importFrom officer opts_current_table block_caption styles_info run_autonum to_wml
+#' @importFrom officer opts_current_table run_autonum to_wml
 latex_value <- function(x,
                         ft.align = opts_current$get("ft.align"),
                         ft.tabcolsep = opts_current$get("ft.tabcolsep"),
                         ft.arraystretch = opts_current$get("ft.arraystretch"),
                         ft.latex.float = opts_current$get("ft.latex.float"),
-                        bookdown) {
+                        bookdown, quarto = FALSE) {
+
   if (is.null(ft.align)) ft.align <- "center"
-  if (is.null(ft.tabcolsep)) ft.tabcolsep <- 2
+  if (is.null(ft.tabcolsep)) ft.tabcolsep <- 0
   if (is.null(ft.arraystretch)) ft.arraystretch <- 1.5
   if (is.null(ft.latex.float)) ft.latex.float <- "none"
 
   x <- flextable_global$defaults$post_process_pdf(x)
 
   add_latex_dep(
-    float = "float" %in% ft.latex.float,
-    wrapfig = grepl("^wrap", ft.latex.float)
+    float = TRUE,
+    wrapfig = TRUE
   )
 
   if ("none" %in% ft.latex.float) {
@@ -338,18 +401,37 @@ latex_value <- function(x,
     lat_container <- latex_container_none()
   }
 
-  out <- paste(
-    cline_cmd,
-    latex_str(x,
-      ft.align = ft.align,
-      ft.tabcolsep = ft.tabcolsep,
-      ft.arraystretch = ft.arraystretch,
-      lat_container = lat_container,
-      bookdown = bookdown
-    ),
+  tab_props <- opts_current_table()
+  topcaption <- tab_props$topcaption
+  if (quarto) {
+    caption_str <- caption_quarto_latex(x, tab_props = tab_props)
+  } else if (bookdown) {
+    caption_str <- caption_bookdown_latex(x, tab_props = tab_props)
+  } else {
+    caption_str <- caption_default_latex(x, tab_props = tab_props)
+  }
+
+  container_str <- latex_container_str(
+    x = x,
+    latex_container = lat_container,
+    quarto = quarto)
+
+  str <- latex_str(
+    x,
+    ft.align = ft.align,
+    ft.tabcolsep = ft.tabcolsep,
+    ft.arraystretch = ft.arraystretch,
+    lat_container = lat_container,
+    caption = caption_str,
+    topcaption = topcaption, quarto = quarto
+  )
+  latex <- paste(
+    container_str[1],
+    str,
+    container_str[2],
     sep = "\n\n"
   )
-  out
+
 }
 
 pptx_value <- function(x, ft.left = opts_current$get("ft.left"),
@@ -365,9 +447,7 @@ pptx_value <- function(x, ft.left = opts_current$get("ft.left"),
 
   str <- pptx_str(x, uid = uid, offx = ft.left, offy = ft.top, cx = 10, cy = 6)
 
-  caption <- caption_html_str(x, bookdown = bookdown)
-
-  paste(caption, "```{=openxml}", str, "```", sep = "\n")
+  paste("```{=openxml}", str, "```", sep = "\n")
 }
 
 #' @importFrom htmltools HTML browsable
@@ -393,12 +473,13 @@ pptx_value <- function(x, ft.left = opts_current$get("ft.left"),
 #' @param x flextable object
 #' @param preview preview type, one of c("html", "pptx", "docx", "pdf, "log").
 #' When `"log"` is used, a description of the flextable is printed.
+#' @param align left, center (default) or right. Only for docx/html/pdf.
 #' @param ... arguments for 'pdf_document' call when preview is "pdf".
 #' @family flextable print function
 #' @importFrom utils browseURL
 #' @importFrom rmarkdown render pdf_document
 #' @importFrom officer read_pptx add_slide read_docx
-print.flextable <- function(x, preview = "html", ...){
+print.flextable <- function(x, preview = "html", align = "center", ...){
   if (!interactive() || "log" %in% preview ){
     cat("a flextable object.\n")
     cat( "col_keys:", paste0("`", x$col_keys, "`", collapse = ", " ), "\n" )
@@ -407,7 +488,7 @@ print.flextable <- function(x, preview = "html", ...){
     cat("original dataset sample:", "\n")
     print(x$body$dataset[seq_len( min(c(5, nrow(x$body$dataset) ) ) ), ])
   } else  if( preview == "html" ){
-    print( browsable( htmltools_value(x) ) )
+    print( browsable( htmltools_value(x, ft.shadow = FALSE, ft.align = align) ) )
   } else if( preview == "pptx" ){
     doc <- read_pptx()
     doc <- add_slide(doc, layout = "Title and Content", master = "Office Theme")
@@ -415,14 +496,13 @@ print.flextable <- function(x, preview = "html", ...){
     file_out <- print(doc, target = tempfile(fileext = ".pptx"))
     browseURL(file_out)
   } else if( preview == "docx" ){
-    x <- flextable_global$defaults$post_process_docx(x)
     doc <- read_docx()
-    doc <- body_add_flextable(doc, value = x, align = "center")
+    doc <- body_add_flextable(doc, value = x, align = align)
     file_out <- print(doc, target = tempfile(fileext = ".docx"))
     browseURL(file_out)
   } else if( preview == "pdf" ){
     rmd <- tempfile(fileext = ".Rmd")
-    cat("```{r echo=FALSE}\nx\n```\n", file = rmd)
+    cat(sprintf("```{r echo=FALSE, ft.align=\"%s\"}\nx\n```\n", align), file = rmd)
     render(rmd, output_format = pdf_document(...), quiet = TRUE)
     file_out <- gsub("\\.Rmd$", ".pdf", rmd)
     browseURL(file_out)
@@ -481,7 +561,7 @@ print.flextable <- function(x, preview = "html", ...){
 #'   ft.htmlscroll   \tab HTML option, add a scroll if table is too big to fit into its HTML container. \tab TRUE    \tab yes  \tab no \tab no  \tab no \cr
 #'   ft.split        \tab Word option 'Allow row to break across pages' can be activated when TRUE. \tab FALSE    \tab no  \tab yes \tab no  \tab no \cr
 #'   ft.keepnext     \tab Word option 'keep rows together' can be desactivated when FALSE \tab TRUE    \tab no  \tab yes \tab no  \tab no \cr
-#'   ft.tabcolsep    \tab space between the text and the left/right border of its containing cell   \tab 8.0      \tab no  \tab no  \tab yes \tab no \cr
+#'   ft.tabcolsep    \tab space between the text and the left/right border of its containing cell   \tab 0      \tab no  \tab no  \tab yes \tab no \cr
 #'   ft.arraystretch \tab height of each row relative to its default height                         \tab 1.5      \tab no  \tab no  \tab yes \tab no \cr
 #'   ft.latex.float  \tab type of floating placement in the document, one of 'none', 'float', 'wrap-r', 'wrap-l', 'wrap-i', 'wrap-o' \tab 'none'      \tab no  \tab no  \tab yes \tab no \cr
 #'   ft.left         \tab left coordinates in inches                                                \tab 1.0      \tab no  \tab no  \tab no  \tab yes\cr
@@ -656,9 +736,13 @@ knit_print.flextable <- function(x, ...){
 
   is_bookdown <- isTRUE(opts_knit$get('bookdown.internal.label')) &&
     isTRUE(!is_rdocx_document)
+  is_quarto <- isTRUE(knitr::opts_knit$get("quarto.version") > numeric_version("0"))
+
   pandoc2 <- pandoc_version() >= numeric_version("2.0")
-  str <- flextable_to_rmd(x, bookdown = is_bookdown, pandoc2 = pandoc2,
-                          print = FALSE)
+  str <- flextable_to_rmd(x,
+                          bookdown = is_bookdown,
+                          pandoc2 = pandoc2,
+                          print = FALSE, quarto = is_quarto)
   knit_print(asis_output(str))
 }
 
@@ -708,9 +792,13 @@ save_as_html <- function(..., values = NULL, path, encoding = "utf-8", title = d
     }
     values[[i]] <- flextable_global$defaults$post_process_html(values[[i]])
 
+    caption <- caption_default_html(values[[i]], align = "center")
+    manual_css <- attr(caption, "css")
+
     txt[2] <- html_str(values[[i]],
-                       caption = caption_html_str(values[[i]], bookdown = FALSE),
-                       shadow = FALSE)
+                       caption = caption,
+                       shadow = FALSE,
+                       manual_css = manual_css)
 
     val[i] <- paste(txt, collapse = "")
   }
@@ -788,6 +876,7 @@ save_as_pptx <- function(..., values = NULL, path){
 #' @param path Word file to be created
 #' @param pr_section a [prop_section] object that can be used to define page
 #' layout such as orientation, width and height.
+#' @param align left, center (default) or right.
 #' @examples
 #'
 #' tf <- tempfile(fileext = ".docx")
@@ -809,14 +898,13 @@ save_as_pptx <- function(..., values = NULL, path){
 #' @family flextable print function
 #' @importFrom officer body_add_par prop_section body_set_default_section
 #'   page_size page_mar
-save_as_docx <- function(..., values = NULL, path, pr_section = NULL){
+save_as_docx <- function(..., values = NULL, path, pr_section = NULL, align = "center"){
 
   if( is.null(values) ){
     values <- list(...)
   }
 
   values <- Filter(function(x) inherits(x, "flextable"), values)
-  values <- lapply(values, flextable_global$defaults$post_process_docx)
 
   titles <- names(values)
   show_names <- !is.null(titles)
@@ -838,8 +926,8 @@ save_as_docx <- function(..., values = NULL, path, pr_section = NULL){
   for( i in seq_along(values) ){
     if(show_names){
       z <- body_add_par(z, titles[i], style = "heading 2" )
-    }
-    z <- body_add_flextable(z, values[[i]] )
+    } else z <- body_add_par(z, "")
+    z <- body_add_flextable(z, values[[i]], align = align)
   }
   z <- body_set_default_section(z, pr_section)
   print(z, target = path )
@@ -915,26 +1003,48 @@ save_as_image <- function(x, path, zoom = 3, expand = 10, webshot = "webshot" ){
 
 #' @export
 #' @title plot a flextable
-#' @description save a flextable as an image and display the
-#' result in a new R graphics window.
-#' @note This function requires packages: webshot and magick.
+#' @description plots a flextable, either as a grid grob object or as a raster image
+#' and display the result in a new graphics window.
+#' @details
+#' \itemize{
+#'   \item method `grob`, uses method [gen_grob()]
+#'   to convert the flextable into a grid graphics grob object.
+#'   \item method `webshot`, uses method [as_raster()]
+#'   to convert the flextable into a raster object.
+#'   In that case packages `webshot` and `magick` are required.
+#' }
+#'
 #' @param x a flextable object
-#' @param zoom,expand parameters used by `webshot` function.
-#' @param ... additional parameters sent to [as_raster()] function
+#' @param method the method to use for the plot, one of `grob` or `webshot`
+#' @param ... additional arguments passed to [gen_grob()] if method is 'grob'
+#' and passed to [as_raster()] if method is 'webshot'.
 #' @examples
 #' ftab <- flextable( head( mtcars ) )
 #' ftab <- autofit(ftab)
 #' \dontrun{
+#' plot(ftab)
 #' if( require("webshot") ){
-#'   plot(ftab)
+#'   plot(ftab, method = "webshot")
 #' }
 #' }
 #' @family flextable print function
-#' @importFrom grDevices as.raster
-plot.flextable <- function(x, zoom = 2, expand = 2, ... ){
-  img <- as_raster(x = x, zoom = zoom, expand = expand)
-  par(mar = rep(0, 4))
-  plot(grDevices::as.raster(img, ...))
+#' @importFrom grid grid.newpage grid.draw viewport pushViewport popViewport
+plot.flextable <- function(x, method = c("grob", "webshot"), ...) {
+  method <- match.arg(method)
+  if (method == "webshot") {
+    par(mar = rep(0, 4))
+    plot(as_raster(x, ...))
+  } else {
+    grid.newpage()
+    # leave a 5pt margin around the plot
+    pushViewport(viewport(
+      width = unit(1, "npc") - unit(10, "pt"),
+      height = unit(1, "npc") - unit(10, "pt")
+    ))
+    grid.draw(gen_grob(x, ...))
+    popViewport()
+    invisible()
+  }
 }
 
 #' @export
@@ -947,6 +1057,7 @@ plot.flextable <- function(x, zoom = 2, expand = 2, ... ){
 #' @param zoom,expand parameters used by `webshot` function.
 #' @param webshot webshot package as a scalar character, one of "webshot" or
 #' "webshot2".
+#' @param ... additional arguments passed to other functions
 #' @importFrom grDevices as.raster
 #' @examples
 #' ft <- qflextable( head( mtcars ) )
@@ -957,7 +1068,7 @@ plot.flextable <- function(x, zoom = 2, expand = 2, ... ){
 #' }
 #' }
 #' @family flextable print function
-as_raster <- function(x, zoom = 2, expand = 2, webshot = "webshot"){
+as_raster <- function(x, zoom = 2, expand = 2, webshot = "webshot", ...){
   if (!requireNamespace(webshot, quietly = TRUE)) {
     stop("package ", webshot, " is required when saving a flextable as an image.")
   }
@@ -965,6 +1076,8 @@ as_raster <- function(x, zoom = 2, expand = 2, webshot = "webshot"){
     stop("package magick is required when saving a flextable as an image.")
   }
   path <- tempfile(fileext = ".png")
+  on.exit(unlink(path))
   save_as_image(x, path, zoom = zoom, expand = expand, webshot = webshot )
-  magick::image_read(path = path)
+  img <- magick::image_read(path = path)
+  as.raster(img, ...)
 }

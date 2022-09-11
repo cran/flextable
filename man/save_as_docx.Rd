@@ -4,7 +4,7 @@
 \alias{save_as_docx}
 \title{save flextable objects in an Word file}
 \usage{
-save_as_docx(..., values = NULL, path, pr_section = NULL)
+save_as_docx(..., values = NULL, path, pr_section = NULL, align = "center")
 }
 \arguments{
 \item{...}{flextable objects, objects, possibly named. If named objects, names are
@@ -17,6 +17,8 @@ used as titles. If provided, argument \code{...} will be ignored.}
 
 \item{pr_section}{a \link{prop_section} object that can be used to define page
 layout such as orientation, width and height.}
+
+\item{align}{left, center (default) or right.}
 }
 \description{
 sugar function to save flextable objects in an Word file.
@@ -45,6 +47,7 @@ Other flextable print function:
 \code{\link{as_raster}()},
 \code{\link{df_printer}()},
 \code{\link{flextable_to_rmd}()},
+\code{\link{gen_grob}()},
 \code{\link{htmltools_value}()},
 \code{\link{knit_print.flextable}()},
 \code{\link{plot.flextable}()},

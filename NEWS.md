@@ -1,3 +1,35 @@
+# flextable 0.8.0
+
+## new features
+
+- flextable now supports "Grid graphics" output format. See `gen_grob()`.
+- `labelizor()` is a new function to help change text by labels. 
+- add support for paragraph settings (made with `fp_par()`) in captions with `set_caption()`.
+- captions are now made with `as_paragraph()`
+- caption alignments and keep_with_next is now computed instead of being provided by user
+- alternative text for Word tables with word_title and word_description 
+by calling `set_table_properties()` or setting values to knitr chunk options `tab.alt.title` and `tab.alt.description`.
+- Word and HTML captions paragraphs settings can be defined by using `set_caption()`. 
+The alignment of the paragraph can be different from the alignment of the table 
+with the argument `align_with_table=FALSE`.
+- new theme 'APA', `theme_apa` (@rempsyc #426)
+- method `as_flextable.tabulator()` gains an argument `spread_first_col` to enable 
+spreading of the first column of the table as a line separator.
+
+
+## Issues
+
+- fix caption issue resulting from a clash with variable name 'n' (#443)
+- Quarto support
+- fix as_grouped_data() with date columns (#438)
+- fix footnotes spread over separate lines when 'inline' (#442)
+- fix missing caption with rmarkdown pdf output
+- fix first horizontal borders repeated issue with Word output
+- add empty paragraphs between tables in `save_as_docx()` to avoid Word confusion
+- fix `fortify_width()` calculation
+
+
+
 # flextable 0.7.3
 
 ## new features
@@ -8,6 +40,13 @@ labels to display in the first column names, i.e. the *row* column names.
 clinical trial analysis ready to be used by `tabulator()`.
 - `as_image()` don't need anymore parameters `width` and 
 `height` if package 'magick' is available.
+
+## Changes
+
+- `plot.flextable` now default to *grid Graphics*. It produce a plot object 
+that can be used with packages 'ggplot2', 'patchwork' and 'cowplot'. The raster 
+version made with 'webshot' and 'magick' pachages is still available, use `plot(..., method = "webshot")`. 
+
 
 ## Issues
 

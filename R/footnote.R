@@ -94,7 +94,6 @@ footnote <- function(x, i = NULL, j = NULL, value, ref_symbols = NULL, part = "b
   }
 
   sep_str <- rep(sep, length(value))
-  sep_str[length(sep_str)] <- ""
 
   cell_index <- data.frame(i = i, j = j)
   if (length(symbols_str) == 1) {
@@ -104,13 +103,13 @@ footnote <- function(x, i = NULL, j = NULL, value, ref_symbols = NULL, part = "b
   # of cells to tag
   stopifnot(length(symbols_str) == nrow(cell_index))
 
-  for (n in seq_len(nrow(cell_index))) {
-    i_cell <- cell_index[["i"]][n]
-    j_cell <- cell_index[["j"]][n]
+  for (index_num in seq_len(nrow(cell_index))) {
+    i_cell <- cell_index[["i"]][index_num]
+    j_cell <- cell_index[["j"]][index_num]
     x <- append_chunks(x,
       i = i_cell, j = j_cell,
       part = part,
-      as_sup(symbols_str[n])
+      as_sup(symbols_str[index_num])
     )
   }
 
@@ -118,7 +117,12 @@ footnote <- function(x, i = NULL, j = NULL, value, ref_symbols = NULL, part = "b
 
   if (inline) {
     # init a new line
-    x <- add_footer_lines(x, values = "")
+    if (n_row < 1) {
+      x <- add_footer_lines(x, values = "")
+      n_chunk <- 0
+    } else {
+      n_chunk <- nrow(x[["footer"]]$content[n_row, 1][[1]])
+    }
 
     paras <- mapply(rbind,
       as_paragraph(as_sup(ref_symbols)),
@@ -127,8 +131,13 @@ footnote <- function(x, i = NULL, j = NULL, value, ref_symbols = NULL, part = "b
       SIMPLIFY = FALSE
     )
     paras <- do.call(rbind, paras)
-    paras$seq_index <- seq_len(nrow(paras))
-    x[["footer"]]$content[nrow_part(x, "footer"), 1] <- list(paras)
+    paras$seq_index <- seq_len(nrow(paras)) + n_chunk
+    if (n_row < 1) {
+      x[["footer"]]$content[1, 1] <- list(paras)
+    } else {
+      x[["footer"]]$content[n_row, 1] <- list(rbind(x[["footer"]]$content[n_row, 1][[1]], paras))
+    }
+
   } else {
     # init new lines
     x <- add_footer_lines(x, values = ref_symbols)

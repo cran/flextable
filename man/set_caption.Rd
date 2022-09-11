@@ -6,31 +6,47 @@
 \usage{
 set_caption(
   x,
-  caption,
+  caption = NULL,
   autonum = NULL,
-  style = "Table Caption",
+  word_stylename = "Table Caption",
+  style = word_stylename,
+  fp_p = NULL,
+  align_with_table = TRUE,
+  html_classes = NULL,
   html_escape = TRUE
 )
 }
 \arguments{
 \item{x}{flextable object}
 
-\item{caption}{caption value}
+\item{caption}{caption value.}
 
 \item{autonum}{an autonum representation. See \code{\link[officer:run_autonum]{officer::run_autonum()}}.
 This has only an effect when output is Word. If used, the caption is preceded
 by an auto-number sequence. In this case, the caption is preceded by an auto-number
 sequence that can be cross referenced.}
 
-\item{style}{caption paragraph style name. These names are available with
-function \code{\link[officer:styles_info]{officer::styles_info()}} when output is Word; if HTML, the
-value is set as class value in the \code{caption} tag.}
+\item{word_stylename, style}{'Word' style name to associate with caption paragraph. These names are available with
+function \code{\link[officer:styles_info]{officer::styles_info()}} when output is Word. Argument \code{style}
+is deprecated in favor of \code{word_stylename}.}
+
+\item{fp_p}{paragraph formatting properties associated with the caption, see \code{\link[=fp_par]{fp_par()}}.
+It applies when possible, i.e. in HTML and 'Word' but not with bookdown.}
+
+\item{align_with_table}{if TRUE, caption is aligned as the flextable, if FALSE,
+\code{fp_p} will not be updated and alignement is as defined with \code{fp_p}.
+It applies when possible, i.e. in HTML and 'Word' but not with bookdown.}
+
+\item{html_classes}{css class(es) to apply to associate with caption paragraph
+when output is 'Word'.}
 
 \item{html_escape}{should HTML entities be escaped so that it can be safely
 included as text or an attribute value within an HTML document.}
 }
 \description{
-Set caption value in a flextable.
+Set caption value in a flextable. The function
+can also be used to define formattings that will be applied
+if possible to Word and HTML outputs.
 \itemize{
 \item The caption will be associated with a paragraph style when
 the output is Word. It can also be numbered as a auto-numbered
@@ -41,6 +57,33 @@ structured and do not behave as HTML documents and paginated documents
 a shape to contain the caption (technically it can't be in the
 PowerPoint shape containing the table).
 }
+
+When working with 'R Markdown' or 'Quarto', the caption settings
+defined with \code{set_caption()} will be prioritized over knitr chunk options.
+}
+\details{
+The values defined by \code{set_caption()} will be preferred when possible, i.e. the
+caption ID, the associated paragraph style, etc. Why specify "where possible"?
+Because the principles differ from tool to tool. Here is what we have noticed
+and tried to respect (if you think we are wrong, let us know):
+\itemize{
+\item Word and HTML documents made with 'rmarkdown', i.e. with \code{rmarkdown::word_document()}
+and \code{rmarkdown::html_document()} are not supposed to have numbered and cross-referenced captions.
+\item PDF documents made with 'rmarkdown' \code{rmarkdown::pdf_document()} automatically add numbers
+before the caption.
+\item Word and HTML documents made with 'bookdown' are supposed to have numbered and
+cross-referenced captions. This is achieved by 'bookdown' but for technical reasons,
+the caption must not be defined in an HTML or XML block. So with flextable we lose
+the ability to format the caption content; surprisingly this is not the case with PDF.
+\item HTML and PDF documents created with Quarto will manage captions and cross-references
+differently; Quarto will replace captions with \code{tbl-cap} and \code{label} values.
+\item Word documents made with Quarto are another specific case, Quarto does not
+inject captions from the \code{tbl-cap} and \code{label} values. This is a temporary
+situation that should evolve later. flextable' will evolve according to the
+evolution of Quarto.
+}
+
+Using officer enable all options specified with \code{set_caption()}.
 }
 \section{R Markdown}{
 
@@ -68,6 +111,19 @@ The following options are only available when used with \code{officedown::rdocx_
 
 
 See \link{knit_print.flextable} for more details.
+}
+
+\section{Using 'Quarto'}{
+
+
+'Quarto' manage captions and cross-references instead of flextable. That's why
+\code{set_caption()} is not useful in a 'Quarto' document except for Word documents
+where 'Quarto' does not manage captions yet (when output is raw xml which is the
+case for flextable).
+
+knitr options are almost the same than those detailled in the R Markdown section (see upper),
+but be aware that 'Quarto' manage captions and it can be overwrite what has
+been defined by flextable. See Quarto documentation for more information.
 }
 
 \examples{
