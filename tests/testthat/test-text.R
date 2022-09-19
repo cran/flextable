@@ -57,7 +57,7 @@ test_that("pptx - string are html encoded", {
 
 test_that("html - string are html encoded", {
 
-  str_ <- flextable:::html_str(ft1)
+  str_ <- flextable:::gen_raw_html(ft1)
   str_ <- gsub("<style>(.*)</style>", "", str_)
   str_ <- gsub("<script>(.*)</script>", "", str_)
   str_ <- gsub("<template id=\"[0-9a-z\\-]+\">", "", str_)
@@ -68,7 +68,7 @@ test_that("html - string are html encoded", {
 })
 test_that("utf8 is preserved", {
   ft <- flextable(data.frame(a = c('\U2265 4.7')))
-  str_ <- flextable:::html_str(ft)
+  str_ <- flextable:::gen_raw_html(ft)
   str_ <- gsub("<style>(.*)</style>", "", str_)
   str_ <- gsub("<script>(.*)</script>", "", str_)
   str_ <- gsub("<template id=\"[0-9a-z\\-]+\">", "", str_)
@@ -83,7 +83,7 @@ test_that("NA managment", {
   x <- data.frame(zz = c("a", NA_character_), stringsAsFactors = FALSE)
   ft1 <- flextable(x)
 
-  str_ <- flextable:::html_str(ft1)
+  str_ <- flextable:::gen_raw_html(ft1)
   str_ <- gsub("<style>(.*)</style>", "", str_)
   str_ <- gsub("<script>(.*)</script>", "", str_)
   str_ <- gsub("<template id=\"[0-9a-z\\-]+\">", "", str_)
@@ -116,4 +116,28 @@ test_that("newlines and tabulations expand correctly", {
       "<tab>", "is", "<tab>", "it", "<br>",
       "thatsit", "<br>")
   )
+})
+
+test_that("word superscript and subscript", {
+  ft <- flextable( data.frame(a = ""), col_keys = c("dummy") )
+  ft <- delete_part(ft, part = "header")
+
+
+  ft <- compose(ft, i = 1, j = "dummy", part = "body",
+              value = as_paragraph(
+                as_sub("Sepal.Length")
+              ) )
+  runs <- flextable:::fortify_run(ft)
+  expect_equal(runs$vertical.align[1], "subscript")
+  openxml <- flextable:::runs_as_wml(ft, txt_data = runs)$run_openxml
+  expect_match(openxml, "<w:vertAlign w:val=\"subscript\"/>", fixed = TRUE)
+
+  ft <- compose(ft, i = 1, j = "dummy", part = "body",
+              value = as_paragraph(
+                as_sup("Sepal.Length")
+              ) )
+  runs <- flextable:::fortify_run(ft)
+  expect_equal(runs$vertical.align[1], "superscript")
+  openxml <- flextable:::runs_as_wml(ft, txt_data = runs)$run_openxml
+  expect_match(openxml, "<w:vertAlign w:val=\"superscript\"/>", fixed = TRUE)
 })

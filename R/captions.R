@@ -114,48 +114,11 @@ caption_default_docx_openxml <- function(x, align = "center",
   caption_str
 }
 
-caption_default_rdocx_md <- function(x, tab_props = opts_current_table()) {
-
-  tab_props$id <- mcoalesce_options(x$caption$autonum$bookmark, tab_props$id, opts_current$get("label"))
-  tab_props$cap.style <- mcoalesce_options(x$caption$style, tab_props$cap.style)
-
-  if (!has_caption(x, knitr_caption = tab_props$cap)) {
-    return("")
-  }
-
-  style_start <- ""
-  style_end <- ""
-
-  has_caption_style <- !is.null(tab_props$cap.style)
-  if (has_caption_style) {
-    style_start <- sprintf("::: {custom-style=\"%s\"}\n", tab_props$cap.style)
-    style_end <- "\n:::\n"
-  }
-
-  run_autonum <- get_word_autonum(x, tab_props)
-  autonum <- ""
-  if (!is.null(run_autonum)) {
-    autonum <- paste("`", to_wml(run_autonum), "`{=openxml}", sep = "")
-  }
-
-  caption_chunks_str <- caption_chunks_text(x = x, knitr_caption = tab_props$cap)
-
-  caption <- paste(
-    style_start,
-    paste0("<caption>", autonum, caption_chunks_str, "</caption>"),
-    style_end,
-    "",
-    sep = "\n"
-  )
-
-  caption
-}
-
 # HTML ----
 
 
 
-caption_bookdown_html <- function(x, tab_props = opts_current_table()) {
+caption_bookdown_html <- function(x, align = "center", tab_props = opts_current_table()) {
   # for bookdown::html_document2.
   # 'bookdown' wants a table reference as (#tab:bookmark) to enable cross-references
   # in a non raw block. It is then only possible to format chunk of text but
@@ -180,7 +143,11 @@ caption_bookdown_html <- function(x, tab_props = opts_current_table()) {
 
   inline_css <- ""
   if (!is.null(x$caption$fp_p)) {
-    inline_css <- sprintf(" style=\"%s\"", format(x$caption$fp_p, type = "html"))
+    fp_p <- x$caption$fp_p
+    if (x$caption$align_with_table) {
+      fp_p <- update(fp_p, text.align = align)
+    }
+    inline_css <- sprintf(" style=\"%s\"", format(fp_p, type = "html"))
   }
 
   caption_class <- tab_props$style

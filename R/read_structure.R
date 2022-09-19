@@ -18,7 +18,6 @@ expand_special_char <- function(x, what, with = NA, ...) {
   x
 }
 
-
 #' @importFrom data.table rbindlist setDF
 #' @noRd
 #' @title fortify style
