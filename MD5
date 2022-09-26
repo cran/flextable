@@ -1,6 +1,6 @@
-856ea9cc1403f67341114c5333f2ae6c *DESCRIPTION
+74d59b1ee59dd125f978016f8031c8c3 *DESCRIPTION
 aa87b2e92cbcf82a1cdbb201f01e247d *NAMESPACE
-2c56c3c4bac30cb8d234cf8a6c75af5d *NEWS.md
+dc7d9f317d2102e2c906f193204bf664 *NEWS.md
 000ec630157972be175f77712493d68a *R/00_utils.R
 e79d7b110752fab7bca33c12d69dbafd *R/01_fpstruct.R
 53da019a68ee6146eab3ae7894e28e5e *R/05_content.R
@@ -8,7 +8,7 @@ a635a73b62fa366fdcbed73334a1eb14 *R/a_flextable_package.R
 da3e6b01dd9db593d422b4b1d7d2fea4 *R/append_chunk.R
 8ecf2054900e748c5ef5e3e3c852ba4f *R/as_flextable.R
 85f7b8a082361105aa995e2f265f5e55 *R/as_flextable_gam.R
-b2e87bfc5d9e8b9e549da37b6da3f1a6 *R/as_flextable_tabulator.R
+4013413eed4009b56a09ee4dca7dde50 *R/as_flextable_tabulator.R
 a075ea33df0955998186aeb2f1303042 *R/augment_rows.R
 b8632e2304e38ef8aa1fddbdfff3b7ff *R/body_add_flextable.R
 b4359e423b658cb9caeadf4cc4ed0071 *R/border_fix.R
@@ -292,7 +292,7 @@ b14e8d08fc66c5c88a5edd4054b31f66 *man/style.Rd
 bd83b5dbddf669558eb97199b302c215 *man/summarizor.Rd
 a7f1c1cd7fab49e1d0f4363b1a7cf45b *man/surround.Rd
 9c773693642a6ee6da853615bde6643d *man/tabulator.Rd
-c580dd21693ae15f8052b7ab7e194709 *man/tabulator_colnames.Rd
+57d451fa8777339b95af8d5c53de1bda *man/tabulator_colnames.Rd
 abb4109246f73bcf166495ee78a0d621 *man/theme_alafoli.Rd
 2358d4205f4689c6e062d7fa81c59a9b *man/theme_apa.Rd
 b8de9e3742ac1dd80009ee6722e2afee *man/theme_booktabs.Rd
@@ -325,7 +325,7 @@ ebc6e2e6f47bb0a17ee2d7732725f583 *tests/testthat/rmd/bookdown.Rmd
 940fe19333805c72f157b2530179ec8e *tests/testthat/rmd/captions.Rmd
 d5c183c3c050f08f2cc2aa501329613b *tests/testthat/rmd/rmarkdown.Rmd
 bc45d99c3c3404c5fddc96f71438f692 *tests/testthat/test-borders.R
-e5f8c296ac7ebf57a6cadf3c492bd260 *tests/testthat/test-captions-rmd.R
+2e7de4ddab226b6c4fc4e1c49b80305c *tests/testthat/test-captions-rmd.R
 e2caa9c6810c21803460fe0f92d87101 *tests/testthat/test-cell-content.R
 bef2d8e584899adcb1c6aa5ea3897502 *tests/testthat/test-dimensions.R
 88cc8d6c38e28a8e1b31000c82b2cded *tests/testthat/test-errors.R
