@@ -1,3 +1,9 @@
+get_output_file <- function(rmd){
+  basen <- tools::file_path_sans_ext(basename(rmd))
+  list.files(path = dirname(rmd), pattern = paste0(basen, ".(html|pdf|docx|pptx)$"),
+             full.names = TRUE)
+}
+
 compare_image <- function(img1, img2){
   require("magick")
   img.reference <- image_raster(magick::image_read(img1), tidy = FALSE)
@@ -58,6 +64,16 @@ html_to_miniature <- function(x, path) {
     setwd(curr_wd)
   })
   path
+}
+
+expect_snapshot_rdocx <- function(name, x) {
+  name <- paste0(name, ".png")
+  announce_snapshot_file(name = name)
+  docx_path <- tempfile(fileext = ".docx")
+  path = tempfile(fileext = ".png")
+  print(x, target = docx_path)
+  doconv::to_miniature(docx_path, fileout = path, width = 1000)
+  expect_snapshot_file(path, name, compare = compare_image)
 }
 
 expect_snapshot_to <- function(name, x, format = "docx") {

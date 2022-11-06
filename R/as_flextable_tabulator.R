@@ -146,6 +146,8 @@ tabulator <- function(x, rows, columns,
   stopifnot(`rows can not be empty` = length(rows)>0,
             `columns can not be empty` = length(columns)>0
   )
+  use_labels <- attr(x, "use_labels")
+  n_by <- attr(x, "n_by")
 
   x <- as.data.frame(x)
 
@@ -174,9 +176,10 @@ tabulator <- function(x, rows, columns,
   setDF(cts)
   cts <- cts[cts$cts> 1,]
   if(nrow(cts)>0){
-    all_dims <- paste0(c(columns, rows), collapse = ", ")
-    stop("the number of rows is not unique for some combinations ",
-         "of rows and columns: ", all_dims)
+    all_dims <- paste0("`", c(columns, rows), "`", collapse = ", ")
+    stop(sprintf(
+      "number of rows is not unique for some combinations of rows and columns: %s.",
+      all_dims))
   }
 
   .formula <- paste(paste0("`", rows, "`", collapse = "+"),
@@ -201,7 +204,10 @@ tabulator <- function(x, rows, columns,
     visible_columns = visible_columns,
     hidden_columns = hidden_columns,
     col_exprs = col_exprs,
-    row_exprs = row_compose)
+    row_exprs = row_compose,
+    use_labels = use_labels,
+    n_by = n_by
+  )
 
   class(z) <- "tabulator"
 
@@ -366,17 +372,35 @@ as_flextable.tabulator <- function(
   if(spread_first_col){
     row_spanner <- rows[1]
     rows <- rows[-1]
-    row_spanner_labels <- dat[[row_spanner]][!is.na(dat[[row_spanner]])]
-    ft <- mk_par(ft, i = !is.na(dat[[row_spanner]]),
-                 value = as_paragraph(row_spanner_labels))
-    ft <- merge_h(ft, i = !is.na(dat[[row_spanner]]))
+
+    # treatment of groups
+    rleid_ <- do.call(rleid, dat[row_spanner])
+    table_rleid <- table(rleid_[is.na(dat[[row_spanner]])])
+    table_uid <- as.integer(names(table_rleid[table_rleid > 1]))-1# considered as title row for non single group
+
+    # write title rows for non single groups
+    sel <- rleid_ %in% table_uid
+    row_spanner_labels <- dat[[row_spanner]][sel]
+    ft <- mk_par(ft, i = sel, value = as_paragraph(row_spanner_labels))
+    ft <- merge_h(ft, i = sel)
+
+    # write title rows for single groups
+    sna <- !is.na(dat[[row_spanner]])
+    sna <- c(sna[-length(sna)] == sna[-1], FALSE) & sna
+    row_spanner_labels <- dat[[row_spanner]][sna]
+    ft <- mk_par(ft, i = sna, j = 1, value = as_paragraph(row_spanner_labels))
+
   }
 
   ft <- merge_v(ft, j = rows, part = "body")
   ft <- valign(ft, valign = "top", j = rows)
 
   for(j in names(x$row_exprs)){
-    ft <- mk_par(ft, i = !is.na(dat[[j]]), j = j, value = !!x$row_exprs[[j]])
+    if(!j %in% row_spanner) {
+      ft <- mk_par(ft, i = !is.na(dat[[j]]), j = j, value = !!x$row_exprs[[j]])
+    } else {
+      ft <- mk_par(ft, i = !is.na(dat[[j]]), j = 1, value = !!x$row_exprs[[j]])
+    }
   }
 
   for(column in rev(columns)){
@@ -443,6 +467,34 @@ as_flextable.tabulator <- function(
   if(spread_first_col){
     ft <- align(x = ft, i = !is.na(dat[[row_spanner]]), align = columns_alignment)
   }
+
+  if (!is.null(x$use_labels)) {
+    for(labj in names(x$use_labels)) {
+      if (labj %in% ft$col_keys) {
+        ft <- labelizor(
+          x = ft, j = labj,
+          labels = x$use_labels[[labj]],
+          part = "all"
+        )
+      }
+    }
+  }
+  if (!is.null(x$n_by) && length(x$columns) == 1L) {
+    sum_x <- visible_columns
+    grp_labels <- sum_x[sum_x$.tab_columns %in% names(x$col_exprs)[1] & sum_x$type %in% "columns", x$columns]
+    col_keys <- sum_x[sum_x$.tab_columns %in% names(x$col_exprs)[1] & sum_x$type %in% "columns", "col_keys"]
+    names(col_keys) <- grp_labels
+    cts <- x$n_by$n
+    names(cts) <- x$n_by[[x$columns]]
+    for (lvl in names(cts)) {
+      ft <- append_chunks(
+        x = ft,
+        j = col_keys[lvl], i = 1, part = "header",
+        as_chunk(cts[lvl], formatter = fmt_header_n)
+      )
+    }
+  }
+
 
   ft <- autofit(ft, part = "all", add_w = .2, add_h = .0, unit = "cm")
   ft <- fix_border_issues(ft, part = "all")
@@ -596,6 +648,9 @@ print.tabulator <- function(x, ...){
     paste0(shQuote(columns_keys, type = "cmd"), collapse = ", "),
     ")\n", sep = "")
 
+  print(as.data.table(x$data))
+  invisible()
+
 }
 
 
@@ -606,9 +661,11 @@ check_filter_expr <- function(filter_expr, x){
   missing_varnames <- setdiff(filter_varnames, colnames(x))
 
   if(length(missing_varnames) > 0){
-    stop(quo_text(filter_expr), " is using unknown variable(s): ",
-         paste0("`", missing_varnames, "`", collapse = ","),
-         call. = FALSE)
+    stop(
+      sprintf("`%s` is using unknown variable(s): %s",
+              quo_text(filter_expr),
+              paste0("`", missing_varnames, "`", collapse = ",")),
+      call. = FALSE)
   }
 }
 

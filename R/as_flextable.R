@@ -22,6 +22,10 @@ as_flextable <- function( x, ... ){
 #' @param x dataset
 #' @param groups columns names to be used as row separators.
 #' @param columns columns names to keep
+#' @param expand_single if FALSE, groups with only one
+#' row will not be expanded with a title row. If TRUE (the
+#' default), single row groups and multi-row groups are all
+#' restructured.
 #' @examples
 #' # as_grouped_data -----
 #' library(data.table)
@@ -36,49 +40,54 @@ as_flextable <- function( x, ... ){
 #' data_co2
 #' @seealso [as_flextable.grouped_data()]
 #' @export
-as_grouped_data <- function( x, groups, columns = NULL ){
+as_grouped_data <- function( x, groups, columns = NULL, expand_single = TRUE){
 
   if( inherits(x, "data.table") || inherits(x, "tbl_df") || inherits(x, "tbl") || is.matrix(x) )
     x <- as.data.frame(x, stringsAsFactors = FALSE)
 
   stopifnot(is.data.frame(x), ncol(x) > 0 )
 
-  if( is.null(columns))
+  if(is.null(columns))
     columns <- setdiff(names(x), groups)
 
-  x <- x[, c(groups, columns), drop = FALSE]
+  z <- x[, c(groups, columns), drop = FALSE]
+  setDT(z)
 
-  x$fake_order___ <- seq_len(nrow(x))
-  values <- lapply(x[groups], function(x) rle(x = format(x) ) )
+  z[, c("rleid"):= list(do.call(rleid, as.list(.SD))), .SDcols = groups]
+  z <- merge(
+    z,
+    z[, list(rlen = .N), by = "rleid"],
+    by = "rleid")
 
-  vout <- lapply(values, function(x){
-    out <- lapply(x$lengths, function(l){
-      out <- rep(0L, l)
-      out[1] <- l
-      out
-    } )
-    out <- unlist(x = out)
-    which(as.integer( out ) > 0)
-  })
+  subsets <- list()
+  for (grp_i in seq_along(groups)) {
+    grp_comb <- groups[seq_len(grp_i)]
+    if (!expand_single) {
+      subdat <- unique(z[z$rlen>1, .SD, .SDcols = c(grp_comb, "rleid")], by = "rleid")
+    } else {
+      subdat <- unique(z[, .SD, .SDcols = c(grp_comb, "rleid")], by = "rleid")
+    }
+    subdat[, c("rleid") := list(.SD$rleid - 1 + grp_i*.1 )]
+    void_cols <- setdiff(colnames(subdat), c(groups[grp_i], "rleid"))
+    if (length(void_cols)) {
+      subdat[, c(void_cols) := lapply(.SD, function(w) {w[] <- NA;w} ), .SDcols = void_cols]
+    }
+    subsets[[length(subsets) + 1]] <- subdat
+  }
 
+  if (!expand_single) {
+    z[z$rlen>1, c(groups) := lapply(.SD, function(w) {w[] <- NA;w} ), .SDcols = groups]
+  } else {
+    z[, c(groups) := lapply(.SD, function(w) {w[] <- NA;w} ), .SDcols = groups]
+  }
+  z$rlen <- NULL
 
+  subsets[[length(subsets) + 1]] <- z
 
-  new_rows <- mapply(function(i, column, decay_order){
-    na_cols <- setdiff(names(x), c( column, "fake_order___") )
-    dat <- x[i,,drop = FALSE]
-    dat$fake_order___ <- dat$fake_order___ - decay_order
-    dat[seq_len(nrow(dat)), na_cols] <- NA
-    dat
-  }, vout, groups, length(groups) / seq_along(groups) * .1, SIMPLIFY = FALSE)
-
-  # should this be made col by col?
-  x[,groups] <- NA
-
-  new_rows <- append( new_rows, list(x) )
-
-  x <- rbind.match.columns(new_rows)
-  x <- x[order(x$fake_order___),,drop = FALSE]
-  x$fake_order___ <- NULL
+  x <- rbindlist(subsets, use.names = TRUE, fill = TRUE)
+  setorderv(x, cols = "rleid")
+  x$rleid <- NULL
+  setDF(x)
   class(x) <- c("grouped_data", class(x))
   attr(x, "groups") <- groups
   attr(x, "columns") <- columns
@@ -128,11 +137,12 @@ as_flextable.grouped_data <- function(x, col_keys = NULL, hide_grouplabel = FALS
   z <- flextable(x, col_keys = col_keys )
 
   j2 <- length(col_keys)
-  for( group in groups){
-    i <- !is.na(x[[group]])
-    gnames <- x[[group]][i]
+  for( grp_name in groups){
+    i <- !is.na(x[[grp_name]])
+    gnames <- x[[grp_name]][i]
     if(!hide_grouplabel){
-      z <- compose(z, i = i, j = 1, value = as_paragraph(as_chunk(group), ": ", as_chunk(gnames)))
+      z <- compose(z, i = i, j = 1,
+                   value = as_paragraph(as_chunk(grp_name), ": ", as_chunk(gnames)))
     } else {
       z <- compose(z, i = i, j = 1, value = as_paragraph(as_chunk(gnames)))
     }
@@ -179,8 +189,10 @@ as_flextable.glm <- function(x, ...){
 
 
   if(!requireNamespace("broom", quietly = TRUE)){
-    stop("broom package should be install to create ",
-      "a flextable from a glm object.")
+    stop(sprintf(
+      "'%s' package should be installed to create a flextable from an object of type '%s'.",
+      "broom", "glm")
+    )
   }
 
   data_t <- broom::tidy(x)
@@ -241,7 +253,10 @@ as_flextable.glm <- function(x, ...){
 as_flextable.lm <- function(x, ...){
 
   if( !requireNamespace("broom", quietly = TRUE) ){
-    stop("broom package should be install to create a flextable from a glm object.")
+    stop(sprintf(
+      "'%s' package should be installed to create a flextable from an object of type '%s'.",
+      "broom", "lm")
+    )
   }
 
   data_t <- broom::tidy(x)
@@ -432,7 +447,10 @@ continuous_summary <- function(dat, columns = NULL,
 as_flextable.merMod <- function(x, ...){
 
   if( !requireNamespace("broom.mixed", quietly = TRUE) ){
-    stop("broom.mixed package should be install to create a flextable from a mixed model.")
+    stop(sprintf(
+      "'%s' package should be installed to create a flextable from an object of type '%s'.",
+      "broom.mixed", "mixed model")
+    )
   }
 
   data_t <- broom::tidy(x)
@@ -535,7 +553,10 @@ as_flextable.glmmadmb <- as_flextable.merMod
 #' @importFrom rlang sym
 as_flextable.kmeans <- function(x, digits = 4, ...) {
   if (!requireNamespace("broom", quietly = TRUE)) {
-    stop("broom package should be install to create a flextable from a kmeans model.")
+    stop(sprintf(
+      "'%s' package should be installed to create a flextable from an object of type '%s'.",
+      "broom", "kmeans")
+    )
   }
 
   ## kmeans body ----
@@ -652,7 +673,12 @@ as_flextable.kmeans <- function(x, digits = 4, ...) {
 #' }
 as_flextable.pam <- function(x, digits = 4, ...){
   if( !requireNamespace("broom", quietly = TRUE) ){
-    stop("broom package should be install to create a flextable from a kmeans model.")
+    if (!requireNamespace("broom", quietly = TRUE)) {
+      stop(sprintf(
+        "'%s' package should be installed to create a flextable from an object of type '%s'.",
+        "broom", "pam")
+      )
+    }
   }
 
   clus_stat_names <- c(

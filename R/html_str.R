@@ -1,10 +1,16 @@
 gen_raw_html <- function(x,
-                         align = NULL,
                          class = "tabwid",
                          caption = "",
-                         shadow = TRUE,
                          topcaption = TRUE,
                          manual_css = "") {
+
+  align <- x$properties$align
+  shadow <- x$properties$opts_html$shadow
+
+  # for ubiquity and other packages that dump old flextable
+  if(is.null(shadow)) shadow <- TRUE
+  if(is.null(align)) align <- "center"
+
   fixed_layout <- x$properties$layout %in% "fixed"
   if (!fixed_layout) {
     if (x$properties$width > 0) {
@@ -30,11 +36,38 @@ gen_raw_html <- function(x,
     manual_css_str <- manual_css
   }
 
+  if (!is.null(x$properties$opts_html$scroll)) {
+
+    freeze_first_column <- x$properties$opts_html$scroll$freeze_first_column
+    if (isTRUE(freeze_first_column)) {
+      freeze_first_css_th <- paste0(
+        ".", classname, " thead > tr > th:first-child {position:sticky;left:0;z-index:5;}")
+      freeze_first_css_td <- paste0(
+        ".", classname, " tbody > tr > td:first-child {position:sticky;left:0;z-index:3;}")
+      freeze_first_css <- paste0(
+        c(freeze_first_css_th, freeze_first_css_td),
+        collapse = "")
+
+      x$properties$opts_html$extra_css <- paste0(
+        freeze_first_css,
+        x$properties$opts_html$extra_css
+      )
+    }
+
+    if (!is.null(x$properties$opts_html$scroll$height)) {
+      x$properties$opts_html$extra_css <- paste0(
+        ".", classname, " th {position: sticky;top: 0;z-index: 4;}.", classname, " {border-collapse: separate !important;}",
+        x$properties$opts_html$extra_css
+      )
+    }
+
+  }
+
   html <- paste0(
     "<style>",
     tabcss,
     codes$css,
-    flextable_global$defaults$extra_css,
+    x$properties$opts_html$extra_css,
     manual_css_str,
     "</style>",
     sprintf("<table class='%s'>", classname),
@@ -56,7 +89,13 @@ gen_raw_html <- function(x,
     tab_class <- paste0(tab_class, " tabwid-caption-bottom")
   }
 
-  html <- paste0("<div class=\"", tab_class, "\">", html, "</div>")
+  style_div <- ""
+  if(!is.null(x$properties$opts_html$scroll)) {
+    style_div <- do.call(scrollbox, x$properties$opts_html$scroll)
+    style_div <- paste0(" style=\"", style_div, "\"")
+  }
+
+  html <- paste0("<div class=\"", tab_class, "\"", style_div, ">", html, "</div>")
 
   if (shadow) {
     uid <- UUIDgenerate(n = 2L)
@@ -64,7 +103,7 @@ gen_raw_html <- function(x,
     tabwid_css <- paste(
       c(
         "<style>",
-        readLines(system.file(package = "flextable", "web_1.1.0", "tabwid.css"), encoding = "UTF-8"),
+        readLines(system.file(package = "flextable", "web_1.1.2", "tabwid.css"), encoding = "UTF-8"),
         "</style>"
       ),
       collapse = "\n"
@@ -87,13 +126,24 @@ to_shadow_dom <- function(uid1, uid2) {
     "", "<script>",
     paste0("var dest = document.getElementById(\"", uid2, "\");"),
     paste0("var template = document.getElementById(\"", uid1, "\");"),
-    "var caption = template.content.querySelector(\"caption\");",
     "var fantome = dest.attachShadow({mode: 'open'});",
     "var templateContent = template.content;",
     "fantome.appendChild(templateContent);",
     "</script>", ""
   )
   paste(script_commands, collapse = "\n")
+}
+
+scrollbox <- function(height = NULL, add_css = "", ...) {
+  str <- "overflow-x:auto;width:100%;"
+  if (!is.null(height)) {
+    if (is.numeric(height)) {
+      height <- sprintf("%.0fpx", height)
+    }
+    str <- paste0(str, "overflow-y:auto;height:", height, ";")
+  }
+  str <- paste0(str, add_css)
+  str
 }
 
 # to html/css  ----
@@ -138,7 +188,7 @@ html_content_strs <- function(x){
 
   cell_data <- cell_data[, list(
     td_tag = paste0(
-      "<td ",
+      ifelse(get("part") %in% "header", "<th ", "<td "),
       paste0(
         ifelse(get("rowspan") > 1,
           paste0(" colspan=\"", get("rowspan"), "\""),
@@ -156,7 +206,8 @@ html_content_strs <- function(x){
   dat <- merge(txt_data, par_data , by = c("part", "ft_row_id", "col_id"))
   dat$p_tag <- paste0(dat$p_tag, dat$span_tag, "</p>")
   dat <- merge(dat, cell_data , by = c("part", "ft_row_id", "col_id"))
-  dat$td_tag <- paste0(dat$td_tag, dat$p_tag, "</td>")
+  dat$td_tag <- paste0(dat$td_tag, dat$p_tag,
+                       ifelse(dat$part %in% "header", "</th>", "</td>"))
 
   data_hrule <- fortify_hrule(x)
   data_hrule$tr_tag <- "<tr>"
@@ -243,10 +294,10 @@ img_as_html <- function(img_data, width, height){
       } else if( grepl("\\.webp", ignore.case = TRUE, x = img_raster) ){
         mime <- "image/webp"
       } else {
-        stop("this format is not implemented")
+        stop(sprintf("'flextable' does not support format of the file '%s'.", img_raster))
       }
       if(!file.exists(img_raster)){
-        stop("file ", shQuote(img_raster), " can not be found.")
+        stop(sprintf("file '%s' can not be found.",img_raster))
       }
       img_raster <- base64enc::dataURI(file = img_raster, mime = mime )
 
@@ -385,21 +436,14 @@ cell_css_styles <- function(x, add_widths = TRUE){
 #' @title htmlDependency for flextable objects
 #' @description When using loops in an R Markdown for HTML document, the
 #' htmlDependency object for flextable must also be added at least once.
-#' @param htmlscroll add a scroll if table is too big to fit
-#' into its HTML container, default to TRUE.
 #' @examples
 #' if(require("htmltools"))
 #'   div(flextable_html_dependency())
-flextable_html_dependency <- function(htmlscroll = TRUE){
-  if (isTRUE(htmlscroll)) {
-    stylesheet <- c("tabwid.css", "scrool.css")
-  } else {
-    stylesheet <- "tabwid.css"
-  }
+flextable_html_dependency <- function(){
   htmlDependency("tabwid",
-                 "1.1.0",
-                 src = system.file(package="flextable", "web_1.1.0"),
-                 stylesheet = stylesheet)
+                 "1.1.2",
+                 src = system.file(package="flextable", "web_1.1.2"),
+                 stylesheet = "tabwid.css")
 
 }
 

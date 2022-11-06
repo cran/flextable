@@ -8,9 +8,9 @@
 body_add_flextable(
   x,
   value,
-  align = "center",
+  align = NULL,
   pos = "after",
-  split = FALSE,
+  split = NULL,
   topcaption = TRUE,
   keepnext = NULL
 )
@@ -39,8 +39,9 @@ option 'Allow row to break across pages'.}
 \item{topcaption}{if TRUE caption is added before the table, if FALSE,
 caption is added after the table.}
 
-\item{keepnext}{deprecated, keepnext is to to TRUE for captions
-on top of tables and FALSE for captions on bottom of tables}
+\item{keepnext}{default to FALSE, 'keep with next' binds the table
+to the first line of the next block (a paragraph or a table). It
+ensures no page break happens between the two blocks.}
 
 \item{bookmark}{bookmark id}
 }
@@ -59,7 +60,7 @@ library(officer)
 # autonum for caption
 autonum <- run_autonum(seq_id = "tab", bkm = "mtcars")
 
-ftab <- flextable( head( mtcars ) )
+ftab <- flextable(head(mtcars))
 ftab <- set_caption(ftab, caption = "mtcars data", autonum = autonum)
 ftab <- autofit(ftab)
 doc <- read_docx()

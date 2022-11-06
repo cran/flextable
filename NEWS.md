@@ -1,8 +1,48 @@
+# flextable 0.8.3
+
+## new features
+
+- new argument `expand_single` in `as_grouped_data()`. If FALSE, groups with only one
+row will not be expanded with a title row.
+- new functions `fmt_avg_dev()`, `fmt_header_n()`, `fmt_n_percent()` and renaming of `fmt_2stats()` 
+to `fmt_summarizor()` to help working with `tabulator()`. `tabulator()` has also new
+internal values that allow N=xxx notes and automatic labels.
+- function `set_table_properties()` is now the recommanded way to set
+arguments related to format options and alignment in a document. It is
+supposed to replace "knitr" chunk options `ft.align`, `ft.split`,
+`ft.keepnext`, `ft.tabcolsep`, `ft.arraystretch`, `ft.latex.float`,
+`ft.shadow`, `fonts_ignore` although they are all still
+supported.
+This allows less interaction with the 'R Markdown' or 'Quarto'
+eco-system and let to define it globally with `set_flextable_defaults()`.
+- HTML scrolling can be activated by calling `set_table_properties()` and 
+providing a *scroll* value for argument `opts_html`: 
+`opts_html = list(scroll = list(height = "500px",freeze_first_column = TRUE))`.
+- new function `grid_chunk()` to let users add grid graphics
+- functions `add_header_row()`, `add_footer_row()`, `add_body_row()`,
+`add_header_lines()` and `add_footer_lines()` 
+now supports formatted paragraph made with `as_paragraph()`.
+- captions: support for simple text in addition to `as_paragraph()`
+- `summarizor()` can now be transformed directly as a flextable 
+with method `as_flextable()`.
+
+## Issues
+
+- fix issue with keepnext and `body_add_flextable()`
+- fix issue of misordered chunks with `prepend_chunks()`
+- argument 'unit' is dropped in `line_spacing()` as it is expected to be a ratio
+
+## Changes
+
+- `ft.keepnext` now default to FALSE as lot of users had issues
+with this option.
+- function `xtable_to_flextable()` is removed (use `as_flextable()`)
+
 # flextable 0.8.2
 
 ## Issues
 
-* prevent docx captions test when pandoc version 
+- prevent docx captions test when pandoc version 
 is "2.9.2.1" (on CRAN Flavor r-devel-linux-x86_64-fedora-gcc).
 
 # flextable 0.8.1

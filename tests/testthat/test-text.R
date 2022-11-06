@@ -84,12 +84,9 @@ test_that("NA managment", {
   ft1 <- flextable(x)
 
   str_ <- flextable:::gen_raw_html(ft1)
-  str_ <- gsub("<style>(.*)</style>", "", str_)
-  str_ <- gsub("<script>(.*)</script>", "", str_)
-  str_ <- gsub("<template id=\"[0-9a-z\\-]+\">", "", str_)
-  str_ <- gsub("</div></template(.*)", "", str_)
+  str_ <- paste0("<div>", str_, "</div>")
   doc <- read_xml(str_)
-  text_ <- xml_text(xml_find_all(doc, "/table/tbody/tr/td/p"))
+  text_ <- xml_text(xml_find_all(doc, "//table/tbody/tr/td/p"))
   expect_equal(text_, c("a", "") )
 })
 

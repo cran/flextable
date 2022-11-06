@@ -162,10 +162,10 @@ as_chunk <- function(x, props = NULL, formatter = format_fun, ...) {
 
   if( length(props) > 0 && is.list(props) ){
     if( !all(sapply(props, inherits, "fp_text")) ){
-      stop("props should be a list of fp_text object")
+      stop("`props` should be a list of `fp_text` object(s).")
     }
     if( length(props) != length(text) ){
-      stop("props should be a list of length ", length(text) )
+      stop(sprintf("`props` should be a list of same length than `x`: %.0f.", length(text)))
     }
   }
   data <- chunk_dataframe(txt = text,
@@ -506,10 +506,12 @@ as_equation <- function(x, width = 1, height = .2, unit = "in", props = NULL){
 
   if( length(props) > 0 && is.list(props) ){
     if( !all(sapply(props, inherits, "fp_text")) ){
-      stop("props should be a list of fp_text object")
+      stop("`props` should be a list of `fp_text` object(s).")
     }
     if( length(props) != length(x) ){
-      stop("props should be a list of length ", length(x) )
+      stop(sprintf(
+        "`props` should be a list of same length than `x`: %.0f.",
+        length(x)))
     }
   }
 
@@ -618,10 +620,12 @@ as_word_field <- function(x, props = NULL, width = .1, height = .15, unit = "in"
 
   if( length(props) > 0 && is.list(props) ){
     if( !all(sapply(props, inherits, "fp_text")) ){
-      stop("props should be a list of fp_text object")
+      stop("`props` should be a list of `fp_text` object(s).")
     }
     if( length(props) != length(x) ){
-      stop("props should be a list of length ", length(x) )
+      stop(sprintf(
+        "`props` should be a list of same length than `x`: %.0f.",
+        length(x)))
     }
   }
 
@@ -673,8 +677,17 @@ to_wml_word_field <- function(x, pr_txt) {
 #' @export
 #' @title concatenate chunks in a flextable
 #' @description The function is concatenating text and images within paragraphs of
-#' a flextable object, this function is to be used with function [compose()].
-#' @param ... chunk elements that are defining paragraph
+#' a flextable object, this function is to be used with functions such as [compose()],
+#' [add_header_lines()], [add_footer_lines()].
+#'
+#' This allows the concatenation of formatted pieces of text (chunks) that
+#' represent the content of a paragraph.
+#'
+#' The cells of a flextable contain each a single paragraph. This paragraph
+#' is made of chunks that can be text, images or plots, equations and links.
+#'
+#' @param ... chunk elements that are defining paragraph. If a character is used,
+#' it is transformed to a chunk object with function [as_chunk()].
 #' @param list_values a list of chunk elements that are defining paragraph. If
 #' specified argument `...` is unused.
 #' @family functions for mixed content paragraphs

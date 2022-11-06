@@ -23,8 +23,14 @@ default_flextable_settings <- list(
   na_str  = "",
   nan_str  = "",
   fmt_date = "%Y-%m-%d", fmt_datetime = "%Y-%m-%d %H:%M:%S",
+
+  shadow = TRUE, extra_css = "",
+  scroll = NULL,
+  split = TRUE, keep_with_next = FALSE,
+  tabcolsep = 0, arraystretch = 1.5, float = "none",
+
   fonts_ignore = FALSE,
-  extra_css = "",
+
   theme_fun = "theme_booktabs",
   post_process_pdf = function(x) x,
   post_process_docx = function(x) x,
@@ -76,6 +82,28 @@ flextable_global$defaults <- default_flextable_settings
 #' xelatex or lualatex. If pdflatex is used, fonts will be ignored because they are
 #' not supported by pdflatex, whereas with the xelatex and lualatex engines they are.
 #' @param extra_css css instructions to be integrated with the table.
+#' @param shadow `TRUE` or `FALSE`, use shadow dom (for HTML only), this option is existing
+#' to disable shadow dom (set to `FALSE`) for pagedown and Quarto that can
+#' not support it for now.
+#' @param scroll NULL or a list if you want to add a scroll-box.
+#' See **scroll** element of argument `opts_html` in function [set_table_properties()].
+#' @param split Word option 'Allow row to break across pages' can be
+#' activated when TRUE.
+#' @param keep_with_next Word option 'keep rows together' is
+#' activated when TRUE. It avoids page break within tables. This
+#' is handy for small tables, i.e. less than a page height.
+#' @param tabcolsep space between the text and the left/right border of its containing
+#' cell.
+#' @param arraystretch height of each row relative to its default
+#' height, the default value is 1.5.
+#' @param float type of floating placement in the PDF document, one of:
+#' * 'none' (the default value), table is placed after the preceding
+#' paragraph.
+#' * 'float', table can float to a place in the text where it fits best
+#' * 'wrap-r', wrap text around the table positioned to the right side of the text
+#' * 'wrap-l', wrap text around the table positioned to the left side of the text
+#' * 'wrap-i', wrap text around the table positioned inside edge-near the binding
+#' * 'wrap-o', wrap text around the table positioned outside edge-far from the binding
 #' @param theme_fun a single character value (the name of the theme function
 #' to be applied) or a theme function (input is a flextable, output is a flextable).
 #' @param post_process_pdf,post_process_docx,post_process_html,post_process_pptx Post-processing functions
@@ -113,8 +141,14 @@ set_flextable_defaults <- function(
   cs.family = NULL, eastasia.family = NULL, hansi.family = NULL,
   decimal.mark = NULL, big.mark = NULL, digits = NULL,
   na_str = NULL, nan_str = NULL,
-  fmt_date = NULL, fmt_datetime = NULL, extra_css = NULL,
-  fonts_ignore = NULL, theme_fun = NULL,
+  fmt_date = NULL, fmt_datetime = NULL,
+  extra_css = NULL,
+  shadow = NULL,
+  scroll = NULL,
+  split = NULL, keep_with_next = NULL,
+  tabcolsep = NULL, arraystretch = NULL, float = NULL,
+  fonts_ignore = NULL,
+  theme_fun = NULL,
   post_process_pdf = NULL,
   post_process_docx = NULL,
   post_process_html = NULL,
@@ -198,6 +232,28 @@ set_flextable_defaults <- function(
   if( !is.null(fonts_ignore) ){
     x$fonts_ignore <- fonts_ignore
   }
+  if( !is.null(shadow) ){
+    x$shadow <- shadow
+  }
+  if( !is.null(split) ){
+    x$split <- split
+  }
+  if( !is.null(keep_with_next) ){
+    x$keep_with_next <- keep_with_next
+  }
+  if( !is.null(tabcolsep) ){
+    x$tabcolsep <- tabcolsep
+  }
+  if( !is.null(arraystretch) ){
+    x$arraystretch <- arraystretch
+  }
+  if( !is.null(float) ){
+    x$float <- float
+  }
+
+  if( !is.null(scroll) ){
+    x$scroll <- scroll
+  }
   if( !is.null(extra_css) ){
     x$extra_css <- extra_css
   }
@@ -229,8 +285,6 @@ set_flextable_defaults <- function(
   }
 
   flextable_defaults <- flextable_global$defaults
-
-
 
   flextable_new_defaults <- modifyList(flextable_defaults, x)
   flextable_global$defaults <- flextable_new_defaults
@@ -266,7 +320,7 @@ get_flextable_defaults <- function(){
 #' @export
 print.flextable_defaults <- function(x, ...){
 
-  message("## style properties\n")
+  cat("## style properties\n")
   styles <- c("font.family", "hansi.family", "eastasia.family", "cs.family",
               "font.size", "font.color", "text.align", "padding.bottom",
     "padding.top", "padding.left", "padding.right", "line_spacing", "border.color",
@@ -274,39 +328,41 @@ print.flextable_defaults <- function(x, ...){
   df <- data.frame(property = styles, value = unlist(x[styles]), stringsAsFactors = FALSE)
   row.names(df) <- NULL
   print(df)
-  message("")
+  cat("\n")
 
-  message("## cell content settings\n")
+  cat("## cell content settings\n")
   contents <- c("decimal.mark", "big.mark",
               "digits", "na_str", "nan_str", "fmt_date", "fmt_datetime")
   df <- data.frame(property = contents, value = unlist(x[contents]), stringsAsFactors = FALSE)
   row.names(df) <- NULL
   print(df)
-  message("")
+  cat("\n")
 
-  message("## table.layout is:", x$table.layout, "\n")
-  if(is.character(x$theme_fun)) message("## default theme is:", x$theme_fun, "\n")
+  cat("## table.layout is:", x$table.layout, "\n")
+  if(is.character(x$theme_fun)) cat("## default theme is:", x$theme_fun, "\n")
 
-  message("## HTML specific:")
-  message("extra_css:", x$extra_css)
-  message("post_process_html:")
+  cat("## HTML specific:\n")
+  cat("shadow:", x$shadow, "\n")
+  cat("extra_css:", x$extra_css, "\n")
+  cat("scrool:", if (is.null(x$scrool)) "no" else "yes", "\n")
+  cat("post_process_html:\n")
   print(x$post_process_html)
-  message("")
+  cat("\n")
 
-  message("## latex specific:")
-  message("post_process_pdf:")
+  cat("## latex specific:\n")
+  cat("post_process_pdf:\n")
   print(x$post_process_pdf)
-  message("")
+  cat("\n")
 
-  message("## Word specific:")
-  message("post_process_docx:")
+  cat("## Word specific:\n")
+  cat("post_process_docx:\n")
   print(x$post_process_docx)
-  message("")
+  cat("\n")
 
-  message("## PowerPoint specific:")
-  message("post_process_pptx:")
+  cat("## PowerPoint specific:\n")
+  cat("post_process_pptx:\n")
   print(x$post_process_pptx)
-  message("")
+  cat("\n")
 
   invisible(NULL)
 }

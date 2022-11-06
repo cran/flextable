@@ -8,47 +8,32 @@
 #' @param x dataset
 #' @param by columns names to be used as grouping columns
 #' @param overall_label label to use as overall label
-#' @seealso [fmt_2stats()], [labelizor()]
+#' @seealso [fmt_summarizor()], [labelizor()]
 #' @examples
 #' z <- summarizor(CO2[-c(1, 4)],
 #'   by = "Treatment",
 #'   overall_label = "Overall"
 #' )
-#'
-#'
-#' # version 1 ----
-#' tab_1 <- tabulator(
-#'   x = z,
-#'   rows = c("variable", "stat"),
-#'   columns = "Treatment",
-#'   blah = as_paragraph(
-#'     as_chunk(
-#'       fmt_2stats(
-#'         stat = stat,
-#'         num1 = value1, num2 = value2,
-#'         cts = cts, pcts = percent
-#'       )
-#'     )
-#'   )
-#' )
-#'
-#' ft_1 <- as_flextable(tab_1, separate_with = "variable")
+#' ft_1 <- as_flextable(z)
 #' ft_1
 #'
 #' # version 2 with your own functions ----
 #' n_format <- function(n, percent) {
 #'   z <- character(length = length(n))
 #'   wcts <- !is.na(n)
-#'   z[wcts] <- sprintf("%.0f (%.01f %%)", n[wcts], percent[wcts] * 100)
+#'   z[wcts] <- sprintf("%.0f (%.01f %%)",
+#'     n[wcts], percent[wcts] * 100)
 #'   z
 #' }
-#' stat_format <- function(num1, num2, stat) {
-#'   num1_mask <- "%.01f"
-#'   num2_mask <- "(%.01f)"
 #'
+#' stat_format <- function(stat, num1, num2,
+#'                         num1_mask = "%.01f",
+#'                         num2_mask = "(%.01f)") {
 #'   z_num <- character(length = length(num1))
 #'
 #'   is_mean_sd <- !is.na(num1) & !is.na(num2) & stat %in% "mean_sd"
+#'   is_median_iqr <- !is.na(num1) & !is.na(num2) &
+#'     stat %in% "median_iqr"
 #'   is_range <- !is.na(num1) & !is.na(num2) & stat %in% "range"
 #'   is_num_1 <- !is.na(num1) & is.na(num2)
 #'
@@ -59,32 +44,37 @@
 #'     " ",
 #'     sprintf(num2_mask, num2[is_mean_sd])
 #'   )
+#'   z_num[is_median_iqr] <- paste0(
+#'     sprintf(num1_mask, num1[is_median_iqr]),
+#'     " ",
+#'     sprintf(num2_mask, num2[is_median_iqr])
+#'   )
 #'   z_num[is_range] <- paste0(
+#'     "[",
 #'     sprintf(num1_mask, num1[is_range]),
 #'     " - ",
-#'     sprintf(num1_mask, num2[is_range])
+#'     sprintf(num1_mask, num2[is_range]),
+#'     "]"
 #'   )
+#'
 #'   z_num
 #' }
 #'
 #' tab_2 <- tabulator(z,
 #'   rows = c("variable", "stat"),
 #'   columns = "Treatment",
-#'   `Est.` = as_paragraph(as_chunk(stat_format(value1, value2, stat))),
+#'   `Est.` = as_paragraph(
+#'     as_chunk(stat_format(stat, value1, value2))),
 #'   `N` = as_paragraph(as_chunk(n_format(cts, percent)))
 #' )
 #'
 #' ft_2 <- as_flextable(tab_2, separate_with = "variable")
 #' ft_2
 #' @section Illustrations:
-#' ft_1 appears as:
 #'
-#' \if{html}{\figure{fig_summarizor_1.png}{options: width="500"}}
-#'
-#' ft_2 appears as:
+#' \if{html}{\figure{fig_summarizor_1.png}{options: width="328"}}
 #'
 #' \if{html}{\figure{fig_summarizor_2.png}{options: width="500"}}
-#'
 #' @export
 summarizor <- function(
     x, by = character(),
@@ -113,6 +103,8 @@ summarizor <- function(
 
   cols <- setdiff(colnames(x), by)
   dtx <- as.data.table(x)
+  datn <- dtx[, list(n = .N), by = by]
+  setDF(datn)
   dat <- dtx[, list(data=list(.SD)), by = by, .SDcols = cols]
   dat$data <- lapply(dat$data, dataset_describe)
 
@@ -130,8 +122,57 @@ summarizor <- function(
   levs <- c(first_levels, setdiff(unique(dat$stat), c(first_levels, last_levels)), last_levels)
   labs <- levs
   dat$stat <- factor(dat$stat, levels = levs, labels = labs)
+
+  dat$variable <- factor(dat$variable, levels = cols)
   setDF(dat)
+  attr(dat, "use_labels") <- list(
+    stat = c(stat = "", mean_sd = "Mean (SD)", median_iqr = "Median (IQR)",
+             range = "Range", missing = "Missing"),
+    variable = c(variable = "")
+  )
+  class(dat) <- c("summarizor", class(dat))
+  attr(dat, "n_by") <- datn
+  attr(dat, "by") <- by
   dat
+}
+
+#' @export
+#' @title summarizor to flextable
+#' @description `summarizor` object can be transformed as a flextable
+#' with method [as_flextable()].
+#' @param x result from [summarizor()]
+#' @param ... arguments for [as_flextable.tabulator()]
+#' @family as_flextable methods
+#' @examples
+#' z <- summarizor(CO2[-c(1, 4)],
+#'   by = "Treatment",
+#'   overall_label = "Overall"
+#' )
+#' ft_1 <- as_flextable(z, spread_first_col = TRUE)
+#' ft_1 <- prepend_chunks(ft_1,
+#'   i = ~ is.na(variable), j = 1,
+#'   as_chunk("\t"))
+#' ft_1 <- autofit(ft_1)
+#' ft_1
+as_flextable.summarizor <- function(x, ...) {
+
+  tab <- tabulator(
+    x = x,
+    rows = c("variable", "stat"),
+    columns = attr(x, "by"),
+    blah = as_paragraph(
+      as_chunk(
+        fmt_summarizor(
+          stat = !!sym("stat"),
+          num1 = !!sym("value1"), num2 = !!sym("value2"),
+          cts = !!sym("cts"), pcts = !!sym("percent")
+        )
+      )
+    )
+  )
+  ft <- as_flextable(tab, ...)
+
+  ft
 }
 
 #' @importFrom stats sd IQR median
@@ -167,7 +208,7 @@ dataset_describe <- function(dataset){
 }
 
 #' @export
-#' @title format content for data generated with [summarizor()]
+#' @title format content for data generated with summarizor()
 #' @description This function was written to allow easy demonstrations
 #' of flextable's ability to produce table summaries (with [summarizor()]).
 #' It assumes that we have either a quantitative variable, in which
@@ -189,6 +230,37 @@ dataset_describe <- function(dataset){
 #' @param pcts_mask format associated with `pcts`, a format string
 #' used by [sprintf()].
 #' @seealso [summarizor()], [tabulator()], [mk_par()]
+#' @family text formatter functions
+#' @examples
+#' library(flextable)
+#' z <- summarizor(iris, by = "Species")
+#'
+#' tab_1 <- tabulator(
+#'   x = z,
+#'   rows = c("variable", "stat"),
+#'   columns = "Species",
+#'   blah = as_paragraph(
+#'     as_chunk(
+#'       fmt_summarizor(
+#'         stat = stat,
+#'         num1 = value1, num2 = value2,
+#'         cts = cts, pcts = percent
+#'       )
+#'     )
+#'   )
+#' )
+#'
+#' ft_1 <- as_flextable(x = tab_1, separate_with = "variable")
+#' ft_1 <- labelizor(
+#'   x = ft_1, j = "stat",
+#'   labels = c(mean_sd = "Moyenne (ecart-type)",
+#'              median_iqr = "Mediane (IQR)",
+#'              range = "Etendue",
+#'              missing = "Valeurs manquantes"
+#'              )
+#' )
+#' ft_1 <- autofit(ft_1)
+#' ft_1
 fmt_2stats <- function(stat, num1, num2, cts, pcts,
                        num1_mask = "%.01f", num2_mask = "(%.01f)",
                        cts_mask = "%.0f", pcts_mask = "(%.02f%%)"){
@@ -230,5 +302,101 @@ fmt_2stats <- function(stat, num1, num2, cts, pcts,
 
   paste0(z_num, z_cts)
 
+}
+#' @export
+#' @rdname fmt_2stats
+fmt_summarizor <- fmt_2stats
+
+
+#' @export
+#' @title format content for count data
+#' @description The function formats counts and
+#' percentages as `n (xx.x%)`. If percentages are
+#' missing, they are not printed.
+#' @param n count values
+#' @param pct percent values
+#' @param digit number of digits for the percentages
+#' @seealso [tabulator()], [mk_par()]
+#' @family text formatter functions
+#' @examples
+#' library(flextable)
+#'
+#' df <- structure(
+#'   list(
+#'     cut = structure(
+#'       .Data = 1:5, levels = c(
+#'         "Fair", "Good", "Very Good", "Premium", "Ideal"),
+#'       class = c("ordered", "factor")),
+#'     n = c(1610L, 4906L, 12082L, 13791L, 21551L),
+#'     pct = c(0.0299, 0.0909, 0.2239, 0.2557, 0.3995)
+#'   ),
+#'   row.names = c(NA, -5L),
+#'   class = "data.frame")
+#'
+#' ft_1 <- flextable(df, col_keys = c("cut", "txt"))
+#' ft_1 <- mk_par(
+#'   x = ft_1, j = "txt",
+#'   value = as_paragraph(fmt_n_percent(n, pct)))
+#' ft_1 <- align(ft_1, j = "txt", part = "all", align = "right")
+#' ft_1 <- autofit(ft_1)
+#' ft_1
+fmt_n_percent <- function(n, pct, digit = 1){
+  z1 <- character(length(n))
+  z2 <- character(length(n))
+  z1[!is.na(n)] <- sprintf("%.0f", n[!is.na(n)])
+  z2[!is.na(pct)] <- sprintf(paste0(" (%0", 3L + as.integer(digit), ".", digit, "f%%)"), 100 * pct[!is.na(pct)])
+  paste0(z1, z2)
+}
+
+"%05.2f"
+#' @export
+#' @title format count data for headers
+#' @description The function formats counts as `\n(N=XX)`. This helper
+#' function is used to add counts in columns titles.
+#' @param n count values
+#' @seealso [tabulator()], [mk_par()]
+#' @family text formatter functions
+#' @examples
+#' library(flextable)
+#'
+#' df <- data.frame(zz = 1)
+#'
+#' ft_1 <- flextable(df)
+#' ft_1 <- append_chunks(
+#'   x = ft_1, j = 1, part = "header",
+#'   value = as_chunk(fmt_header_n(200)))
+#' ft_1 <- autofit(ft_1)
+#' ft_1
+fmt_header_n <- function(n){
+  z1 <- character(length(n))
+  z1[!is.na(n)] <- sprintf("\n(N=%.0f)", n[!is.na(n)])
+  z1
+}
+
+#' @export
+#' @title format content for mean and sd
+#' @description The function formats means and
+#' standard deviations as `mean (sd)`.
+#' @param avg,dev mean and sd values
+#' @param digit1,digit2 number of digits to show when printing 'mean' and 'sd'.
+#' @seealso [tabulator()], [mk_par()]
+#' @family text formatter functions
+#' @examples
+#' library(flextable)
+#'
+#' df <- data.frame(avg = 1:3*3, sd = 1:3)
+#'
+#' ft_1 <- flextable(df, col_keys = "avg")
+#' ft_1 <- mk_par(
+#'   x = ft_1, j = 1, part = "body",
+#'   value = as_paragraph(fmt_avg_dev(avg = avg, dev = sd)))
+#' ft_1 <- autofit(ft_1)
+#' ft_1
+fmt_avg_dev <- function(avg, dev, digit1 = 1, digit2 = 1){
+  z1 <- character(length(avg))
+  z2 <- character(length(avg))
+  z1[!is.na(avg)] <- sprintf(paste0("%.", digit1, "f"), avg[!is.na(avg)])
+  z2[!is.na(dev)] <- sprintf(paste0(" (%.", digit2, "f)"), dev[!is.na(dev)])
+  paste0(z1, z2)
 }
 

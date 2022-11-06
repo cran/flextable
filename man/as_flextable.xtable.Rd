@@ -2,22 +2,9 @@
 % Please edit documentation in R/xtable_to_flextable.R
 \name{as_flextable.xtable}
 \alias{as_flextable.xtable}
-\alias{xtable_to_flextable}
 \title{get a flextable from a xtable object}
 \usage{
 \method{as_flextable}{xtable}(
-  x,
-  text.properties = fp_text_default(),
-  format.args = getOption("xtable.format.args", NULL),
-  rowname_col = "rowname",
-  hline.after = getOption("xtable.hline.after", c(-1, 0, nrow(x))),
-  NA.string = getOption("xtable.NA.string", ""),
-  include.rownames = TRUE,
-  rotate.colnames = getOption("xtable.rotate.colnames", FALSE),
-  ...
-)
-
-xtable_to_flextable(
   x,
   text.properties = fp_text_default(),
   format.args = getOption("xtable.format.args", NULL),
@@ -53,8 +40,6 @@ implemented.}
 \description{
 Get a \code{flextable} object from
 a \code{xtable} object.
-
-\code{xtable_to_flextable} will be deprecated in favor of \code{as_flextable.xtable}.
 }
 \section{Illustrations}{
 
@@ -113,6 +98,7 @@ Other as_flextable methods:
 \code{\link{as_flextable.grouped_data}()},
 \code{\link{as_flextable.htest}()},
 \code{\link{as_flextable.lm}()},
+\code{\link{as_flextable.summarizor}()},
 \code{\link{as_flextable.tabulator}()},
 \code{\link{as_flextable}()}
 }

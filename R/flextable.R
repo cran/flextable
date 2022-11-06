@@ -72,8 +72,9 @@ flextable <- function(data, col_keys = names(data),
 
   stopifnot(is.data.frame(data), ncol(data) > 0 )
   if( any( duplicated(col_keys) ) ){
-    stop("duplicated col_keys: ",
+    stop(sprintf("duplicated col_keys: %s",
          paste0(unique(col_keys[duplicated(col_keys)]), collapse = ", "))
+    )
   }
   if( inherits(data, "data.table") || inherits(data, "tbl_df") || inherits(data, "tbl") )
     data <- as.data.frame(data, stringsAsFactors = FALSE)
@@ -143,6 +144,11 @@ qflextable <- function(data){
 #' When working with 'R Markdown' or 'Quarto', the caption settings
 #' defined with `set_caption()` will be prioritized over knitr chunk options.
 #'
+#' Caption value can be a single string or the result to a call to
+#' [as_paragraph()]. With the latter, the caption is made of
+#' formatted chunks whereas with the former, caption will not be
+#' associated with any formatting.
+#'
 #' @details
 #' The values defined by `set_caption()` will be preferred when possible, i.e. the
 #' caption ID, the associated paragraph style, etc. Why specify "where possible"?
@@ -164,13 +170,26 @@ qflextable <- function(data){
 #' situation that should evolve later. flextable' will evolve according to the
 #' evolution of Quarto.
 #'
-#' Using officer enable all options specified with `set_caption()`.
+#' Using [body_add_flextable()] enable all options specified with `set_caption()`.
 #'
 #' @section R Markdown:
 #'
 #' flextable captions can be defined from R Markdown documents by using
-#' `knitr::opts_chunk$set()`. The following options are available
-#' with `officedown::rdocx_document` and/or bookdown:
+#' `knitr::opts_chunk$set()`. User don't always have to call `set_caption()`
+#' to set a caption, he can use knitr chunk options instead. A typical call
+#' would be:
+#'
+#' ``````
+#' ```{r}
+#' #| tab.id: bookmark_id
+#' #| tab.cap: caption text
+#' flextable(head(cars))
+#' ```
+#' ``````
+#'
+#' `tab.id` is the caption id or bookmark, `tab.cap` is the caption
+#' text. There are many options that can replace `set_caption()`
+#' features. The following knitr chunk options are available:
 #'
 #' | **label**                                               |    **name**     | **value**  |
 #' |:--------------------------------------------------------|:---------------:|:----------:|
@@ -179,11 +198,6 @@ qflextable <- function(data){
 #' | caption                                                 | tab.cap         |    NULL    |
 #' | display table caption on top of the table or not        | tab.topcaption  |    TRUE    |
 #' | caption table sequence identifier.                      | tab.lp          |   "tab:"   |
-#'
-#' The following options are only available when used with `officedown::rdocx_document`:
-#'
-#' | **label**                                               |    **name**     | **value**  |
-#' |:--------------------------------------------------------|:---------------:|:----------:|
 #' | prefix for numbering chunk (default to   "Table ").     | tab.cap.pre     |   Table    |
 #' | suffix for numbering chunk (default to   ": ").         | tab.cap.sep     |    " :"    |
 #' | title number depth                                      | tab.cap.tnd     |      0     |
@@ -193,10 +207,37 @@ qflextable <- function(data){
 #'
 #' See [knit_print.flextable] for more details.
 #'
+#' @section Formatting the caption:
+#'
+#' You can build your caption with `as_paragraph()`.
+#' This is recommended if your captions need complex content. The caption is build
+#' with a paragraph made of chunks (for example, a red bold text + Arial italic
+#' text).
+#'
+#' The user will then have the ability to format text and to add images
+#' and equations. If no format is specified (using `"a string"`
+#' or `as_chunk("a string")`), [fp_text_default()] is used to define
+#' font settings (font family, bold, italic, color, etc...).
+#' The default values can be changed with set_flextable_defaults().
+#' It is recommended to explicitly use  `as_chunk()`.
+#'
+#' The counterpart is that the style properties of the caption will
+#' not take precedence over those of the formatted elements. You will
+#' have to specify the font to use:
+#'
+#' ```
+#' ftab <- flextable(head(cars)) %>%
+#'   set_caption(
+#'     as_paragraph(
+#'       as_chunk("caption", props = fp_text_default(font.family = "Cambria"))
+#'     ), word_stylename = "Table Caption")
+#' print(ftab, preview = "docx")
+#' ```
+#'
 #' @section Using 'Quarto':
 #'
 #' 'Quarto' manage captions and cross-references instead of flextable. That's why
-#' `set_caption()` is not useful in a 'Quarto' document except for Word documents
+#' `set_caption()` is not that useful in a 'Quarto' document except for Word documents
 #' where 'Quarto' does not manage captions yet (when output is raw xml which is the
 #' case for flextable).
 #'
@@ -205,14 +246,24 @@ qflextable <- function(data){
 #' been defined by flextable. See Quarto documentation for more information.
 #'
 #' @param x flextable object
-#' @param caption caption value.
+#' @param caption caption value. The caption can be either a string either
+#' a call to [as_paragraph()]. In the latter case, users are free to format
+#' the caption with colors, italic fonts, also mixed with images or
+#' equations. Note that Quarto does not allow the use of this feature.
+#'
+#' Caption as a string does not support 'Markdown' syntax. If you want to
+#' add a bold text in the caption, use `as_paragraph('a ', as_b('bold'), ' text')`
+#' when providing caption.
 #' @param autonum an autonum representation. See [officer::run_autonum()].
-#' This has only an effect when output is Word. If used, the caption is preceded
-#' by an auto-number sequence. In this case, the caption is preceded by an auto-number
-#' sequence that can be cross referenced.
+#' This has an effect only when the output is "Word" (in which case the object
+#' is used to define the Word auto-numbering), "html" and "pdf" (in which case only
+#' the bookmark identifier will be used). If used, the caption is preceded
+#' by an auto-number sequence.
 #' @param word_stylename,style 'Word' style name to associate with caption paragraph. These names are available with
 #' function [officer::styles_info()] when output is Word. Argument `style`
-#' is deprecated in favor of `word_stylename`.
+#' is deprecated in favor of `word_stylename`. If the caption is defined with
+#' `as_paragraph()`, some of the formattings of the paragraph style will be
+#' replaced by the formattings associated with the chunks (such as the font).
 #' @param fp_p paragraph formatting properties associated with the caption, see [fp_par()].
 #' It applies when possible, i.e. in HTML and 'Word' but not with bookdown.
 #' @param align_with_table if TRUE, caption is aligned as the flextable, if FALSE,
@@ -245,15 +296,16 @@ set_caption <- function(x,
                         html_classes = NULL,
                         html_escape = TRUE) {
 
-  if (!inherits(x, "flextable")) {
-    stop("set_caption supports only flextable objects.")
+  if( !inherits(x, "flextable") ) {
+    stop(sprintf("Function `%s` supports only flextable objects.", "set_caption()"))
   }
 
   caption_value <- NULL
+  simple_caption <- TRUE
   if (!is.null(caption) && !inherits(caption, "paragraph")) {
-    caption_value <- as_paragraph(as_chunk(caption, props = fp_text_default()))
-    caption_value <- caption_value[[1]]
+    caption_value <- caption
   } else if (!is.null(caption) && inherits(caption, "paragraph")) {
+    simple_caption <- FALSE
     caption_value <- caption[[1]]
 
     by_columns <- c("font.size", "italic", "bold", "underlined", "color", "shading.color",
@@ -264,12 +316,14 @@ set_caption <- function(x,
       caption_value[[j]][is.na(caption_value[[j]])] <- default_fp_t[[j]]
     }
   }
-  if (!is.null(caption)) {
+  if (!is.null(caption) && !simple_caption) {
     caption_value <- expand_special_char(caption_value, what = "\n", with = "<br>")
     caption_value <- expand_special_char(caption_value, what = "\t", with = "<tab>")
   }
 
-  x$caption <- list(value = caption_value, align_with_table = align_with_table)
+  x$caption <- list(value = caption_value,
+                    simple_caption = simple_caption,
+                    align_with_table = align_with_table)
 
   if (!is.null(autonum) && inherits(autonum, "run_autonum")) {
     x$caption$autonum <- autonum
@@ -319,6 +373,47 @@ regulartable <- function( data, col_keys = names(data), cwidth = .75, cheight = 
 #' PowerPoint and PDF output. Its default value is 0, as an effect, it
 #' only use necessary width to display all content. It is not used by the
 #' PDF output.
+#' @param align alignment in document (only Word, HTML and PDF),
+#' supported values are 'left', 'center' and 'right'.
+#' @param opts_html html options as a list. Supported elements are:
+#' - 'shadow' `TRUE` or `FALSE`, use shadow dom, this option is existing
+#' to disable shadow dom (set to `FALSE`) for pagedown and Quarto that can
+#' not support it for now.
+#' - 'extra_css': extra css instructions to be integrated with the HTML
+#' code of the table.
+#' - 'scroll': NULL or a list if you want to add a scroll-box.
+#'     - Use an empty list to add an horizontal scroll.  The with
+#'     is fixed, corresponding to the container's width.
+#'     - If the list has a value named `height` it will be used as
+#'     height and the scroll will happen also vertically. The height
+#'     will be in pixel if numeric, if a string it should be a valid css
+#'     measure.
+#'     - If the list has a value named `freeze_first_column` set to `TRUE`,
+#'     the first column is set as a *sticky* column.
+#'     - If the list has a value named `add_css` it will be used as extra
+#'     css to add, .i.e: `border:1px solid red;`.
+#' @param opts_word Word options as a list. Supported elements are:
+#' - 'split':  Word option 'Allow row to break across pages' can be
+#' activated when TRUE.
+#' - 'keep_with_next': Word option 'keep rows together' is
+#' activated when TRUE. It avoids page break within tables. This
+#' is handy for small tables, i.e. less than a page height.
+#' @param opts_pdf PDF options as a list. Supported elements are:
+#' - 'tabcolsep': space between the text and the left/right border of its containing
+#' cell.
+#' - 'arraystretch': height of each row relative to its default
+#' height, the default value is 1.5.
+#' - 'float': type of floating placement in the PDF document, one of:
+#'     * 'none' (the default value), table is placed after the preceding
+#' paragraph.
+#'     * 'float', table can float to a place in the text where it fits best
+#'     * 'wrap-r', wrap text around the table positioned to the right side of the text
+#'     * 'wrap-l', wrap text around the table positioned to the left side of the text
+#'     * 'wrap-i', wrap text around the table positioned inside edge-near the binding
+#'     * 'wrap-o', wrap text around the table positioned outside edge-far from the binding
+#' - 'fonts_ignore': if TRUE, pdf-engine 'pdflatex' can be used instead of
+#' 'xelatex' or 'lualatex.' If pdflatex is used, fonts will be ignored because they are
+#' not supported by pdflatex, whereas with the xelatex and lualatex engines they are.
 #' @param word_title alternative text for Word table (used as title of the table)
 #' @param word_description alternative text for Word table (used as description of the table)
 #' @examples
@@ -326,8 +421,31 @@ regulartable <- function( data, col_keys = names(data), cwidth = .75, cheight = 
 #' ft_1 <- flextable(head(cars))
 #' ft_1 <- autofit(ft_1)
 #' ft_2 <- set_table_properties(ft_1, width = .5, layout = "autofit")
-#' ft_3 <- set_table_properties(ft_1, width = 1, layout = "autofit")
 #' ft_2
+#' ft_3 <- set_table_properties(ft_1, width = 1, layout = "autofit")
+#'
+#' # add scroll for HTML ----
+#' set.seed(2)
+#' dat <- lapply(1:14, function(x) rnorm(n = 20))
+#' dat <- setNames(dat, paste0("colname", 1:14))
+#' dat <- as.data.frame(dat)
+#'
+#' ft_4 <- flextable(dat)
+#' ft_4 <- colformat_double(ft_4)
+#' ft_4 <- bg(ft_4, j = 1, bg = "#DDDDDD", part = "all")
+#' ft_4 <- bg(ft_4, i = 1, bg = "#DDDDDD", part = "header")
+#' ft_4 <- autofit(ft_4)
+#' ft_4 <- set_table_properties(
+#'   x = ft_4,
+#'   opts_html = list(
+#'     shadow = FALSE,
+#'     scroll = list(
+#'       height = "500px",
+#'       freeze_first_column = TRUE
+#'     )
+#'   )
+#' )
+#' ft_4
 #' @family flextable dimensions
 #' @section Illustrations:
 #'
@@ -337,8 +455,11 @@ regulartable <- function( data, col_keys = names(data), cwidth = .75, cheight = 
 #'
 #' \if{html}{\figure{fig_set_table_properties_3.png}{options: width="500"}}
 set_table_properties <- function(x, layout = "fixed", width = 0,
-                                 word_title = NULL,
-                                 word_description = NULL) {
+                                 align = "center",
+                                 opts_html = list(),
+                                 opts_word = list(),
+                                 opts_pdf = list(),
+                                 word_title = NULL, word_description = NULL) {
   stopifnot(`wrong layout value` = layout %in% c("fixed", "autofit"),
             `width is not numeric` = is.numeric(width),
             `width is > 1` = width <= 1)
@@ -355,19 +476,84 @@ set_table_properties <- function(x, layout = "fixed", width = 0,
   x$properties <- list(
     layout = layout,
     width = width,
+    align = align,
+    opts_html = do.call(opts_ft_html, opts_html),
+    opts_word = do.call(opts_ft_word, opts_word),
+    opts_pdf = do.call(opts_ft_pdf, opts_pdf),
     word_title = word_title,
     word_description = word_description
   )
   x
 }
 
+opts_ft_html <- function(shadow = get_flextable_defaults()$shadow,
+                         extra_css = get_flextable_defaults()$extra_css,
+                         scroll = get_flextable_defaults()$scroll) {
+
+  if( !is.logical(shadow) || length(shadow) != 1 ){
+    stop(sprintf("'%s' is expected to be a single %s.", "shadow", "logical"), call. = FALSE)
+  }
+  if(!is.character(extra_css) || length(extra_css) != 1 || any(is.na(extra_css))){
+    stop(sprintf("'%s' is expected to be a single %s.", "extra_css", "character"), call. = FALSE)
+  }
+  if(!is.null(scroll) && !is.list(scroll)){
+    stop(sprintf("'%s' is expected to be %s.", "scroll", "NULL or a list"), call. = FALSE)
+  }
+
+  z <- list(shadow = shadow, extra_css = extra_css, scroll = scroll)
+  class(z) <- "opts_ft_html"
+  z
+}
+opts_ft_word <- function(split = get_flextable_defaults()$split, keep_with_next = get_flextable_defaults()$keep_with_next) {
+
+  if( !is.logical(split) || length(split) != 1 ){
+    stop(sprintf("'%s' is expected to be a single %s.", "split", "logical"), call. = FALSE)
+  }
+  if( !is.logical(keep_with_next) || length(keep_with_next) != 1 ){
+    stop(sprintf("'%s' is expected to be a single %s.", "keep_with_next", "logical"), call. = FALSE)
+  }
+
+  z <- list(split = split, keep_with_next = keep_with_next)
+  class(z) <- "opts_ft_word"
+  z
+}
+opts_ft_pdf <- function(tabcolsep = get_flextable_defaults()$tabcolsep,
+                        arraystretch = get_flextable_defaults()$arraystretch,
+                        float = get_flextable_defaults()$float,
+                        fonts_ignore = get_flextable_defaults()$fonts_ignore) {
+
+  if( !is.logical(fonts_ignore) || length(fonts_ignore) != 1 ){
+    stop(sprintf("'%s' is expected to be a single %s.", "fonts_ignore", "logical"), call. = FALSE)
+  }
+  if( !is.numeric(tabcolsep) || length(tabcolsep) != 1 || any(sign(tabcolsep) < 0) ){
+    stop(sprintf("'%s' is expected to be a single %s.", "tabcolsep", "positive number"), call. = FALSE)
+  }
+  if( !is.numeric(arraystretch) || length(arraystretch) != 1 || any(sign(arraystretch) < 0) ){
+    stop(sprintf("'%s' is expected to be a single %s.", "arraystretch", "positive number"), call. = FALSE)
+  }
+  if( !is.character(float) || length(float) != 1 || !all(float %in% c('none', 'float', 'wrap-r', 'wrap-l', 'wrap-i', 'wrap-o')) ){
+    stop(sprintf("'%s' is expected to be a single %s.", "float", "character (one of 'none', 'float', 'wrap-r', 'wrap-l', 'wrap-i', 'wrap-o')"), call. = FALSE)
+  }
+
+  z <- list(tabcolsep = tabcolsep,
+            arraystretch = arraystretch,
+            float = float,
+            fonts_ignore = fonts_ignore)
+  class(z) <- "opts_ft_pdf"
+  z
+}
+
 
 #' @export
 knit_print.run_reference <- function(x, ...){
   is_quarto <- isTRUE(knitr::opts_knit$get("quarto.version") > numeric_version("0"))
+  title <- ""
+  if (is_quarto) {
+    title <- opts_current_table()$cap.pre
+  }
   if(grepl( "docx", opts_knit$get("rmarkdown.pandoc.to"))) {
     knit_print( asis_output(
-      paste("`", to_wml(x), "`{=openxml}", sep = "")
+      paste(title, "`", to_wml(x), "`{=openxml}", sep = "")
     ) )
   } else if(is_quarto) {
     knit_print( asis_output(

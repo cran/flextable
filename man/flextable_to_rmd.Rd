@@ -17,6 +17,8 @@ flextable_to_rmd(
   ft.top = opts_current$get("ft.top"),
   text_after = "",
   webshot = opts_current$get("webshot"),
+  ft.htmlscroll = opts_current$get("ft.htmlscroll"),
+  ft.shadow = opts_current$get("ft.shadow"),
   bookdown = FALSE,
   quarto = FALSE,
   pandoc2 = TRUE,
@@ -32,7 +34,7 @@ flextable_to_rmd(
 \item{ft.split}{Word option 'Allow row to break across pages' can be
 activated when TRUE.}
 
-\item{ft.keepnext}{default \code{TRUE}. Word option 'keep rows
+\item{ft.keepnext}{default \code{FALSE}. Word option 'keep rows
 together' is activated when TRUE. It avoids page break
 within tables. This is handy for small tables, i.e. less than
 a page height.
@@ -70,6 +72,12 @@ For example, you can put "\\\\pagebreak" here to have tables produced with page 
 
 \item{webshot}{webshot package as a scalar character, one of "webshot" or
 "webshot2".}
+
+\item{ft.htmlscroll}{\code{TRUE} or \code{FALSE} (default) to enable horizontal scrolling.}
+
+\item{ft.shadow}{\code{TRUE} (default) or \code{FALSE} to use shadow dom (for HTML only), this option is existing
+to disable shadow dom (set to \code{FALSE}) for pagedown and Quarto that can
+not support it for now.}
 
 \item{bookdown}{\code{TRUE} or \code{FALSE} (default) to support cross referencing with bookdown.}
 
