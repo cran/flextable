@@ -39,6 +39,19 @@ htmltools_value <- function(x, ft.align = NULL, ft.shadow = NULL) {
 }
 
 #' @export
+as.character.flextable <- function(x, ...) {
+  x <- flextable_global$defaults$post_process_html(x)
+  x$properties$opts_html$shadow <- FALSE
+  caption <- caption_default_html(x, align = x$properties$align)
+  manual_css <- attr(caption, "css")
+  gen_raw_html(x,
+               class = "tabwid",
+               caption = caption,
+               manual_css = manual_css
+  )
+}
+
+#' @export
 #' @title flextable raw code
 #'
 #' @description Print openxml, latex or html code of a
@@ -431,6 +444,18 @@ knit_to_latex <- function(x, bookdown, quarto = FALSE) {
     container_str[2],
     sep = "\n\n"
   )
+  paste(
+    "\\global\\setlength{\\Oldarrayrulewidth}{\\arrayrulewidth}",
+    "\\global\\setlength{\\Oldtabcolsep}{\\tabcolsep}",
+    sprintf("\\setlength{\\tabcolsep}{%spt}", format_double(x$properties$opts_pdf$tabcolsep, 0)),
+    sprintf("\\renewcommand*{\\arraystretch}{%s}", format_double(x$properties$opts_pdf$arraystretch, 2)),
+    latex,
+    sprintf("\\arrayrulecolor[HTML]{%s}", colcode0(x$properties$opts_pdf$default_line_color)),
+    "\\global\\setlength{\\arrayrulewidth}{\\Oldarrayrulewidth}",
+    "\\global\\setlength{\\tabcolsep}{\\Oldtabcolsep}",
+    "\\renewcommand*{\\arraystretch}{1}",
+    sep = "\n\n"
+  )
 }
 
 knit_to_pml <- function(x, left = opts_current$get("ft.left"),
@@ -741,7 +766,24 @@ knit_print.flextable <- function(x, ...) {
     pandoc2 = pandoc2,
     print = FALSE, quarto = is_quarto
   )
-  knit_print(asis_output(str))
+  if (knitr::is_latex_output()) {
+    knit_print(
+      knitr::raw_block(
+        x = str, type = "latex",
+        meta = list(
+          latex_dependency(
+            name = "hhline",
+            extra_lines= c("\\newlength\\Oldarrayrulewidth",
+                           "\\newlength\\Oldtabcolsep")
+          )
+        )
+      )
+    )
+  } else {
+    knit_print(asis_output(str))
+  }
+
+
 }
 
 #' @export
@@ -984,8 +1026,9 @@ save_as_docx <- function(..., values = NULL, path, pr_section = NULL, align = "c
 #' @family flextable print function
 save_as_image <- function(x, path, zoom = 3, expand = 10, webshot = "webshot") {
   if (!inherits(x, "flextable")) {
-    stop("x must be a flextable")
+    stop(sprintf("Function `%s` supports only flextable objects.", as.character(sys.call()[[1]])))
   }
+
   if (!requireNamespace(webshot, quietly = TRUE)) {
     stop(sprintf(
       "'%s' package should be installed to create an image from a flextable.",

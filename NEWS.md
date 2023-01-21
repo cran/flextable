@@ -1,3 +1,22 @@
+# flextable 0.8.4
+
+## new features
+
+- new argument `expand_single` in `as_flextable.tabulator()`. If `FALSE`,
+groups with only one row will not be expanded with a title row.
+- argument `labels` of `labelizor()` now support functions in 
+addition to named vectors.
+- `as.character()` now returns the HTML string of the table
+- new method `as_flextable` for data.frame using `df_printer()` function
+implementation.
+
+## Issues
+
+- fix mis-calculated columns widths in latex
+- fix horizontal lines in latex tables
+- adapt latex table container to quarto changes
+- Word caption: autonumber works without bookmark
+
 # flextable 0.8.3
 
 ## new features

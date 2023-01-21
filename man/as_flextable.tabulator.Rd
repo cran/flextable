@@ -13,6 +13,7 @@
   columns_alignment = "center",
   label_rows = x$rows,
   spread_first_col = FALSE,
+  expand_single = FALSE,
   sep_w = 0.05,
   unit = "in",
   ...
@@ -38,6 +39,11 @@ be matched based on the names.}
 \item{spread_first_col}{if TRUE, first row is spread as a new line separator
 instead of being a column. This helps to reduce the width and allows for
 clear divisions.}
+
+\item{expand_single}{if FALSE (the default), groups with only one
+row will not be expanded with a title row. If TRUE,
+single row groups and multi-row groups are all
+restructured.}
 
 \item{sep_w}{blank column separators'width to be used. If 0,
 blank column separators will not be used.}
@@ -90,11 +96,14 @@ init_flextable_defaults()
 \code{\link[=summarizor]{summarizor()}}, \code{\link[=as_grouped_data]{as_grouped_data()}}
 
 Other as_flextable methods: 
-\code{\link{as_flextable.gam}()},
+\code{\link{as_flextable.data.frame}()},
 \code{\link{as_flextable.glm}()},
 \code{\link{as_flextable.grouped_data}()},
 \code{\link{as_flextable.htest}()},
+\code{\link{as_flextable.kmeans}()},
 \code{\link{as_flextable.lm}()},
+\code{\link{as_flextable.merMod}()},
+\code{\link{as_flextable.pam}()},
 \code{\link{as_flextable.summarizor}()},
 \code{\link{as_flextable.xtable}()},
 \code{\link{as_flextable}()}

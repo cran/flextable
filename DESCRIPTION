@@ -1,10 +1,11 @@
 Package: flextable
 Type: Package
 Title: Functions for Tabular Reporting
-Version: 0.8.3
+Version: 0.8.4
 Authors@R: c(
     person("David", "Gohel", role = c("aut", "cre"),
     email = "david.gohel@ardata.fr"),
+    person(given = "ArData", role = "cph"),
     person("Clementine", "Jager", role = "ctb"),
     person("Panagiotis", "Skintzos", role = "aut", email = "panagiotis.skintzos@ardata.fr"),
     person("Quentin", "Fazilleau", role = "ctb"),
@@ -21,12 +22,12 @@ Description: Create pretty tables for 'HTML', 'PDF', 'Microsoft Word', 'Microsof
   create tables, modify and format their content. It also extends package 'officer' that does 
   not contain any feature for customized tabular reporting.
 License: GPL-3
-Imports: stats, utils, grDevices, graphics, officer (>= 0.4.4),
+Imports: stats, utils, grDevices, graphics, officer (>= 0.5.1),
         rmarkdown, knitr, htmltools, xml2, data.table (>= 1.13.0), uuid
         (>= 0.1-4), gdtools (>= 0.1.6), rlang, base64enc, grid
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Suggests: testthat (>= 2.1.0), magick, equatags, commonmark, ggplot2,
-        scales, webshot, doconv (>= 0.1.4), locatexec, xtable, broom,
+        scales, webshot2, doconv (>= 0.3.0), xtable, broom,
         broom.mixed, mgcv, cluster, lme4, nlme, bookdown, pdftools,
         officedown
 Encoding: UTF-8
@@ -35,8 +36,9 @@ URL: https://ardata-fr.github.io/flextable-book/,
 BugReports: https://github.com/davidgohel/flextable/issues
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2022-11-05 17:42:24 UTC; davidgohel
+Packaged: 2023-01-21 00:18:53 UTC; davidgohel
 Author: David Gohel [aut, cre],
+  ArData [cph],
   Clementine Jager [ctb],
   Panagiotis Skintzos [aut],
   Quentin Fazilleau [ctb],
@@ -50,4 +52,4 @@ Author: David Gohel [aut, cre],
     theme_apa)
 Maintainer: David Gohel <david.gohel@ardata.fr>
 Repository: CRAN
-Date/Publication: 2022-11-06 15:00:08 UTC
+Date/Publication: 2023-01-21 01:10:02 UTC

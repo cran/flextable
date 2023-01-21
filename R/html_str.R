@@ -70,7 +70,7 @@ gen_raw_html <- function(x,
     x$properties$opts_html$extra_css,
     manual_css_str,
     "</style>",
-    sprintf("<table class='%s'>", classname),
+    sprintf("<table data-quarto-disable-processing='true' class='%s'>", classname),
     caption,
     codes$html,
     "</table>"
@@ -439,6 +439,7 @@ cell_css_styles <- function(x, add_widths = TRUE){
 #' @examples
 #' if(require("htmltools"))
 #'   div(flextable_html_dependency())
+#' @keywords internal
 flextable_html_dependency <- function(){
   htmlDependency("tabwid",
                  "1.1.2",

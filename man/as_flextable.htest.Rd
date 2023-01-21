@@ -15,12 +15,6 @@
 produce a flextable describing an
 object oof class \code{htest}.
 }
-\section{Illustrations}{
-
-
-\if{html}{\figure{fig_as_flextable.htest_1.png}{options: width="500"}}
-}
-
 \examples{
 if(require("stats")){
   M <- as.table(rbind(c(762, 327, 468), c(484, 239, 477)))
@@ -32,10 +26,13 @@ if(require("stats")){
 }
 \seealso{
 Other as_flextable methods: 
-\code{\link{as_flextable.gam}()},
+\code{\link{as_flextable.data.frame}()},
 \code{\link{as_flextable.glm}()},
 \code{\link{as_flextable.grouped_data}()},
+\code{\link{as_flextable.kmeans}()},
 \code{\link{as_flextable.lm}()},
+\code{\link{as_flextable.merMod}()},
+\code{\link{as_flextable.pam}()},
 \code{\link{as_flextable.summarizor}()},
 \code{\link{as_flextable.tabulator}()},
 \code{\link{as_flextable.xtable}()},

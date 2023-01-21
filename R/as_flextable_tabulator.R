@@ -7,7 +7,9 @@
 #' allows to define any display with the syntax of flextable in
 #' a table whose layout is showing dimensions of the aggregation
 #' across rows and columns.
-#'
+#' \if{html}{\out{
+#' <img src="https://www.ardata.fr/img/flextable-imgs/ft-0-7-2-001-square.png" alt="tabulator illustration" style="width:100\%;">
+#' }}
 #' @note
 #' This is very first version of the function; be aware it
 #' can evolve or change.
@@ -123,15 +125,6 @@
 #' }
 #'
 #' init_flextable_defaults()
-#' @section Illustrations:
-#'
-#' ft_1 appears as:
-#'
-#' \if{html}{\figure{fig_tabulator_1.png}{options: width="300"}}
-#'
-#' ft_2 appears as:
-#'
-#' \if{html}{\figure{fig_tabulator_2.png}{options: width="500"}}
 #' @importFrom rlang enquos enquo call_args
 #' @importFrom data.table rleidv as.data.table
 #' @seealso [as_flextable.tabulator()], [summarizor()],
@@ -233,6 +226,10 @@ tabulator <- function(x, rows, columns,
 #' @param spread_first_col if TRUE, first row is spread as a new line separator
 #' instead of being a column. This helps to reduce the width and allows for
 #' clear divisions.
+#' @param expand_single if FALSE (the default), groups with only one
+#' row will not be expanded with a title row. If TRUE,
+#' single row groups and multi-row groups are all
+#' restructured.
 #' @param sep_w blank column separators'width to be used. If 0,
 #' blank column separators will not be used.
 #' @param unit unit of argument `sep_w`, one of "in", "cm", "mm".
@@ -280,6 +277,7 @@ as_flextable.tabulator <- function(
     small_border = fp_border_default(width = .75),
     rows_alignment = "left", columns_alignment = "center",
     label_rows = x$rows, spread_first_col = FALSE,
+    expand_single = FALSE,
     sep_w = .05, unit = "in", ...) {
 
   # get necessary element
@@ -289,7 +287,7 @@ as_flextable.tabulator <- function(
   columns <- x$columns
 
   if(spread_first_col){
-    dat <- as_grouped_data(dat, groups = rows[1])
+    dat <- as_grouped_data(dat, groups = rows[1], expand_single = expand_single)
   }
 
   visible_columns <- x$visible_columns
