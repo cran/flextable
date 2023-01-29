@@ -1,7 +1,7 @@
 Package: flextable
 Type: Package
 Title: Functions for Tabular Reporting
-Version: 0.8.4
+Version: 0.8.5
 Authors@R: c(
     person("David", "Gohel", role = c("aut", "cre"),
     email = "david.gohel@ardata.fr"),
@@ -22,21 +22,21 @@ Description: Create pretty tables for 'HTML', 'PDF', 'Microsoft Word', 'Microsof
   create tables, modify and format their content. It also extends package 'officer' that does 
   not contain any feature for customized tabular reporting.
 License: GPL-3
-Imports: stats, utils, grDevices, graphics, officer (>= 0.5.1),
+Imports: stats, utils, grDevices, graphics, officer (>= 0.5.2),
         rmarkdown, knitr, htmltools, xml2, data.table (>= 1.13.0), uuid
-        (>= 0.1-4), gdtools (>= 0.1.6), rlang, base64enc, grid
+        (>= 0.1-4), gdtools (>= 0.3.0), rlang, base64enc, grid
 RoxygenNote: 7.2.3
 Suggests: testthat (>= 2.1.0), magick, equatags, commonmark, ggplot2,
         scales, webshot2, doconv (>= 0.3.0), xtable, broom,
         broom.mixed, mgcv, cluster, lme4, nlme, bookdown, pdftools,
-        officedown
+        officedown, pkgdown (>= 2.0.0), ragg
 Encoding: UTF-8
 URL: https://ardata-fr.github.io/flextable-book/,
         https://davidgohel.github.io/flextable/
 BugReports: https://github.com/davidgohel/flextable/issues
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2023-01-21 00:18:53 UTC; davidgohel
+Packaged: 2023-01-29 22:12:24 UTC; davidgohel
 Author: David Gohel [aut, cre],
   ArData [cph],
   Clementine Jager [ctb],
@@ -52,4 +52,4 @@ Author: David Gohel [aut, cre],
     theme_apa)
 Maintainer: David Gohel <david.gohel@ardata.fr>
 Repository: CRAN
-Date/Publication: 2023-01-21 01:10:02 UTC
+Date/Publication: 2023-01-29 23:00:03 UTC
