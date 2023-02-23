@@ -2,7 +2,7 @@
 % Please edit documentation in R/summarizor.R
 \name{as_flextable.summarizor}
 \alias{as_flextable.summarizor}
-\title{summarizor to flextable}
+\title{Transform a 'summarizor' object into a flextable}
 \usage{
 \method{as_flextable}{summarizor}(x, ...)
 }
@@ -12,7 +12,7 @@
 \item{...}{arguments for \code{\link[=as_flextable.tabulator]{as_flextable.tabulator()}}}
 }
 \description{
-\code{summarizor} object can be transformed as a flextable
+\code{summarizor} object should be transformed into a flextable
 with method \code{\link[=as_flextable]{as_flextable()}}.
 }
 \examples{
@@ -30,6 +30,7 @@ ft_1
 \seealso{
 Other as_flextable methods: 
 \code{\link{as_flextable.data.frame}()},
+\code{\link{as_flextable.gam}()},
 \code{\link{as_flextable.glm}()},
 \code{\link{as_flextable.grouped_data}()},
 \code{\link{as_flextable.htest}()},
@@ -37,6 +38,7 @@ Other as_flextable methods:
 \code{\link{as_flextable.lm}()},
 \code{\link{as_flextable.merMod}()},
 \code{\link{as_flextable.pam}()},
+\code{\link{as_flextable.tabular}()},
 \code{\link{as_flextable.tabulator}()},
 \code{\link{as_flextable.xtable}()},
 \code{\link{as_flextable}()}

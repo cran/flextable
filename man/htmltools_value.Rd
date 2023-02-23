@@ -2,7 +2,7 @@
 % Please edit documentation in R/printers.R
 \name{htmltools_value}
 \alias{htmltools_value}
-\title{flextable as an HTML object}
+\title{flextable as an 'HTML' object}
 \usage{
 htmltools_value(x, ft.align = NULL, ft.shadow = NULL)
 }
@@ -11,9 +11,7 @@ htmltools_value(x, ft.align = NULL, ft.shadow = NULL)
 
 \item{ft.align}{flextable alignment, supported values are 'left', 'center' and 'right'.}
 
-\item{ft.shadow}{use shadow dom, this option is existing
-to disable shadow dom (set to \code{FALSE}) for pagedown that
-can not support it for now.}
+\item{ft.shadow}{deprecated.}
 }
 \value{
 an object marked as \link{HTML} ready to be used within
@@ -39,6 +37,7 @@ Other flextable print function:
 \code{\link{save_as_docx}()},
 \code{\link{save_as_html}()},
 \code{\link{save_as_image}()},
-\code{\link{save_as_pptx}()}
+\code{\link{save_as_pptx}()},
+\code{\link{to_html.flextable}()}
 }
 \concept{flextable print function}

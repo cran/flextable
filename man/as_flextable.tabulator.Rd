@@ -2,7 +2,7 @@
 % Please edit documentation in R/as_flextable_tabulator.R
 \name{as_flextable.tabulator}
 \alias{as_flextable.tabulator}
-\title{tabulator to flextable}
+\title{Transform a 'tabulator' object into a flextable}
 \usage{
 \method{as_flextable}{tabulator}(
   x,
@@ -53,7 +53,7 @@ blank column separators will not be used.}
 \item{...}{unused argument}
 }
 \description{
-\code{tabulator} object can be transformed as a flextable
+\code{\link[=tabulator]{tabulator()}} object can be transformed as a flextable
 with method \code{\link[=as_flextable]{as_flextable()}}.
 }
 \examples{
@@ -97,6 +97,7 @@ init_flextable_defaults()
 
 Other as_flextable methods: 
 \code{\link{as_flextable.data.frame}()},
+\code{\link{as_flextable.gam}()},
 \code{\link{as_flextable.glm}()},
 \code{\link{as_flextable.grouped_data}()},
 \code{\link{as_flextable.htest}()},
@@ -105,6 +106,7 @@ Other as_flextable methods:
 \code{\link{as_flextable.merMod}()},
 \code{\link{as_flextable.pam}()},
 \code{\link{as_flextable.summarizor}()},
+\code{\link{as_flextable.tabular}()},
 \code{\link{as_flextable.xtable}()},
 \code{\link{as_flextable}()}
 }

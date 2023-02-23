@@ -1,5 +1,5 @@
 #' @export
-#' @title add flextable into a Word document
+#' @title Add flextable into a Word document
 #' @description add a flextable into a Word document.
 #' @param x an rdocx object
 #' @param value `flextable` object
@@ -52,7 +52,7 @@ body_add_flextable <- function(x, value,
   value <- flextable_global$defaults$post_process_docx(value)
 
   caption_str <- NULL
-  if (!is.null(value$caption$value)) {
+  if (has_caption(value)) {
     if (topcaption) {
       apply_cap_kwn <- TRUE
     } else {
@@ -61,9 +61,7 @@ body_add_flextable <- function(x, value,
     }
     caption_str <- caption_default_docx_openxml(
       x = value,
-      align = value$properties$align,
       keep_with_next = apply_cap_kwn,
-      tab_props = list(),
       allow_autonum = TRUE
     )
     if ("" %in% caption_str) caption_str <- NULL
@@ -97,25 +95,26 @@ body_replace_flextable_at_bkm <- function(x, bookmark, value, align = "center", 
 }
 
 #' @export
-#' @title add flextable at a bookmark location in document's header
+#' @title Add flextable at a bookmark location in document's header
 #' @description replace in the header of a document  a paragraph containing a bookmark by a flextable.
 #' A bookmark will be considered as valid if enclosing words
 #' within a paragraph; i.e., a bookmark along two or more paragraphs is invalid,
 #' a bookmark set on a whole paragraph is also invalid, but bookmarking few words
 #' inside a paragraph is valid.
-#' @importFrom xml2 xml_replace as_xml_document
+#' @importFrom xml2 xml_replace as_xml_document xml_find_first xml_parent
 #' @param x an rdocx object
 #' @param bookmark bookmark id
 #' @param value a flextable object
+#' @keywords internal
 headers_flextable_at_bkm <- function(x, bookmark, value) {
   stopifnot(inherits(x, "rdocx"), inherits(value, "flextable"))
   str <- gen_raw_wml(value, doc = x)
   xml_elt <- as_xml_document(str)
   for (header in x$headers) {
-    if (header$has_bookmark(bookmark)) {
-      header$cursor_bookmark(bookmark)
-      cursor_elt <- header$get_at_cursor()
-      xml_replace(cursor_elt, xml_elt)
+    node <- xml_find_first(header$get(), '//w:bookmarkStart[@w:name="hd_summary_tbl"]')
+    if (!inherits(node, "xml_missing")) {
+      node <- xml_parent(node)
+      xml_replace(node, xml_elt)
     }
   }
 
@@ -123,7 +122,7 @@ headers_flextable_at_bkm <- function(x, bookmark, value) {
 }
 
 #' @export
-#' @title add flextable at a bookmark location in document's footer
+#' @title Add flextable at a bookmark location in document's footer
 #' @description replace in the footer of a document  a paragraph containing a bookmark by a flextable.
 #' A bookmark will be considered as valid if enclosing words
 #' within a paragraph; i.e., a bookmark along two or more paragraphs is invalid,
@@ -132,15 +131,16 @@ headers_flextable_at_bkm <- function(x, bookmark, value) {
 #' @param x an rdocx object
 #' @param bookmark bookmark id
 #' @param value a flextable object
+#' @keywords internal
 footers_flextable_at_bkm <- function(x, bookmark, value) {
   stopifnot(inherits(x, "rdocx"), inherits(value, "flextable"))
   str <- gen_raw_wml(value, doc = x)
   xml_elt <- as_xml_document(str)
   for (footer in x$footers) {
-    if (footer$has_bookmark(bookmark)) {
-      footer$cursor_bookmark(bookmark)
-      cursor_elt <- footer$get_at_cursor()
-      xml_replace(cursor_elt, xml_elt)
+    node <- xml_find_first(footer$get(), '//w:bookmarkStart[@w:name="hd_summary_tbl"]')
+    if (!inherits(node, "xml_missing")) {
+      node <- xml_parent(node)
+      xml_replace(node, xml_elt)
     }
   }
 

@@ -1,5 +1,5 @@
 #' @export
-#' @title tabular summary for gam object
+#' @title Transform a 'gam' model into a flextable
 #' @description produce a flextable describing a
 #' generalized additive model produced by function `mgcv::gam`.
 #' \if{html}{\out{
@@ -7,6 +7,7 @@
 #' }}
 #' @param x gam model
 #' @param ... unused argument
+#' @family as_flextable methods
 #' @examples
 #' if (require("mgcv")) {
 #'   set.seed(2)

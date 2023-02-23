@@ -2,7 +2,7 @@
 % Please edit documentation in R/printers.R
 \name{save_as_pptx}
 \alias{save_as_pptx}
-\title{save flextable objects in an PowerPoint file}
+\title{Save flextable objects in a 'PowerPoint' file}
 \usage{
 save_as_pptx(..., values = NULL, path)
 }
@@ -48,6 +48,7 @@ Other flextable print function:
 \code{\link{print.flextable}()},
 \code{\link{save_as_docx}()},
 \code{\link{save_as_html}()},
-\code{\link{save_as_image}()}
+\code{\link{save_as_image}()},
+\code{\link{to_html.flextable}()}
 }
 \concept{flextable print function}

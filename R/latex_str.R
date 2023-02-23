@@ -1,5 +1,5 @@
 #' @export
-#' @title add latex dependencies
+#' @title Add latex dependencies
 #' @description Manually add flextable latex dependencies to
 #' the knitr session via [knit_meta_add()].
 #'
@@ -13,15 +13,22 @@
 #' @examples
 #' add_latex_dep()
 #' @keywords internal
+#' @importFrom knitr knit_meta_add
 add_latex_dep <- function(float = FALSE, wrapfig = FALSE){
 
-  pandoc_to <- opts_knit$get("rmarkdown.pandoc.to")
-  if(is.null(pandoc_to)) pandoc_to <- ""
-  if(!grepl("latex", pandoc_to)){
-    return(invisible(NULL))
+  knit_meta_add(list_latex_dep(float = float, wrapfig = wrapfig))
+
+  invisible(NULL)
+}
+
+#' @importFrom rmarkdown latex_dependency
+list_latex_dep <- function(float = FALSE, wrapfig = FALSE){
+
+  if(!is_latex_output()){
+    return(list())
   }
 
-  is_quarto <- isTRUE(knitr::opts_knit$get("quarto.version") > numeric_version("0"))
+  is_quarto <- is_in_quarto()
 
   fonts_ignore <- flextable_global$defaults$fonts_ignore
   fontspec_compat <- get_pdf_engine() %in% c("xelatex", "lualatex")
@@ -35,29 +42,31 @@ add_latex_dep <- function(float = FALSE, wrapfig = FALSE){
             call. = FALSE
     )
   }
-  if (fontspec_compat || is_quarto) {
-    usepackage_latex("fontspec")
-  }
-  usepackage_latex("multirow")
-  usepackage_latex("multicol")
-  usepackage_latex("colortbl")
-  usepackage_latex(
-    name = "hhline",
-    extra_lines= c("\\newlength\\Oldarrayrulewidth",
-                   "\\newlength\\Oldtabcolsep")
-  )
 
-  latex_dependency(
+  x <- list()
+
+  if (fontspec_compat || is_quarto) {
+    x$fontspec <- latex_dependency("fontspec")
+  }
+  x$multirow <- latex_dependency("multirow")
+  x$multicol <- latex_dependency("multicol")
+  x$colortbl <- latex_dependency("colortbl")
+  x$hhline <- latex_dependency(
     name = "hhline",
     extra_lines= c("\\newlength\\Oldarrayrulewidth",
                    "\\newlength\\Oldtabcolsep")
   )
-  usepackage_latex("longtable")
-  if(float) usepackage_latex("float")
-  if(wrapfig) usepackage_latex("wrapfig")
-  usepackage_latex("array")
-  usepackage_latex("hyperref")
-  invisible(NULL)
+  x$longtable <- latex_dependency("longtable")
+  x$array <- latex_dependency("array")
+  x$hyperref <- latex_dependency("hyperref")
+
+  if(float) {
+    x$float <- latex_dependency("float")
+  }
+  if(wrapfig) {
+    x$wrapfig <- latex_dependency("wrapfig")
+  }
+  x
 }
 
 
@@ -290,7 +299,8 @@ augment_multicolumn_fixed <- function(properties_df) {
         ">{", .SD$background_color,
         c("center" = "\\centering", left = "\\raggedright", right = "\\raggedleft")[.SD$text.align],
         "}",
-        "p{", latex_colwidth(.SD), "}",
+        c(center = "m", "top" = "p", "bottom" = "b")[.SD$vertical.align],
+        "{", latex_colwidth(.SD), "}",
         .SD$vborder_right,
         "}{"
       ),
@@ -367,12 +377,6 @@ calc_column_size <- function(df, levels) {
 }
 
 # tools ----
-#' @importFrom knitr knit_meta_add
-#' @importFrom rmarkdown latex_dependency
-usepackage_latex <- function(name, ...) {
-  knit_meta_add(list(latex_dependency(name, ...)))
-}
-
 merge_table_properties <- function(x) {
   cell_data <- fortify_style(x, "cells")
   par_data <- fortify_style(x, "pars")

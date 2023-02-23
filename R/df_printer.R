@@ -57,13 +57,18 @@ df_printer <- function(dat, ...) {
   )
   args$x <- dat
 
+  if (is.null(knitr::pandoc_to())) {
+    message("this function is to be used in a knitr context.")
+    return(invisible(FALSE))
+  }
+
   knitr::knit_print(
     do.call(as_flextable, args)
   )
 }
 
 #' @export
-#' @title set data.frame automatic printing as a flextable
+#' @title Set data.frame automatic printing as a flextable
 #' @description Define [df_printer()] as data.frame
 #' print method in an R Markdown document.
 #'

@@ -2,7 +2,7 @@
 % Please edit documentation in R/as_flextable.R
 \name{as_flextable}
 \alias{as_flextable}
-\title{method to convert object to flextable}
+\title{Method to transform objects into flextables}
 \usage{
 as_flextable(x, ...)
 }
@@ -21,6 +21,7 @@ see what arguments can be used.
 \seealso{
 Other as_flextable methods: 
 \code{\link{as_flextable.data.frame}()},
+\code{\link{as_flextable.gam}()},
 \code{\link{as_flextable.glm}()},
 \code{\link{as_flextable.grouped_data}()},
 \code{\link{as_flextable.htest}()},
@@ -29,6 +30,7 @@ Other as_flextable methods:
 \code{\link{as_flextable.merMod}()},
 \code{\link{as_flextable.pam}()},
 \code{\link{as_flextable.summarizor}()},
+\code{\link{as_flextable.tabular}()},
 \code{\link{as_flextable.tabulator}()},
 \code{\link{as_flextable.xtable}()}
 }

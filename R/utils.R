@@ -33,16 +33,6 @@ absolute_path <- function(x) {
   epath
 }
 
-#' @importFrom knitr opts_current
-ref_label <- function(base = "tab:") {
-  label <- opts_current$get("label")
-  if (is.null(label)) {
-    return("")
-  }
-  paste0("(\\#", base, label, ")")
-}
-
-
 #' @importFrom stats median median sd mad
 #' @importFrom stats quantile
 Q1 <- function(z) as.double(quantile(z, probs = .25, na.rm = TRUE, names = FALSE))
@@ -57,7 +47,6 @@ N <- function(z) length(z)
 NAS <- function(z) sum(is.na(z))
 
 
-#' @importFrom uuid UUIDgenerate
 as_bookmark <- function(id, str) {
   new_id <- UUIDgenerate()
   bm_start_str <- sprintf("<w:bookmarkStart w:id=\"%s\" w:name=\"%s\"/>", new_id, id)
@@ -188,19 +177,4 @@ if (!"gregexec" %in% getNamespaceExports("base")) {
       res
     }
   }
-}
-.url_special_chars <- list(
-  `&` = '&amp;',
-  `<` = '&lt;',
-  `>` = '&gt;',
-  `'` = '&#39;',
-  `"` = '&quot;',
-  ` ` = "&nbsp;"
-)
-officer_url_encode <- function(x) {
-  for (chr in names(.url_special_chars)) {
-    x <- gsub(chr, .url_special_chars[[chr]], x, fixed = TRUE, useBytes = TRUE)
-  }
-  Encoding(x) <- "UTF-8"
-  x
 }

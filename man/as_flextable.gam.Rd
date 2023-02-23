@@ -2,7 +2,7 @@
 % Please edit documentation in R/as_flextable_gam.R
 \name{as_flextable.gam}
 \alias{as_flextable.gam}
-\title{tabular summary for gam object}
+\title{Transform a 'gam' model into a flextable}
 \usage{
 \method{as_flextable}{gam}(x, ...)
 }
@@ -32,3 +32,20 @@ if (require("mgcv")) {
   ft
 }
 }
+\seealso{
+Other as_flextable methods: 
+\code{\link{as_flextable.data.frame}()},
+\code{\link{as_flextable.glm}()},
+\code{\link{as_flextable.grouped_data}()},
+\code{\link{as_flextable.htest}()},
+\code{\link{as_flextable.kmeans}()},
+\code{\link{as_flextable.lm}()},
+\code{\link{as_flextable.merMod}()},
+\code{\link{as_flextable.pam}()},
+\code{\link{as_flextable.summarizor}()},
+\code{\link{as_flextable.tabular}()},
+\code{\link{as_flextable.tabulator}()},
+\code{\link{as_flextable.xtable}()},
+\code{\link{as_flextable}()}
+}
+\concept{as_flextable methods}

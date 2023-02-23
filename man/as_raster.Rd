@@ -2,17 +2,12 @@
 % Please edit documentation in R/printers.R
 \name{as_raster}
 \alias{as_raster}
-\title{get a flextable as a raster}
+\title{Transform a flextable into a raster}
 \usage{
-as_raster(x, zoom = 2, expand = 2, webshot = "webshot", ...)
+as_raster(x, ...)
 }
 \arguments{
 \item{x}{a flextable object}
-
-\item{zoom, expand}{parameters used by \code{webshot} function.}
-
-\item{webshot}{webshot package as a scalar character, one of "webshot" or
-"webshot2".}
 
 \item{...}{additional arguments passed to other functions}
 }
@@ -22,12 +17,12 @@ raster. This function has been implemented to let flextable be printed
 on a ggplot object.
 }
 \note{
-This function requires packages: webshot and magick.
+This function requires package 'magick'.
 }
 \examples{
 ft <- qflextable(head(mtcars))
 \dontrun{
-if (require("ggplot2") && require("webshot")) {
+if (require("ggplot2") && require("magick")) {
   print(qplot(speed, dist, data = cars, geom = "point"))
   grid::grid.raster(as_raster(ft))
 }
@@ -45,6 +40,7 @@ Other flextable print function:
 \code{\link{save_as_docx}()},
 \code{\link{save_as_html}()},
 \code{\link{save_as_image}()},
-\code{\link{save_as_pptx}()}
+\code{\link{save_as_pptx}()},
+\code{\link{to_html.flextable}()}
 }
 \concept{flextable print function}

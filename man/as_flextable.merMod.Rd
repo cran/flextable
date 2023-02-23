@@ -8,7 +8,7 @@
 \alias{as_flextable.brmsfit}
 \alias{as_flextable.glmmTMB}
 \alias{as_flextable.glmmadmb}
-\title{tabular summary for mixed model}
+\title{Transform a mixed model into a flextable}
 \usage{
 \method{as_flextable}{merMod}(x, ...)
 
@@ -44,6 +44,7 @@ if(require("broom.mixed") && require("nlme")){
 \seealso{
 Other as_flextable methods: 
 \code{\link{as_flextable.data.frame}()},
+\code{\link{as_flextable.gam}()},
 \code{\link{as_flextable.glm}()},
 \code{\link{as_flextable.grouped_data}()},
 \code{\link{as_flextable.htest}()},
@@ -51,6 +52,7 @@ Other as_flextable methods:
 \code{\link{as_flextable.lm}()},
 \code{\link{as_flextable.pam}()},
 \code{\link{as_flextable.summarizor}()},
+\code{\link{as_flextable.tabular}()},
 \code{\link{as_flextable.tabulator}()},
 \code{\link{as_flextable.xtable}()},
 \code{\link{as_flextable}()}

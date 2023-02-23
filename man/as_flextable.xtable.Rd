@@ -2,7 +2,7 @@
 % Please edit documentation in R/xtable_to_flextable.R
 \name{as_flextable.xtable}
 \alias{as_flextable.xtable}
-\title{get a flextable from a xtable object}
+\title{Transform a 'xtable' object into a flextable}
 \usage{
 \method{as_flextable}{xtable}(
   x,
@@ -84,6 +84,7 @@ if( require("xtable") ){
 \seealso{
 Other as_flextable methods: 
 \code{\link{as_flextable.data.frame}()},
+\code{\link{as_flextable.gam}()},
 \code{\link{as_flextable.glm}()},
 \code{\link{as_flextable.grouped_data}()},
 \code{\link{as_flextable.htest}()},
@@ -92,6 +93,7 @@ Other as_flextable methods:
 \code{\link{as_flextable.merMod}()},
 \code{\link{as_flextable.pam}()},
 \code{\link{as_flextable.summarizor}()},
+\code{\link{as_flextable.tabular}()},
 \code{\link{as_flextable.tabulator}()},
 \code{\link{as_flextable}()}
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/as_flextable.R
 \name{as_flextable.kmeans}
 \alias{as_flextable.kmeans}
-\title{tabular summary for kmeans}
+\title{Transform a 'kmeans' object into a flextable}
 \usage{
 \method{as_flextable}{kmeans}(x, digits = 4, ...)
 }
@@ -28,6 +28,7 @@ if(require("stats")){
 \seealso{
 Other as_flextable methods: 
 \code{\link{as_flextable.data.frame}()},
+\code{\link{as_flextable.gam}()},
 \code{\link{as_flextable.glm}()},
 \code{\link{as_flextable.grouped_data}()},
 \code{\link{as_flextable.htest}()},
@@ -35,6 +36,7 @@ Other as_flextable methods:
 \code{\link{as_flextable.merMod}()},
 \code{\link{as_flextable.pam}()},
 \code{\link{as_flextable.summarizor}()},
+\code{\link{as_flextable.tabular}()},
 \code{\link{as_flextable.tabulator}()},
 \code{\link{as_flextable.xtable}()},
 \code{\link{as_flextable}()}

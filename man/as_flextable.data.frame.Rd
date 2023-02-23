@@ -2,7 +2,8 @@
 % Please edit documentation in R/as_flextable.R
 \name{as_flextable.data.frame}
 \alias{as_flextable.data.frame}
-\title{Printing data.frame summary as a flextable}
+\title{Transform and summarise a 'data.frame' into a flextable
+Simple summary of a data.frame as a flextable}
 \usage{
 \method{as_flextable}{data.frame}(
   x,
@@ -54,6 +55,7 @@ as_flextable(mtcars)
 }
 \seealso{
 Other as_flextable methods: 
+\code{\link{as_flextable.gam}()},
 \code{\link{as_flextable.glm}()},
 \code{\link{as_flextable.grouped_data}()},
 \code{\link{as_flextable.htest}()},
@@ -62,6 +64,7 @@ Other as_flextable methods:
 \code{\link{as_flextable.merMod}()},
 \code{\link{as_flextable.pam}()},
 \code{\link{as_flextable.summarizor}()},
+\code{\link{as_flextable.tabular}()},
 \code{\link{as_flextable.tabulator}()},
 \code{\link{as_flextable.xtable}()},
 \code{\link{as_flextable}()}

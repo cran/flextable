@@ -1,3 +1,48 @@
+# flextable 0.8.6
+
+In short: 
+
+- RTF support, 
+- revealjs support,
+- preserve all aspects within Quarto html format
+- use grid graphics for saving as png (no need for "webshot" or "webshot2" packages)
+- support for `tables::tabular()`: "Computes a table of summary statistics, cross-classified by various variables"
+
+## new features
+
+- add RTF support with `officer::rtf_add()`.
+- new convert `tables::tabular()` to flextable with new 
+function `as_flextable.tabular()`.
+- add `to_html.flextable()` to make easy embedding of 
+flextable results in HTML (with 'ggiraph' for example).
+- add global setting `border.width` (see `?set_flextable_defaults()`) 
+and set its default value to .75, this setting is 
+used in theme functions. The old default value was hard coded 
+to 1 and can be defined during the whole R session with
+`set_flextable_defaults(border.width = 1)`.
+
+## internals
+
+- drop 'base64enc' dependency and use 'officer' functions
+as replacement. 
+- Use `officer_url_encode()` to encode URL in office files.
+- refactor `knit_print.flextable()` and related functions. 
+- drop webshot dependency to produce images, now using package
+'ragg'.
+- refactor captions: knitr context now updates the caption 
+instead of managing caption value and defined knitr 
+options.
+- use shadow in all HTML output generated via knitr 
+(i.e. 'Quarto' and 'R Markdown').
+
+## issues
+
+- support revealjs (and probably all RMD formats that generate HTML)
+- fix cell's vertical alignments in latex
+- fix detection of non transparent background table in latex so that
+the correct lines instructions (hhlines or clines) are being used.
+- fix `headers_flextable_at_bkm()` and `footers_flextable_at_bkm()`
+
 # flextable 0.8.5
 
 ## changes

@@ -2,7 +2,7 @@
 % Please edit documentation in R/as_flextable.R
 \name{as_flextable.htest}
 \alias{as_flextable.htest}
-\title{tabular summary for htest object}
+\title{Transform a 'htest' object into a flextable}
 \usage{
 \method{as_flextable}{htest}(x, ...)
 }
@@ -27,6 +27,7 @@ if(require("stats")){
 \seealso{
 Other as_flextable methods: 
 \code{\link{as_flextable.data.frame}()},
+\code{\link{as_flextable.gam}()},
 \code{\link{as_flextable.glm}()},
 \code{\link{as_flextable.grouped_data}()},
 \code{\link{as_flextable.kmeans}()},
@@ -34,6 +35,7 @@ Other as_flextable methods:
 \code{\link{as_flextable.merMod}()},
 \code{\link{as_flextable.pam}()},
 \code{\link{as_flextable.summarizor}()},
+\code{\link{as_flextable.tabular}()},
 \code{\link{as_flextable.tabulator}()},
 \code{\link{as_flextable.xtable}()},
 \code{\link{as_flextable}()}

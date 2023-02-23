@@ -539,7 +539,7 @@ align <- function(x, i = NULL, j = NULL, align = c("left", "center", "right", "j
     stop(sprintf("Function `%s` supports only flextable objects.", "align()"))
   }
   part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE)
-  align_value <- match.arg(align)
+  align_value <- match.arg(align, several.ok = TRUE)
 
   if (part == "all") {
     for (p in c("header", "body", "footer")) {
@@ -816,7 +816,7 @@ valign <- function(x, i = NULL, j = NULL, valign = "center", part = "body") {
 
 
 #' @export
-#' @title rotate cell text
+#' @title Rotate cell text
 #' @description It can be useful to be able to change the direction,
 #' when the table headers are huge for example, header labels can
 #' be rendered as "tbrl" (top to bottom and right to left) corresponding
@@ -921,7 +921,7 @@ rotate <- function(x, i = NULL, j = NULL, rotation, align = NULL, part = "body")
 # misc. ----
 
 
-#' @title make blank columns as transparent
+#' @title Make blank columns as transparent
 #' @description blank columns are set as transparent. This is a shortcut function
 #' that will delete top and bottom borders, change background color to
 #' transparent, display empty content and set blank columns' width.
