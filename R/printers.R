@@ -10,11 +10,14 @@
 #' @param x a flextable object
 #' @param ft.align flextable alignment, supported values are 'left', 'center' and 'right'.
 #' @param ft.shadow deprecated.
+#' @param extra_dependencies a list of HTML dependencies to
+#' add in the HTML output.
 #' @family flextable print function
 #' @examples
 #' htmltools_value(flextable(iris[1:5, ]))
 #' @importFrom htmltools tagList
-htmltools_value <- function(x, ft.align = NULL, ft.shadow = NULL) {
+htmltools_value <- function(x, ft.align = NULL, ft.shadow = NULL,
+                            extra_dependencies = NULL) {
   x <- flextable_global$defaults$post_process_html(x)
 
   if (!is.null(ft.align)) {
@@ -23,8 +26,13 @@ htmltools_value <- function(x, ft.align = NULL, ft.shadow = NULL) {
 
   caption <- caption_default_html(x)
   manual_css <- attr(caption, "css")
+
   html_o <- tagList(
-    flextable_html_dependency(),
+    if (length(extra_dependencies) > 0) attachDependencies(
+      x = tags$style(""),
+      extra_dependencies
+    ),
+    flextable_html_dependencies(x),
     HTML(gen_raw_html(x,
       class = "tabwid",
       caption = caption,
@@ -114,10 +122,6 @@ flextable_to_rmd <- function(x, ...) {
   invisible("")
 }
 
-#' @importFrom officer to_html
-#' @export
-officer::to_html
-
 #' @export
 #' @title Get HTML code as a string
 #' @description Generate HTML code of corresponding
@@ -131,6 +135,8 @@ officer::to_html
 #' a table tag.
 #' @family flextable print function
 #' @examples
+#' library(officer)
+#' library(flextable)
 #' x <- to_html(as_flextable(cars))
 to_html.flextable <- function(x, type = c("table", "img"), ...) {
   type_output <- match.arg(type)
@@ -405,7 +411,7 @@ print.flextable <- function(x, preview = "html", align = "center", ...) {
     cat("original dataset sample:", "\n")
     print(x$body$dataset[seq_len(min(c(5, nrow(x$body$dataset)))), ])
   } else if (preview == "html") {
-    print(browsable(htmltools_value(x, ft.align = align)))
+    print(browsable(htmltools_value(x = x, ft.align = align)))
   } else if (preview == "pptx") {
     doc <- read_pptx()
     doc <- add_slide(doc, layout = "Title and Content", master = "Office Theme")
@@ -625,10 +631,10 @@ knit_print.flextable <- function(x, ...) {
     str <- asis_output(str)
   } else if (!is.null(getOption("xaringan.page_number.offset"))) { #xaringan
     str <- knit_to_html(x, bookdown = FALSE, quarto = FALSE)
-    str <- asis_output(str, meta = list(flextable_html_dependency()))
+    str <- asis_output(str, meta = flextable_html_dependencies(x))
   } else if (is_html_output()) { # html
     str <- knit_to_html(x, bookdown = is_bookdown, quarto = is_quarto)
-    str <- raw_html(str, meta = list(flextable_html_dependency()))
+    str <- raw_html(str, meta = flextable_html_dependencies(x))
   } else if (is_latex_output()) { # latex
     str <- knit_to_latex(x, bookdown = is_bookdown, quarto = is_quarto)
     str <- raw_latex(
@@ -671,8 +677,9 @@ knit_print.flextable <- function(x, ...) {
 #' @param values a list (possibly named), each element is a flextable object. If named objects, names are
 #' used as titles. If provided, argument `...` will be ignored.
 #' @param path HTML file to be created
-#' @param encoding encoding to be used in the HTML file
 #' @param title page title
+#' @param lang language of the document using IETF language tags
+#' @return a string containing the full name of the generated file
 #' @examples
 #' ft1 <- flextable(head(iris))
 #' tf1 <- tempfile(fileext = ".html")
@@ -689,52 +696,29 @@ knit_print.flextable <- function(x, ...) {
 #' )
 #' # browseURL(tf2)
 #' @family flextable print function
-save_as_html <- function(..., values = NULL, path, encoding = "utf-8", title = deparse(sys.call())) {
+#' @importFrom htmltools save_html
+save_as_html <- function(..., values = NULL, path,
+                         lang = "en",
+                         title = deparse(sys.call())) {
   if (is.null(values)) {
     values <- list(...)
   }
   values <- Filter(function(x) inherits(x, "flextable"), values)
+  values <- lapply(values, flextable_global$defaults$post_process_html)
+  values <- lapply(values, htmltools_value)
   titles <- names(values)
   show_names <- !is.null(titles)
-
-  val <- character(length(values))
-
-  for (i in seq_along(values)) {
-    txt <- character(2L)
-    if (show_names) {
-      txt[1] <- paste0("<h2>", titles[i], "</h2>")
-    }
-    values[[i]] <- flextable_global$defaults$post_process_html(values[[i]])
-
-    caption <- caption_default_html(values[[i]])
-    manual_css <- attr(caption, "css")
-
-    txt[2] <- gen_raw_html(values[[i]],
-      caption = caption,
-      manual_css = manual_css
-    )
-
-    val[i] <- paste(txt, collapse = "")
+  if (show_names) {
+    old_values <- values
+    values <- rep(list(NULL), length(old_values)*2)
+    values[seq_along(old_values)*2] <- old_values
+    values[seq_along(old_values)*2 - 1] <- lapply(titles, htmltools::h2)
   }
-  tabwid_css <- paste(
-    c(
-      "<style>",
-      readLines(system.file(package = "flextable", "web_1.1.3", "tabwid.css"), encoding = "UTF-8"),
-      "</style>"
-    ),
-    collapse = "\n"
-  )
+  values <- do.call(htmltools::tagList, values)
 
-  str <- c(
-    "<!DOCTYPE htm><html><head>",
-    sprintf('<meta http-equiv="Content-Type" content="text/html; charset=%s"/>', encoding),
-    '<meta name="viewport" content="width=device-width, initial-scale=1.0"/>',
-    "<title>", title, "</title>", tabwid_css, "</head>",
-    '<body style="background-color:transparent;">',
-    val,
-    "</body></html>"
-  )
-  writeLines(str, path, useBytes = TRUE)
+  is_succes <- render_htmltag(x = values, path = absolute_path(path), title = title,
+                              lang = lang)
+  if (!is_succes) stop("could not write the file ", shQuote(path))
   invisible(path)
 }
 
@@ -757,6 +741,7 @@ save_as_html <- function(..., values = NULL, path, encoding = "utf-8", title = d
 #' @param values a list (possibly named), each element is a flextable object. If named objects, names are
 #' used as slide titles. If provided, argument `...` will be ignored.
 #' @param path PowerPoint file to be created
+#' @return a string containing the full name of the generated file
 #' @examples
 #' ft1 <- flextable(head(iris))
 #' tf <- tempfile(fileext = ".pptx")
@@ -799,6 +784,7 @@ save_as_pptx <- function(..., values = NULL, path) {
 #' @param pr_section a [prop_section] object that can be used to define page
 #' layout such as orientation, width and height.
 #' @param align left, center (default) or right.
+#' @return a string containing the full name of the generated file
 #' @examples
 #'
 #' tf <- tempfile(fileext = ".docx")
@@ -861,6 +847,83 @@ save_as_docx <- function(..., values = NULL, path, pr_section = NULL, align = "c
   invisible(path)
 }
 
+#' @export
+#' @title Save flextable objects in an 'RTF' file
+#' @description sugar function to save flextable objects in an 'RTF' file.
+#' @param ... flextable objects, objects, possibly named. If named objects, names are
+#' used as titles.
+#' @param values a list (possibly named), each element is a flextable object. If named objects, names are
+#' used as titles. If provided, argument `...` will be ignored.
+#' @param path Word file to be created
+#' @param pr_section a [prop_section] object that can be used to define page
+#' layout such as orientation, width and height.
+#' @return a string containing the full name of the generated file
+#' @family flextable print function
+#' @examples
+#'
+#' tf <- tempfile(fileext = ".rtf")
+#'
+#' library(officer)
+#' ft1 <- flextable(head(iris))
+#' save_as_rtf(ft1, path = tf)
+#'
+#'
+#' ft2 <- flextable(head(mtcars))
+#' sect_properties <- prop_section(
+#'   page_size = page_size(
+#'     orient = "landscape",
+#'     width = 8.3, height = 11.7
+#'   ),
+#'   type = "continuous",
+#'   page_margins = page_mar(),
+#'   header_default = block_list(
+#'     fpar(ftext("text for default page header")),
+#'       qflextable(data.frame(a = 1L)))
+#' )
+#' tf <- tempfile(fileext = ".rtf")
+#' save_as_rtf(
+#'   `iris table` = ft1, `mtcars table` = ft2,
+#'   path = tf, pr_section = sect_properties
+#' )
+#' @importFrom officer rtf_doc fp_text_lite fpar
+save_as_rtf <- function(..., values = NULL, path, pr_section = NULL) {
+  if (is.null(values)) {
+    values <- list(...)
+  }
+
+  values <- Filter(function(x) inherits(x, "flextable"), values)
+
+  titles <- names(values)
+  show_names <- !is.null(titles)
+  if (is.null(pr_section)) {
+    pr_section <- prop_section(
+      page_size = page_size(orient = "portrait", width = 8.3, height = 11.7),
+      type = "continuous",
+      page_margins = page_mar()
+    )
+  }
+
+  if (!inherits(pr_section, "prop_section")) {
+    stop("pr_section is not a prop_section object, use officer::prop_section.")
+  }
+
+  z <- rtf_doc(def_sec = pr_section)
+
+  for (i in seq_along(values)) {
+    if (show_names) {
+      z <- rtf_add(z,
+                   value = fpar(
+                     titles[i],
+                     fp_p = fp_par(text.align = "left", padding.top = 6, padding.bottom = 6),
+                     fp_t = fp_text_lite(bold = TRUE, font.size = 18, font.family = "Arial")
+                   ))
+    }
+    z <- rtf_add(z, values[[i]])
+  }
+  print(z, target = path)
+  invisible(path)
+}
+
 
 
 #' @export
@@ -871,6 +934,7 @@ save_as_docx <- function(..., values = NULL, path, pr_section = NULL, align = "c
 #' @param expand space in pixels to add around the table.
 #' @param res The resolution of the device
 #' @param ... unused arguments
+#' @return a string containing the full name of the generated file
 #' @examples
 #' library(gdtools)
 #' register_liberationsans()
@@ -1059,3 +1123,4 @@ knitr_update_properties <- function(x, bookdown = FALSE, quarto = FALSE) {
 
   x
 }
+

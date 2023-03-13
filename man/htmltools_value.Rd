@@ -4,7 +4,12 @@
 \alias{htmltools_value}
 \title{flextable as an 'HTML' object}
 \usage{
-htmltools_value(x, ft.align = NULL, ft.shadow = NULL)
+htmltools_value(
+  x,
+  ft.align = NULL,
+  ft.shadow = NULL,
+  extra_dependencies = NULL
+)
 }
 \arguments{
 \item{x}{a flextable object}
@@ -12,6 +17,9 @@ htmltools_value(x, ft.align = NULL, ft.shadow = NULL)
 \item{ft.align}{flextable alignment, supported values are 'left', 'center' and 'right'.}
 
 \item{ft.shadow}{deprecated.}
+
+\item{extra_dependencies}{a list of HTML dependencies to
+add in the HTML output.}
 }
 \value{
 an object marked as \link{HTML} ready to be used within
@@ -38,6 +46,7 @@ Other flextable print function:
 \code{\link{save_as_html}()},
 \code{\link{save_as_image}()},
 \code{\link{save_as_pptx}()},
+\code{\link{save_as_rtf}()},
 \code{\link{to_html.flextable}()}
 }
 \concept{flextable print function}

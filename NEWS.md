@@ -1,3 +1,21 @@
+# flextable 0.9.0
+
+## new features
+
+- add RTF support for captions.
+- enable new labels with `set_header_labels()` from a simple
+un-named vector.
+- function `set_formatter()` now accepts single function to 
+be applied to all columns.
+- HTML output now can capture google fonts if installed with 
+`gdtools::register_gfont()`.
+- refactor `save_as_html()`: use rmarkdown and add google fonts
+if possible (See `gdtools::register_gfont()`).
+
+## issues
+
+- fix `as_flextable.tabular(spread_first_col=TRUE)`
+
 # flextable 0.8.6
 
 In short: 
