@@ -3,7 +3,8 @@
 #' @export
 #' @title Tabulation of aggregations
 #' @description It tabulates a data.frame representing an aggregation
-#' which is then transformed as a flextable. The function
+#' which is then transformed as a flextable with
+#' [as_flextable][as_flextable.tabulator]. The function
 #' allows to define any display with the syntax of flextable in
 #' a table whose layout is showing dimensions of the aggregation
 #' across rows and columns.
@@ -32,79 +33,66 @@
 #' when the flextable is created.
 #' @return an object of class `tabulator`.
 #' @examples
-#' n_format <- function(z){
-#'   x <- sprintf("%.0f", z)
-#'   x[is.na(z)] <- "-"
-#'   x
-#' }
-#'
 #' set_flextable_defaults(digits = 2, border.color = "gray")
 #'
-#' if(require("stats")){
+#' library(data.table)
+#' # example 1 ----
+#' if (require("stats")) {
 #'   dat <- aggregate(breaks ~ wool + tension,
-#'     data = warpbreaks, mean)
+#'     data = warpbreaks, mean
+#'   )
 #'
 #'   cft_1 <- tabulator(
 #'     x = dat, rows = "wool",
 #'     columns = "tension",
 #'     `mean` = as_paragraph(as_chunk(breaks)),
-#'     `(N)` = as_paragraph(
-#'       as_chunk(length(breaks), formatter = n_format ))
+#'     `(N)` = as_paragraph(as_chunk(length(breaks), formatter = fmt_int))
 #'   )
 #'
 #'   ft_1 <- as_flextable(cft_1)
 #'   ft_1
 #' }
 #'
-#' if(require("data.table") && require("ggplot2")){
-#'
+#' # example 2 ----
+#' if (require("ggplot2")) {
 #'   multi_fun <- function(x) {
-#'     list(mean = mean(x),
-#'          sd = sd(x))
+#'     list(mean = mean(x), sd = sd(x))
 #'   }
-#'   myformat <- function(z){
-#'     x <- sprintf("%.1f", z)
-#'     x[is.na(z)] <- ""
-#'     x
-#'   }
-#'
-#'   grey_txt <- fp_text_default(color = "gray")
 #'
 #'   dat <- as.data.table(ggplot2::diamonds)
 #'   dat <- dat[cut %in% c("Fair", "Good", "Very Good")]
-#'   dat <- dat[clarity %in% c("I1", "SI1", "VS2")]
 #'
 #'   dat <- dat[, unlist(lapply(.SD, multi_fun),
-#'                       recursive = FALSE),
-#'              .SDcols = c("z", "y"),
-#'              by = c("cut", "color", "clarity")]
+#'     recursive = FALSE
+#'   ),
+#'   .SDcols = c("z", "y"),
+#'   by = c("cut", "color")
+#'   ]
 #'
 #'   tab_2 <- tabulator(
-#'     x = dat, rows = c("cut", "color"),
-#'     columns = "clarity",
-#'     `z stats` = as_paragraph(
-#'       as_chunk(z.mean, formatter = myformat)),
-#'     `y stats` = as_paragraph(
-#'       as_chunk(y.mean, formatter = myformat),
-#'       as_chunk(" (\u00B1 ", props = grey_txt),
-#'       as_chunk(y.sd, formatter = myformat, props = grey_txt),
-#'       as_chunk(")", props = grey_txt)
-#'       )
+#'     x = dat, rows = "color",
+#'     columns = "cut",
+#'     `z stats` = as_paragraph(as_chunk(fmt_avg_dev(z.mean, z.sd, digit2 = 2))),
+#'     `y stats` = as_paragraph(as_chunk(fmt_avg_dev(y.mean, y.sd, digit2 = 2)))
 #'   )
 #'   ft_2 <- as_flextable(tab_2)
 #'   ft_2 <- autofit(x = ft_2, add_w = .05)
 #'   ft_2
 #' }
 #'
-#' if(require("data.table")){
-#' #' # data.table version
+#' # example 3 ----
+#' # data.table version
 #' dat <- melt(as.data.table(iris),
-#'             id.vars = "Species",
-#'             variable.name = "name",value.name = "value")[,
-#'               list(avg = mean(value, na.rm = TRUE),
-#'                    sd = sd(value, na.rm = TRUE)),
-#'               by = c("Species", "name")
-#'             ]
+#'   id.vars = "Species",
+#'   variable.name = "name", value.name = "value"
+#' )
+#' dat <- dat[,
+#'   list(
+#'     avg = mean(value, na.rm = TRUE),
+#'     sd = sd(value, na.rm = TRUE)
+#'   ),
+#'   by = c("Species", "name")
+#' ]
 #' # dplyr version
 #' # library(dplyr)
 #' # dat <- iris %>%
@@ -117,12 +105,13 @@
 #' tab_3 <- tabulator(
 #'   x = dat, rows = c("Species"),
 #'   columns = "name",
-#'   `mean (sd)` = as_paragraph( as_chunk(avg),
-#'      " (", as_chunk(sd),  ")")
+#'   `mean (sd)` = as_paragraph(
+#'     as_chunk(avg),
+#'     " (", as_chunk(sd), ")"
 #'   )
-#' ft_3 <- as_flextable(tab_3, separate_with = character(0))
+#' )
+#' ft_3 <- as_flextable(tab_3)
 #' ft_3
-#' }
 #'
 #' init_flextable_defaults()
 #' @importFrom rlang enquos enquo call_args
@@ -241,32 +230,47 @@ tabulator <- function(x, rows, columns,
 #'
 #' set_flextable_defaults(digits = 2, border.color = "gray")
 #'
-#' if(require("stats")){
+#' if (require("stats")) {
 #'   dat <- aggregate(breaks ~ wool + tension,
-#'     data = warpbreaks, mean)
+#'     data = warpbreaks, mean
+#'   )
 #'
-#'   cft_1 <- tabulator(x = dat,
-#'                      rows = "wool",
+#'   cft_1 <- tabulator(
+#'     x = dat,
+#'     rows = "wool",
 #'     columns = "tension",
 #'     `mean` = as_paragraph(as_chunk(breaks)),
 #'     `(N)` = as_paragraph(
-#'       as_chunk(length(breaks) ))
+#'       as_chunk(length(breaks))
+#'     )
 #'   )
 #'
 #'   ft_1 <- as_flextable(cft_1, sep_w = .1)
 #'   ft_1
+#' }
 #'
-#'   set_flextable_defaults(padding = 1, font.size = 9, border.color = "orange")
+#' if (require("stats")) {
+#'   set_flextable_defaults(
+#'     padding = 1, font.size = 9,
+#'     border.color = "orange")
+#'
 #'   ft_2 <- as_flextable(cft_1, sep_w = 0)
 #'   ft_2
+#' }
 #'
-#'   set_flextable_defaults(padding = 6, font.size = 11,
-#'                          border.color = "white", font.color = "white",
-#'                          background.color = "#333333")
+#' if (require("stats")) {
+#'   set_flextable_defaults(
+#'     padding = 6, font.size = 11,
+#'     border.color = "white",
+#'     font.color = "white",
+#'     background.color = "#333333"
+#'   )
+#'
 #'   ft_3 <- as_flextable(
 #'     x = cft_1, sep_w = 0,
 #'     rows_alignment = "center",
-#'     columns_alignment = "right")
+#'     columns_alignment = "right"
+#'   )
 #'   ft_3
 #' }
 #'
@@ -300,7 +304,7 @@ as_flextable.tabulator <- function(
   }
 
   visible_columns_keys <- visible_columns[
-    visible_columns$type %in% "columns" &
+    visible_columns$.type. %in% "columns" &
       !visible_columns[[".tab_columns"]] %in% "dummy",
     "col_keys"]
   blank_columns <- visible_columns[
@@ -329,8 +333,8 @@ as_flextable.tabulator <- function(
 
   # for later iteration, a list of visible columns
   # to use when filling the table
-  visible_columns_mapping <- visible_columns[visible_columns$type %in% "columns" & !visible_columns[[".tab_columns"]] %in% "dummy",]
-  visible_columns_mapping$type <- NULL
+  visible_columns_mapping <- visible_columns[visible_columns$.type. %in% "columns" & !visible_columns[[".tab_columns"]] %in% "dummy",]
+  visible_columns_mapping$.type. <- NULL
   visible_columns_mapping <- split(visible_columns_mapping, visible_columns_mapping[columns], drop = TRUE)
 
   # for later iteration, a list of hidden columns that can
@@ -415,7 +419,7 @@ as_flextable.tabulator <- function(
   }
 
   rows_supp <- visible_columns$col_keys[
-    visible_columns$type %in% c("rows_supp", "rows_supp_last") &
+    visible_columns$.type. %in% c("rows_supp", "rows_supp_last") &
       !visible_columns$.tab_columns %in% "dummy"
       ]
   ft <- merge_v(
@@ -481,8 +485,8 @@ as_flextable.tabulator <- function(
   }
   if (!is.null(x$n_by) && length(x$columns) == 1L) {
     sum_x <- visible_columns
-    grp_labels <- sum_x[sum_x$.tab_columns %in% names(x$col_exprs)[1] & sum_x$type %in% "columns", x$columns]
-    col_keys <- sum_x[sum_x$.tab_columns %in% names(x$col_exprs)[1] & sum_x$type %in% "columns", "col_keys"]
+    grp_labels <- sum_x[sum_x$.tab_columns %in% names(x$col_exprs)[1] & sum_x$.type. %in% "columns", x$columns]
+    col_keys <- sum_x[sum_x$.tab_columns %in% names(x$col_exprs)[1] & sum_x$.type. %in% "columns", "col_keys"]
     names(col_keys) <- grp_labels
     cts <- x$n_by$n
     names(cts) <- x$n_by[[x$columns]]
@@ -515,7 +519,7 @@ summary.tabulator <- function(object, ...){
 
   hidden_columns <- object$hidden_columns
   names(hidden_columns)[names(hidden_columns) %in% ".user_columns"] <- "column"
-  hidden_columns$type <- "hidden"
+  hidden_columns$.type. <- "hidden"
 
   visible_columns <- object$visible_columns
   names(visible_columns)[names(visible_columns) %in% ".tab_columns"] <- "column"
@@ -613,7 +617,7 @@ tabulator_colnames <- function(x, columns, ..., type = NULL){
   dat <- summary(x)
 
   if (!is.null(type)) {
-    dat <- dat[dat$type %in% type,]
+    dat <- dat[dat$.type. %in% type,]
   }
 
   exprs <- enquos(...)
@@ -642,7 +646,7 @@ print.tabulator <- function(x, ...){
       paste0("`", names(x$col_exprs), "`", collapse = ", "),
       "\n")
   visible_columns <- x$visible_columns
-  columns_keys <- visible_columns[visible_columns$type %in% "columns" & !visible_columns[[".tab_columns"]] %in% "dummy", "col_keys"]
+  columns_keys <- visible_columns[visible_columns$.type. %in% "columns" & !visible_columns[[".tab_columns"]] %in% "dummy", "col_keys"]
 
   cat("\ncol_keys: c(",
     paste0(shQuote(columns_keys, type = "cmd"), collapse = ", "),
@@ -745,7 +749,7 @@ map_visible_columns <- function(dat, columns, rows, value_names = character(0),
     rdims_supp <- rbind(rdims_supp, x1)
     colnames(rdims_supp) <- names(ldims)
     rdims_supp <- as.data.frame(rdims_supp, row.names = FALSE)
-    rdims_supp$type <- "rows_supp"
+    rdims_supp$.type. <- "rows_supp"
   }
 
   rdims_supp_last <- NULL
@@ -757,12 +761,12 @@ map_visible_columns <- function(dat, columns, rows, value_names = character(0),
     rdims_supp_last <- rbind(x1, rdims_supp_last)
     colnames(rdims_supp_last) <- names(ldims)
     rdims_supp_last <- as.data.frame(rdims_supp_last, row.names = FALSE)
-    rdims_supp_last$type <- "rows_supp_last"
+    rdims_supp_last$.type. <- "rows_supp_last"
   }
 
 
-  ldims$type <- "columns"
-  rdims$type <- "rows"
+  ldims$.type. <- "columns"
+  rdims$.type. <- "rows"
   last_column <- columns[length(columns)]
   dims <- rbind(rdims, rdims_supp, ldims, rdims_supp_last)
 
@@ -773,9 +777,9 @@ map_visible_columns <- function(dat, columns, rows, value_names = character(0),
   }
   dims$col_keys[is_dummy] <- paste0("dummy", seq_len(sum(is_dummy)))
 
-  dims$col_keys[dims$type %in% "rows" & !is_dummy] <- dims[[last_column]][dims$type %in% "rows" & !is_dummy]
-  dims$col_keys[dims$type %in% "rows_supp" & !is_dummy] <- dims[[last_column]][dims$type %in% "rows_supp" & !is_dummy]
-  dims$col_keys[dims$type %in% "rows_supp_last" & !is_dummy] <- dims[[last_column]][dims$type %in% "rows_supp_last" & !is_dummy]
+  dims$col_keys[dims$.type. %in% "rows" & !is_dummy] <- dims[[last_column]][dims$.type. %in% "rows" & !is_dummy]
+  dims$col_keys[dims$.type. %in% "rows_supp" & !is_dummy] <- dims[[last_column]][dims$.type. %in% "rows_supp" & !is_dummy]
+  dims$col_keys[dims$.type. %in% "rows_supp_last" & !is_dummy] <- dims[[last_column]][dims$.type. %in% "rows_supp_last" & !is_dummy]
   setDF(dims)
   dims
 }

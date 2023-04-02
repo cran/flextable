@@ -1,7 +1,7 @@
 #' @title Data summary preparation
 #' @description It performs a univariate statistical analysis of a dataset
 #' by group and formats the results so that they can be used with
-#' the [tabulator()] function.
+#' the [tabulator()] function or directly with [as_flextable][as_flextable.summarizor].
 #' \if{html}{\out{
 #' <img src="https://www.ardata.fr/img/flextable-imgs/flextable-018-square.png" alt="summarizor illustration" style="width:100\%;">
 #' }}
@@ -341,12 +341,11 @@ fmt_summarizor <- fmt_2stats
 fmt_n_percent <- function(n, pct, digit = 1){
   z1 <- character(length(n))
   z2 <- character(length(n))
-  z1[!is.na(n)] <- sprintf("%.0f", n[!is.na(n)])
-  z2[!is.na(pct)] <- sprintf(paste0(" (%0", 3L + as.integer(digit), ".", digit, "f%%)"), 100 * pct[!is.na(pct)])
+  z1[!is.na(n)] <- sprintf("%s", fmt_int(n[!is.na(n)]))
+  z2[!is.na(pct)] <- paste0(" (", fmt_pct(pct[!is.na(pct)]), ")")
   paste0(z1, z2)
 }
 
-"%05.2f"
 #' @export
 #' @title Format count data for headers
 #' @description The function formats counts as `\n(N=XX)`. This helper
@@ -367,9 +366,93 @@ fmt_n_percent <- function(n, pct, digit = 1){
 #' ft_1
 fmt_header_n <- function(n){
   z1 <- character(length(n))
-  z1[!is.na(n)] <- sprintf("\n(N=%.0f)", n[!is.na(n)])
+  z1[!is.na(n)] <- sprintf("\n(N=%s)", fmt_int(n[!is.na(n)]))
   z1
 }
+
+#' @export
+#' @title Format numerical data as integer
+#' @description The function formats numeric vectors as integer.
+#' @param x numeric values
+#' @seealso [tabulator()], [mk_par()]
+#' @family text formatter functions
+#' @examples
+#' library(flextable)
+#'
+#' df <- data.frame(zz = 1.23)
+#'
+#' ft_1 <- flextable(df)
+#' ft_1 <- mk_par(
+#'   x = ft_1, j = 1, part = "body",
+#'   value = as_paragraph(as_chunk(zz, formatter = fmt_int)))
+#' ft_1 <- autofit(ft_1)
+#' ft_1
+fmt_int <- function(x){
+  big.mark <- get_flextable_defaults()$big.mark
+  na_str <- get_flextable_defaults()$na_str
+  nan_str <- get_flextable_defaults()$nan_str
+  format_fun.integer(x, big.mark = big.mark, na_str = na_str, nan_str = nan_str)
+}
+
+#' @export
+#' @title Format numerical data as percentages
+#' @description The function formats numeric vectors as percentages.
+#' @param x numeric values
+#' @seealso [tabulator()], [mk_par()]
+#' @family text formatter functions
+#' @examples
+#' library(flextable)
+#'
+#' df <- data.frame(zz = .45)
+#'
+#' ft_1 <- flextable(df)
+#' ft_1 <- mk_par(
+#'   x = ft_1, j = 1, part = "body",
+#'   value = as_paragraph(as_chunk(zz, formatter = fmt_pct)))
+#' ft_1 <- autofit(ft_1)
+#' ft_1
+fmt_pct <- function(x) {
+
+  big.mark <- get_flextable_defaults()$big.mark
+  decimal.mark <- get_flextable_defaults()$decimal.mark
+  pct_digits <- get_flextable_defaults()$pct_digits
+  na_str <- get_flextable_defaults()$na_str
+  nan_str <- get_flextable_defaults()$nan_str
+  format_fun.pct(x,
+    big.mark = big.mark, decimal.mark = decimal.mark,
+    pct_digits = pct_digits, na_str = na_str, nan_str = nan_str)
+}
+
+#' @export
+#' @title Format numerical data as percentages
+#' @description The function formats numeric vectors as percentages.
+#' @param x numeric values
+#' @seealso [tabulator()], [mk_par()]
+#' @family text formatter functions
+#' @examples
+#' library(flextable)
+#'
+#' df <- data.frame(zz = .45)
+#'
+#' ft_1 <- flextable(df)
+#' ft_1 <- mk_par(
+#'   x = ft_1, j = 1, part = "body",
+#'   value = as_paragraph(as_chunk(zz, formatter = fmt_dbl)))
+#' ft_1 <- autofit(ft_1)
+#' ft_1
+fmt_dbl <- function(x) {
+
+  big.mark <- get_flextable_defaults()$big.mark
+  decimal.mark <- get_flextable_defaults()$decimal.mark
+  digits <- get_flextable_defaults()$digits
+  na_str <- get_flextable_defaults()$na_str
+  nan_str <- get_flextable_defaults()$nan_str
+
+  format_fun.double(x,
+    big.mark = big.mark, decimal.mark = decimal.mark,
+    digits = digits, na_str = na_str, nan_str = nan_str)
+}
+
 
 #' @export
 #' @title Format content for mean and sd

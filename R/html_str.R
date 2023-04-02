@@ -383,14 +383,10 @@ flextable_html_dependency <- function(){
 
 }
 
-#' @importFrom htmltools attachDependencies tags
-flextable_html_dependencies <- function(x) {
+html_dependencies_list <- function(x) {
   list_deps <- list(flextable_html_dependency())
   list_deps <- append(list_deps, lapply(avail_gfonts(x), gdtools::gfontHtmlDependency))
-  attachDependencies(
-    x = tags$style(""),
-    list_deps
-  )
+  list_deps
 }
 
 #' @importFrom gdtools installed_gfonts
@@ -436,7 +432,7 @@ tmp_rmd <- function(title, lang = "en") {
   file <- tempfile(fileext = ".Rmd")
   writeLines(
     c("---",
-      sprintf("title: %s", title),
+      sprintf("title: \"%s\"", title),
       sprintf("lang: %s", lang),
       "params:",
       "  x: ''",

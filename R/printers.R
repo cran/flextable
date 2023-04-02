@@ -15,9 +15,10 @@
 #' @family flextable print function
 #' @examples
 #' htmltools_value(flextable(iris[1:5, ]))
-#' @importFrom htmltools tagList
+#' @importFrom htmltools tagList attachDependencies tags
 htmltools_value <- function(x, ft.align = NULL, ft.shadow = NULL,
                             extra_dependencies = NULL) {
+  x <- flextable_global$defaults$post_process_all(x)
   x <- flextable_global$defaults$post_process_html(x)
 
   if (!is.null(ft.align)) {
@@ -27,12 +28,17 @@ htmltools_value <- function(x, ft.align = NULL, ft.shadow = NULL,
   caption <- caption_default_html(x)
   manual_css <- attr(caption, "css")
 
+  list_deps <- html_dependencies_list(x)
+
   html_o <- tagList(
     if (length(extra_dependencies) > 0) attachDependencies(
       x = tags$style(""),
       extra_dependencies
     ),
-    flextable_html_dependencies(x),
+    attachDependencies(
+      x = tags$style(""),
+      list_deps
+    ),
     HTML(gen_raw_html(x,
       class = "tabwid",
       caption = caption,
@@ -95,6 +101,7 @@ flextable_to_rmd <- function(x, ...) {
   }
 
   if ("html" %in% type_output) {
+    x <- flextable_global$defaults$post_process_all(x)
     x <- flextable_global$defaults$post_process_html(x)
     if (!is_bookdown) {
       caption <- caption_default_html(x)
@@ -147,6 +154,7 @@ to_html.flextable <- function(x, type = c("table", "img"), ...) {
   is_quarto <- is_in_quarto()
 
   if ("table" %in% type_output) {
+    x <- flextable_global$defaults$post_process_all(x)
     x <- flextable_global$defaults$post_process_html(x)
     manual_css <- readLines(system.file(package = "flextable", "web_1.1.3", "tabwid.css"), encoding = "UTF-8")
     gen_raw_html(x, class = "tabwid", caption = "", manual_css = paste0(manual_css, collapse = "\n"))
@@ -163,6 +171,7 @@ to_html.flextable <- function(x, type = c("table", "img"), ...) {
 
 #' @export
 to_wml.flextable <- function(x, ...) {
+  x <- flextable_global$defaults$post_process_all(x)
   x <- flextable_global$defaults$post_process_docx(x)
   x <- knitr_update_properties(x)
   gen_raw_wml(x)
@@ -179,6 +188,7 @@ to_wml.flextable <- function(x, ...) {
 #' knit_to_html(flextable(iris[1:5, ]))
 #' @importFrom knitr raw_html
 knit_to_html <- function(x, bookdown = FALSE, quarto = FALSE) {
+  x <- flextable_global$defaults$post_process_all(x)
   x <- flextable_global$defaults$post_process_html(x)
 
   tab_props <- opts_current_table()
@@ -211,6 +221,7 @@ knit_to_html <- function(x, bookdown = FALSE, quarto = FALSE) {
 #' from a flextable object.
 #' @importFrom officer opts_current_table run_autonum to_wml
 knit_to_wml <- function(x, bookdown = FALSE, quarto = FALSE) {
+  x <- flextable_global$defaults$post_process_all(x)
   x <- flextable_global$defaults$post_process_docx(x)
 
   is_rdocx_document <- opts_current$get("is_rdocx_document")
@@ -290,6 +301,7 @@ knit_to_latex <- function(x, bookdown, quarto = FALSE) {
   ft.arraystretch <- x$properties$opts_pdf$arraystretch
   ft.latex.float <- x$properties$opts_pdf$float
 
+  x <- flextable_global$defaults$post_process_all(x)
   x <- flextable_global$defaults$post_process_pdf(x)
 
   if ("none" %in% ft.latex.float) {
@@ -363,6 +375,7 @@ knit_to_pml <- function(x) {
   if (is.null(top)) {
     top <- 2
   }
+  x <- flextable_global$defaults$post_process_all(x)
   x <- flextable_global$defaults$post_process_pptx(x)
 
   uid <- as.integer(runif(n = 1) * 10^9)
@@ -392,7 +405,7 @@ knit_to_pml <- function(x) {
 #' Note also that a print method is used when flextable are used within
 #' R markdown documents. See [knit_print.flextable()].
 #' @param x flextable object
-#' @param preview preview type, one of c("html", "pptx", "docx", "pdf, "log").
+#' @param preview preview type, one of c("html", "pptx", "docx", "rtf", "pdf, "log").
 #' When `"log"` is used, a description of the flextable is printed.
 #' @param align left, center (default) or right. Only for docx/html/pdf.
 #' @param ... arguments for 'pdf_document' call when preview is "pdf".
@@ -422,6 +435,10 @@ print.flextable <- function(x, preview = "html", align = "center", ...) {
     doc <- read_docx()
     doc <- body_add_flextable(doc, value = x, align = align)
     file_out <- print(doc, target = tempfile(fileext = ".docx"))
+    browseURL(file_out)
+  } else if (preview == "rtf") {
+    file_out <- tempfile(fileext = ".rtf")
+    save_as_rtf(x, path = file_out)
     browseURL(file_out)
   } else if (preview == "pdf") {
     rmd <- tempfile(fileext = ".Rmd")
@@ -489,14 +506,7 @@ print.flextable <- function(x, preview = "html", align = "center", ...) {
 #' - Word only:
 #'   - `ft.split` Word option 'Allow row to break across pages' can be
 #'   activated when TRUE (default value).
-#'   - `ft.keepnext` default `FALSE`. Word option 'keep rows
-#'   together' is activated when TRUE. It avoids page break
-#'   within tables. This is handy for small tables, i.e. less than
-#'   a page height. Be careful, if you print long tables, you should
-#'   rather set its value to `FALSE` to avoid that the tables
-#'   also generate a page break before being placed in the
-#'   Word document. Since Word will try to keep it with the **next
-#'   paragraphs that follow the tables**.
+#'   - `ft.keepnext` defunct in favor of [paginate()]
 #' - PDF only:
 #'   - `ft.tabcolsep` space between the text and the left/right border of its containing
 #'   cell, the default value is 0 points.
@@ -519,7 +529,7 @@ print.flextable <- function(x, preview = "html", align = "center", ...) {
 #' If some values are to be used all the time in the same
 #' document, it is recommended to set these values in a
 #' 'knitr r chunk' by using function
-#' `knitr::opts_chunk$set(ft.split=FALSE, ft.keepnext = FALSE, ...)`.
+#' `knitr::opts_chunk$set(ft.split=FALSE, ...)`.
 #'
 #' @section Table caption:
 #'
@@ -602,6 +612,7 @@ print.flextable <- function(x, preview = "html", align = "center", ...) {
 #' @importFrom stats runif
 #' @importFrom graphics plot par
 #' @family flextable print function
+#' @seealso [paginate()]
 #' @examples
 #' \dontrun{
 #' library(rmarkdown)
@@ -631,10 +642,10 @@ knit_print.flextable <- function(x, ...) {
     str <- asis_output(str)
   } else if (!is.null(getOption("xaringan.page_number.offset"))) { #xaringan
     str <- knit_to_html(x, bookdown = FALSE, quarto = FALSE)
-    str <- asis_output(str, meta = flextable_html_dependencies(x))
+    str <- asis_output(str, meta = html_dependencies_list(x))
   } else if (is_html_output()) { # html
     str <- knit_to_html(x, bookdown = is_bookdown, quarto = is_quarto)
-    str <- raw_html(str, meta = flextable_html_dependencies(x))
+    str <- raw_html(str, meta = html_dependencies_list(x))
   } else if (is_latex_output()) { # latex
     str <- knit_to_latex(x, bookdown = is_bookdown, quarto = is_quarto)
     str <- raw_latex(
@@ -699,11 +710,12 @@ knit_print.flextable <- function(x, ...) {
 #' @importFrom htmltools save_html
 save_as_html <- function(..., values = NULL, path,
                          lang = "en",
-                         title = deparse(sys.call())) {
+                         title = "&#32;") {
   if (is.null(values)) {
     values <- list(...)
   }
   values <- Filter(function(x) inherits(x, "flextable"), values)
+  values <- lapply(values, flextable_global$defaults$post_process_all)
   values <- lapply(values, flextable_global$defaults$post_process_html)
   values <- lapply(values, htmltools_value)
   titles <- names(values)
@@ -808,6 +820,7 @@ save_as_pptx <- function(..., values = NULL, path) {
 #'   path = tf, pr_section = sect_properties
 #' )
 #' @family flextable print function
+#' @seealso [paginate()]
 #' @importFrom officer body_add_par prop_section body_set_default_section
 #'   page_size page_mar
 save_as_docx <- function(..., values = NULL, path, pr_section = NULL, align = "center") {
@@ -859,6 +872,7 @@ save_as_docx <- function(..., values = NULL, path, pr_section = NULL, align = "c
 #' layout such as orientation, width and height.
 #' @return a string containing the full name of the generated file
 #' @family flextable print function
+#' @seealso [paginate()]
 #' @examples
 #'
 #' tf <- tempfile(fileext = ".rtf")
@@ -1065,7 +1079,6 @@ knitr_update_properties <- function(x, bookdown = FALSE, quarto = FALSE) {
   # global properties
   ft.align <- opts_current$get("ft.align")
   ft.split <- opts_current$get("ft.split")
-  ft.keepnext <- opts_current$get("ft.keepnext")
   ft.tabcolsep <- opts_current$get("ft.tabcolsep")
   ft.arraystretch <- opts_current$get("ft.arraystretch")
   ft.latex.float <- mcoalesce_options(opts_current$get("ft.latex.float"), opts_current$get("ft-latex-float"))
@@ -1082,9 +1095,6 @@ knitr_update_properties <- function(x, bookdown = FALSE, quarto = FALSE) {
   # word chunk options
   if (!is.null(ft.split)) {
     x$properties$opts_word$split <- ft.split
-  }
-  if (!is.null(ft.keepnext)) {
-    x$properties$opts_word$keep_with_next <- ft.keepnext
   }
   # latex chunk options
   if (!is.null(ft.tabcolsep)) {

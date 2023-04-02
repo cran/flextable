@@ -1,3 +1,33 @@
+# flextable 0.9.1
+
+## breaking change
+
+- parameter `keepnext` and `ft.keepnext` are defunct, they are replaced
+by function `paginate()` that enable nice pagination of tables across pages 
+or `keep_with_next()` to get total control over rows pagination.
+
+## new features
+
+- add RTF support for captions.
+- `set_flextable_defaults()` gains parameter `pct_digits` 
+(number of digits for percentages) that will be used in relevant 
+functions (only `proc_freq()` for now).
+- new method `as_flextable.table()`.
+- new functions `fmt_dbl()`, `fmt_int()` and `fmt_pct()`.
+- Support for Word and RTF pagination with function `paginate()`
+
+## internals
+
+- refactor proc_freq and support 1d frequency table
+
+## issues
+
+- colname `type` is now possible when using `tabulator()`.
+- value for html dependancies parameter is a list of html-dep as expected.
+This solves issue for blogdown and pkgdown introduced in the previous version.
+- fix `save_as_html()` ugly default title.
+- fix alignment issues when rows are horizontally merged in PDF
+
 # flextable 0.9.0
 
 ## new features

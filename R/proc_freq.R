@@ -1,168 +1,227 @@
-format_pct <- function(x){
-  ifelse(is.na(x), "", paste0(css_no_unit(x*100, digits = 2), "%") )
+fmt_freq_table <- function(pctcol, pctrow, include.row_percent = TRUE, include.column_percent = TRUE) {
+  out_cols <- rep("", length(pctcol))
+  out_rows <- out_sep <- out_cols
+
+  if (include.column_percent) {
+    out_cols[!is.na(pctcol)] <- fmt_pct(pctcol[!is.na(pctcol)])
+  }
+  if (include.row_percent) {
+    out_rows[!is.na(pctrow)] <- fmt_pct(pctrow[!is.na(pctrow)])
+  }
+  if (include.column_percent && include.column_percent) {
+    out_sep[!is.na(pctcol) | !is.na(pctrow)] <- " ; "
+  }
+
+  paste0(out_cols, out_sep, out_rows)
 }
 
-#' @title Frequency table as flextable
+add_level_total <- function(sdat, to_na = TRUE, lev = "Total") {
+  z <- sdat[, lapply(.SD, function(x, lev) {
+    if (is.factor(x)) {
+      old_levs <- levels(x)
+      new_levs <- c(old_levs, lev)
+      levels(x) <- new_levs
+      if (to_na && all(is.na(x))) x[] <- lev
+    }
+    x
+  }, lev = lev)]
+  z$grouping <- NULL
+  z
+}
+
+
+#' @importFrom data.table groupingsets
+fortified_freq <- function(dat, row = character(), column = character(), weight = character()) {
+  by <- unique(c(row, column))
+  sets <- list()
+  if (length(by) > 1) {
+    sets <- list(c(row, column), row, column, character())
+  } else if (length(by) > 0) {
+    sets <- list(by, character())
+  }
+  dataset <- as.data.table(dat)
+  if (length(weight) == 1) {
+    setnames(dataset, old = weight, new = ".weight.")
+  } else {
+    dataset$.weight. <- 1
+  }
+
+  # replace na with "Missing"
+  dataset[, c(by) := lapply(.SD, function(x) {
+    if (is.factor(x)) {
+      old_levs <- levels(x)
+      new_levs <- c(old_levs, "Missing")
+      levels(x) <- new_levs
+      x[is.na(x)] <- "Missing"
+    } else if (is.character(x)) {
+      x[is.na(x)] <- "Missing"
+    }
+    x
+  }) ,.SDcols = by]
+
+  freq_data <- groupingsets(
+    x = dataset,
+    j = c(list(count = sum(.SD$.weight., na.rm = TRUE))),
+    by = by,
+    sets = sets,
+    id = TRUE
+  )
+
+  if (length(by) > 1) {
+    row_sums <- add_level_total(freq_data[freq_data$grouping %in% 1, ])
+    col_sums <- add_level_total(freq_data[freq_data$grouping %in% 2, ])
+    all_sums <- add_level_total(freq_data[freq_data$grouping %in% 3, ])
+    tab_ct <- add_level_total(freq_data[freq_data$grouping %in% 0, ])
+    tab <- rbindlist(list(row_sums, col_sums, all_sums, tab_ct))
+
+    setnames(row_sums, old = "count", new = "total_row")
+    row_sums[[column]] <- NULL
+    rtab <- merge(tab, row_sums, by = row)
+    rtab[, c("pct_row", "total_row", "count") := list(.SD$count / .SD$total_row, NULL, NULL)]
+
+    setnames(col_sums, old = "count", new = "total_col")
+    col_sums[[row]] <- NULL
+    ctab <- merge(tab, col_sums, by = column)
+    ctab[, c("pct_col", "total_col", "count") := list(.SD$count / .SD$total_col, NULL, NULL)]
+
+    tab_margins <- merge(ctab, rtab, by = by, all = FALSE)
+    tab <- merge(tab, tab_margins, by = by, all = TRUE)
+  } else if (length(by) > 0) {
+    all_sums <- add_level_total(freq_data[freq_data$grouping %in% 1, ])
+    tab_ct <- add_level_total(freq_data[freq_data$grouping %in% 0, ])
+    tab <- rbindlist(list(all_sums, tab_ct))
+  }
+  tab[, c("pct") := list(.SD$count / all_sums$count)]
+  setDF(tab)
+  tab
+}
+
+relayout_freq_data <- function(x, order_by) {
+  dat_pct_rowcol <- as.data.table(x)
+  dat_pct_rowcol[, c("count", "pct", ".what.") := list(NULL, NULL, "mpct")]
+
+  dat <- as.data.table(x)
+  dat$.what. <- "count"
+  dat[, c("pct_col", "pct_row") := NULL]
+
+  dat <- rbindlist(list(dat_pct_rowcol, dat),
+    fill = TRUE, use.names = TRUE
+  )
+  dat$.what. <- factor(dat$.what., c("count", "mpct"))
+  setorderv(dat, c(order_by, ".what."))
+
+  setDF(dat)
+  dat
+}
+
+
+#' @title Frequency table
 #'
-#' @description This function compute a two way contingency table
-#' and make a flextable with the result.
+#' @description This function compute a one or two way
+#' contingency table and create a flextable from the result.
 #'
-#' @param x `data.frame` object
+#' The function is largely inspired by "PROC FREQ" from "SAS"
+#' and was written with the intent to make it
+#' as compact as possible.
+#' @param x a `data.frame` object containing variable(s) to use for counts.
 #' @param row `characer` column names for row
 #' @param col `characer` column names for column
-#' @param main `characer` title
 #' @param include.row_percent `boolean` whether to include the row percents; defaults to `TRUE`
 #' @param include.column_percent `boolean` whether to include the column percents; defaults to `TRUE`
 #' @param include.table_percent `boolean` whether to include the table percents; defaults to `TRUE`
-#' @param include.column_total `boolean` whether to include the row of column totals; defaults to `TRUE`
-#' @param include.row_total `boolean` whether to include the column of row totals; defaults to `TRUE`
-#' @param include.header_row `boolean` whether to include the header row; defaults to `TRUE`
 #' @param weight `character` column name for weight
-#'
-#'
-#' @importFrom stats as.formula na.omit
-#'
+#' @param ... unused arguments
+#' @importFrom stats as.formula
 #' @examples
-#'
 #' proc_freq(mtcars, "vs", "gear")
 #' proc_freq(mtcars, "gear", "vs", weight = "wt")
 #' @export
-#' @author Titouan Robert
-proc_freq <- function(x, row, col, main = "", include.row_percent = TRUE, include.column_percent = TRUE,
-                      include.table_percent = TRUE, include.column_total = TRUE, include.row_total = TRUE, include.header_row = TRUE,
-                      weight = NULL){
-
-  ##Compute table
-  # tabl <- as.data.frame.matrix(table(x[[row]], x[[col]]))
-
-  x <- data.table::data.table(x)
-  if(is.null(weight)){
-    tabl <- x[,list(value =  .N), by = c(row, col)]
-  }else{
-    tabl <- x[,list(value = unlist(lapply(.SD, function(X)sum(X, na.rm = TRUE)))), by = c(row, col), .SDcols = weight]
+proc_freq <- function(x, row = character(), col = character(),
+                      include.row_percent = TRUE, include.column_percent = TRUE,
+                      include.table_percent = TRUE,
+                      weight = character(), ...) {
+  if (length(row) && !is.factor(x[[row]])) {
+    x[[row]] <- as.factor(x[[row]])
   }
 
-  tabl  <- na.omit(tabl)
-  ff <- as.formula(paste0("`", row, "`~`", col, "`"))
-  tabl <- data.table::dcast(tabl, ff, value.var = "value", fill = 0)
-  table_out <- as.data.frame(tabl[,.SD, .SDcols = 2:ncol(tabl)])
-  rownames(table_out) <- unlist(tabl[, .SD, .SDcols = 1])
-  colnames(table_out) <- names(tabl)[2:ncol(tabl)]
-  tabl <- table_out
-
-  ##Compute sum
-  tablL <- tabl/rowSums(tabl)
-  tablR <- t(t(tabl)/colSums(tabl))
-  tablT <- tabl/sum(tabl)
-  nr <- nrow(tabl)
-
-  ##Make table
-  tab_end <- sapply(seq_len(nr), function(X){
-    labels <- c("Frequency")
-    dat <- tabl[X,, drop = FALSE]
-    if (include.row_percent) {
-      dat <- rbind(dat, tablL[X,, drop = FALSE])
-      labels <- c(labels, "Row Pct", recursive = TRUE)
-    }
-    if (include.column_percent) {
-      dat <- rbind(dat, tablR[X,, drop = FALSE])
-      labels <- c(labels, "Col Pct", recursive = TRUE)
-    }
-    if (include.table_percent) {
-      dat <- rbind(dat, tablT[X,, drop = FALSE])
-      labels <- c(labels, "Percent", recursive = TRUE)
-    }
-    names(dat) <- colnames(tabl)
-
-    dd <- data.table::data.table(V1 =  rownames(tabl[X,, drop = FALSE]),label = labels,dat)
-    names(dd)[1] <- row
-    dd
-  }, simplify = FALSE)
-  tab_end <- Reduce(rbind, tab_end)
-  tab_end <- as.data.frame(tab_end, check.names = FALSE)
-
-  ##Add total
-  if (include.row_total) {
-    tab_end$Total <- rowSums(tab_end[,3:ncol(tab_end), drop = FALSE])
-    index <- which(tab_end$label == "Row Pct" | tab_end$label == "Col Pct" )
-    if(length(index)>0)
-      tab_end[ index,]$Total <- NA
+  if (length(col) && !is.factor(x[[col]])) {
+    x[[col]] <- as.factor(x[[col]])
   }
-  if (include.column_total) {
-    labels <- c("Frequency")
-    if (include.table_percent) {
-      labels <- c(labels, "Percent", recursive = TRUE)
+  by <- unique(c(row, col))
+  if (!length(by) %in% 1:2) {
+    stop("The `col` and `row` parameters do not allow to define a univariate or bivariate count table. It requires exactly one or two columns.")
+  }
+
+  dat <- fortified_freq(x, row = row, column = col, weight = weight)
+
+  if (length(by) > 1) {
+    dat <- relayout_freq_data(dat, order_by = by)
+    dat <- dat[!(dat[[row]] %in% "Total" & dat[[".what."]] %in% c("mpct")), ]
+    dat$.coltitle. <- col
+
+    count <- pct <- pct_col <- pct_row <- NULL
+
+    rows_set <- c(row, ".what.")
+    first_vline <- 2
+    fnote_lab <- NA_character_
+    margins_label <- "Mar. pct"
+
+    if (include.column_percent && include.row_percent) {
+      fnote_lab <- " Columns and rows percentages"
+    } else if (include.column_percent && !include.row_percent) {
+      margins_label <- "Col. pct"
+    } else if (!include.column_percent && include.row_percent) {
+      margins_label <- "Row pct"
+    } else {
+      dat <- dat[!(dat[[".what."]] %in% c("mpct")), ]
+      rows_set <- row
+      first_vline <- 1
     }
-    endR <- data.frame(GP = "Total", label = labels)
-    names(endR)[1] <-   names(tab_end)[1]
-    columnIndexStart <- 3
-    columnIndexEnd <- if (include.row_total) ncol(tab_end) - 1 else ncol(tab_end)
-    for(i in columnIndexStart:columnIndexEnd){
-      total_row <- c(sum(tab_end[[i]][which(tab_end$label=="Frequency")]))
-      if (include.table_percent) {
-        total_row <- c(total_row, sum(tab_end[[i]][which(tab_end$label=="Percent")]), recursive = TRUE)
+
+    tab <- tabulator(
+      x = dat,
+      rows = rows_set,
+      columns = c(".coltitle.", col),
+      stat = as_paragraph(
+        if (include.table_percent) {
+          as_chunk(fmt_n_percent(count, pct))
+        } else {
+          as_chunk(count, formatter = fmt_int)
+        },
+        as_chunk(fmt_freq_table(pct_col, pct_row,
+          include.column_percent = include.column_percent,
+          include.row_percent = include.row_percent
+        ))
+      )
+    )
+
+    ft <- as_flextable(tab, columns_alignment = "center", sep_w = 0)
+    if (include.column_percent || include.row_percent) {
+      ft <- labelizor(
+        x = ft,
+        labels = c(.what. = "", count = "Count", "mpct" = margins_label), j = ".what."
+      )
+      if (!is.na(fnote_lab)) {
+        ft <- footnote(ft,
+          ref_symbols = " (1)",
+          j = ".what.",
+          i = ~ .what. %in% "mpct" & !duplicated(.what.),
+          value = as_paragraph(fnote_lab), part = "body"
+        )
       }
-      endR[[names(tab_end)[i]]] <- total_row
     }
-    if (include.row_total) {
-      total_cell <- c(sum(tab_end[["Total"]][which(tab_end$label=="Frequency")]))
-      if (include.table_percent) {
-        total_cell <- c(total_cell, NA, recursive = TRUE)
-      }
-      endR$Total = total_cell
-    }
-    tab_end <- rbind(tab_end, endR)
+    ft <- hline(ft, i = as.formula(sprintf("~before(%s, 'Total')", row)))
+    ft <- vline(ft, j = ncol_keys(ft) - 1)
+    ft <- vline(ft, j = first_vline)
+    ft <- autofit(ft)
+  } else {
+    dat <- dat[do.call(order, dat[by]), ]
+    ft <- flextable(dat)
+    ft <- hline(ft, i = as.formula(sprintf("~before(%s, 'Total')", by)))
+    ft <- set_formatter(ft, pct = fmt_pct, count = fmt_int)
+    ft <- set_header_labels(ft, count = "Count", pct = "Percent")
+    ft <- autofit(ft)
   }
-  nl <- nrow(tab_end)
 
-  ##Make flex
-  llflex <- flextable(tab_end)
-  llflex <- merge_v(llflex, j = row )
-  llflex <- autofit(llflex)
-
-  col_id_counts <- seq(3, ncol(tab_end), by = 1L )
-  names_ll <- names(tab_end)
-  which_freq <- tab_end$label %in% "Frequency"
-
-  . <- NULL
-  ##Remove digit for Frequency
-  llflex <- mk_par(
-    llflex, i = ~ label %in% "Frequency", j = col_id_counts,
-    value = as_paragraph(as_chunk(.,formatter = function(x) sprintf("%.0f", x))),
-    use_dot = TRUE, part = "body")
-
-  ##Add %
-  llflex <- mk_par(
-    llflex, i = ~ !label %in% "Frequency", j = col_id_counts,
-    value = as_paragraph(as_chunk(.,formatter = format_pct)),
-    use_dot = TRUE, part = "body")
-
-  ##Style
-  fq <- which(tab_end$label == "Frequency")
-  llflex <- bold(llflex, j = 1)
-  llflex <- border(llflex, i = ~label %in% "Frequency",
-                   border.top = fp_border_default())
-
-  if (include.header_row) {
-    llflex <- add_header_row(llflex, values = c("", col), colwidths = c(2,ncol(tab_end)-2))
-  }
-  llflex <- align(llflex, align = "center", part = "header")
-  llflex <- bold(llflex, part = "header")
-  llflex <- align(llflex, align = "center", part = "body")
-  llflex <- valign(llflex, j = 1, valign = "top", part = "body")
-  llflex <- fix_border_issues(llflex)
-
-  if(main != ""){
-
-    llflex <- add_header_lines(llflex,  values = main)
-    llflex <- bold(llflex, part = "header")
-    llflex <- align(llflex, i = 1, align = "left", part = "header")
-
-  }
-  llflex <- hline(llflex, part = "header", border = officer::fp_border(color = "black", width = 1))
-  llflex <- hline_bottom(llflex, part = "header", border = officer::fp_border(color = "black", width = 2))
-
-  llflex
-
+  ft
 }
-

@@ -2,30 +2,25 @@
 % Please edit documentation in R/proc_freq.R
 \name{proc_freq}
 \alias{proc_freq}
-\title{Frequency table as flextable}
+\title{Frequency table}
 \usage{
 proc_freq(
   x,
-  row,
-  col,
-  main = "",
+  row = character(),
+  col = character(),
   include.row_percent = TRUE,
   include.column_percent = TRUE,
   include.table_percent = TRUE,
-  include.column_total = TRUE,
-  include.row_total = TRUE,
-  include.header_row = TRUE,
-  weight = NULL
+  weight = character(),
+  ...
 )
 }
 \arguments{
-\item{x}{\code{data.frame} object}
+\item{x}{a \code{data.frame} object containing variable(s) to use for counts.}
 
 \item{row}{\code{characer} column names for row}
 
 \item{col}{\code{characer} column names for column}
-
-\item{main}{\code{characer} title}
 
 \item{include.row_percent}{\code{boolean} whether to include the row percents; defaults to \code{TRUE}}
 
@@ -33,23 +28,19 @@ proc_freq(
 
 \item{include.table_percent}{\code{boolean} whether to include the table percents; defaults to \code{TRUE}}
 
-\item{include.column_total}{\code{boolean} whether to include the row of column totals; defaults to \code{TRUE}}
-
-\item{include.row_total}{\code{boolean} whether to include the column of row totals; defaults to \code{TRUE}}
-
-\item{include.header_row}{\code{boolean} whether to include the header row; defaults to \code{TRUE}}
-
 \item{weight}{\code{character} column name for weight}
+
+\item{...}{unused arguments}
 }
 \description{
-This function compute a two way contingency table
-and make a flextable with the result.
+This function compute a one or two way
+contingency table and create a flextable from the result.
+
+The function is largely inspired by "PROC FREQ" from "SAS"
+and was written with the intent to make it
+as compact as possible.
 }
 \examples{
-
 proc_freq(mtcars, "vs", "gear")
 proc_freq(mtcars, "gear", "vs", weight = "wt")
-}
-\author{
-Titouan Robert
 }
