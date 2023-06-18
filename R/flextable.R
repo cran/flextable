@@ -150,25 +150,34 @@ qflextable <- function(data){
 #' associated with any formatting.
 #'
 #' @details
-#' The values defined by `set_caption()` will be preferred when possible, i.e. the
-#' caption ID, the associated paragraph style, etc. Why specify "where possible"?
-#' Because the principles differ from tool to tool. Here is what we have noticed
-#' and tried to respect (if you think we are wrong, let us know):
+#' The behavior of captions in the 'flextable' package varies depending on the formats
+#' and technologies used.
 #'
-#' - Word and HTML documents made with 'rmarkdown', i.e. with `rmarkdown::word_document()`
-#' and `rmarkdown::html_document()` are not supposed to have numbered and cross-referenced captions.
-#' - PDF documents made with 'rmarkdown' `rmarkdown::pdf_document()` automatically add numbers
-#' before the caption.
-#' - Word and HTML documents made with 'bookdown' are supposed to have numbered and
-#' cross-referenced captions. This is achieved by 'bookdown' but for technical reasons,
-#' the caption must not be defined in an HTML or XML block. So with flextable we lose
-#' the ability to format the caption content; surprisingly this is not the case with PDF.
-#' - HTML and PDF documents created with Quarto will manage captions and cross-references
-#' differently; Quarto will replace captions with `tbl-cap` and `label` values.
-#' - Word documents made with Quarto are another specific case, Quarto does not
-#' inject captions from the `tbl-cap` and `label` values. This is a temporary
-#' situation that should evolve later. flextable' will evolve according to the
-#' evolution of Quarto.
+#' The values set by the `set_caption()` function will be prioritized whenever
+#' possible, including the caption ID and associated paragraph style.
+#' However, it's important to note that the behavior may differ across different tools.
+#' Here's what we have observed and attempted to respect, but please inform us
+#' if you believe our observations are incorrect:
+#'
+#' - In Word and HTML documents created with 'rmarkdown' `rmarkdown::word_document()`
+#' and `rmarkdown::html_document()`, numbered and cross-referenced captions are not
+#' typically expected.
+#' - In PDF documents created with 'rmarkdown' `rmarkdown::pdf_document()`, numbers
+#' are automatically added before the caption.
+#' - In Word and HTML documents created with 'bookdown', numbered and cross-referenced
+#' captions are expected. 'bookdown' handles this functionality, but due to
+#' technical reasons, the caption should not be defined within an HTML or XML block.
+#' Therefore, when using 'flextable', the ability to format the caption content is
+#' lost (this limitation does not apply to PDF documents).
+#' - HTML and PDF documents created with Quarto handle captions and
+#' cross-references differently. Quarto replaces captions with 'tbl-cap' and 'label'
+#' values.
+#' - Word documents created with Quarto present another specific case.
+#' Currently, Quarto does not inject captions using the 'tbl-cap' and label values.
+#' However, this is a temporary situation that is expected to change in the future.
+#' The 'flextable' package will adapt accordingly as Quarto evolves.
+#' - When using the `body_add_flextable()` function, all the options
+#' specified with `set_caption()` will be enabled.
 #'
 #' Using [body_add_flextable()] enable all options specified with `set_caption()`.
 #'
@@ -209,41 +218,62 @@ qflextable <- function(data){
 #'
 #' @section Formatting the caption:
 #'
-#' You can build your caption with `as_paragraph()`.
-#' This is recommended if your captions need complex content. The caption is build
-#' with a paragraph made of chunks (for example, a red bold text + Arial italic
-#' text).
+#' To create captions in R Markdown using the 'flextable' package and 'officer'
+#' package, you can utilize the `as_paragraph()` function. This approach is
+#' recommended when your captions require complex content, such as a combination of
+#' different text styles or the inclusion of images and equations.
 #'
-#' The user will then have the ability to format text and to add images
-#' and equations. If no format is specified (using `"a string"`
-#' or `as_chunk("a string")`), [fp_text_default()] is used to define
-#' font settings (font family, bold, italic, color, etc...).
-#' The default values can be changed with set_flextable_defaults().
-#' It is recommended to explicitly use  `as_chunk()`.
+#' The caption is constructed as a paragraph consisting of multiple chunks. Each
+#' chunk represents a specific portion of the caption with its desired formatting,
+#' such as red bold text or Arial italic text.
 #'
-#' The counterpart is that the style properties of the caption will
-#' not take precedence over those of the formatted elements. You will
-#' have to specify the font to use:
+#' By default, if no specific formatting is specified (using either "a string" or
+#' `as_chunk("a string")`), the `fp_text_default()` function sets the font settings
+#' for the caption, including the font family, boldness, italics, color, etc. The
+#' default values can be modified using the `set_flextable_defaults()` function.
+#' However, it is recommended to explicitly use `as_chunk()` to define the desired
+#' formatting.
+#'
+#' It's important to note that the style properties of the caption will not
+#' override the formatting of the individual elements within it. Therefore, you
+#' need to explicitly specify the font to be used for the caption.
+#'
+#' Here's an example of how to set a caption for a flextable in R Markdown using
+#' the 'officer' package:
+#'
 #'
 #' ```
+#' library(flextable)
+#' library(officer)
+#'
 #' ftab <- flextable(head(cars)) %>%
 #'   set_caption(
 #'     as_paragraph(
 #'       as_chunk("caption", props = fp_text_default(font.family = "Cambria"))
-#'     ), word_stylename = "Table Caption")
+#'     ), word_stylename = "Table Caption"
+#'   )
+#'
 #' print(ftab, preview = "docx")
 #' ```
 #'
+#' In this example, the `set_caption()` function sets the caption for the
+#' flextable. The caption is created using `as_paragraph()` with a single chunk
+#' created using `as_chunk("caption", props = fp_text_default(font.family =
+#' "Cambria"))`. The `word_stylename` parameter is used to specify the table
+#' caption style in the resulting Word document. Finally, the `print()` function
+#' generates the flextable with the caption, and `preview = "docx"` displays a
+#' preview of the resulting Word document.
+#'
 #' @section Using 'Quarto':
 #'
-#' 'Quarto' manage captions and cross-references instead of flextable. That's why
-#' `set_caption()` is not that useful in a 'Quarto' document except for Word documents
-#' where 'Quarto' does not manage captions yet (when output is raw xml which is the
-#' case for flextable).
-#'
-#' knitr options are almost the same than those detailled in the R Markdown section (see upper),
-#' but be aware that 'Quarto' manage captions and it can be overwrite what has
-#' been defined by flextable. See Quarto documentation for more information.
+#' In 'Quarto', captions and cross-references are handled differently
+#' compared to 'R Markdown', where flextable takes care of the job.
+#' In Quarto, the responsibility for managing captions lies with the Quarto
+#' framework itself. Consequently, the `set_caption()` function in 'flextable'
+#' is not as useful in a 'Quarto' document. The formatting and numbering of
+#' captions are determined by Quarto rather than flextable. Please refer to
+#' the Quarto documentation for more information on how to work with captions
+#' in Quarto.
 #'
 #' @param x flextable object
 #' @param caption caption value. The caption can be either a string either
@@ -447,7 +477,10 @@ regulartable <- function( data, col_keys = names(data), cwidth = .75, cheight = 
 #' - 'fonts_ignore': if TRUE, pdf-engine 'pdflatex' can be used instead of
 #' 'xelatex' or 'lualatex.' If pdflatex is used, fonts will be ignored because they are
 #' not supported by pdflatex, whereas with the xelatex and lualatex engines they are.
-#' - 'default_line_color': default line color, restored globally after the flextable is produced.
+#' - 'caption_repeat': a boolean that indicates if the caption should be
+#' repeated along pages. Its default value is `TRUE`.
+#' - 'default_line_color': default line color, restored globally after
+#' the flextable is produced.
 #' @param word_title alternative text for Word table (used as title of the table)
 #' @param word_description alternative text for Word table (used as description of the table)
 #' @examples
@@ -544,6 +577,7 @@ opts_ft_pdf <- function(tabcolsep = get_flextable_defaults()$tabcolsep,
                         arraystretch = get_flextable_defaults()$arraystretch,
                         float = get_flextable_defaults()$float,
                         fonts_ignore = get_flextable_defaults()$fonts_ignore,
+                        caption_repeat = TRUE,
                         default_line_color = "black"
                         ) {
 
@@ -559,11 +593,15 @@ opts_ft_pdf <- function(tabcolsep = get_flextable_defaults()$tabcolsep,
   if( !is.character(float) || length(float) != 1 || !all(float %in% c('none', 'float', 'wrap-r', 'wrap-l', 'wrap-i', 'wrap-o')) ){
     stop(sprintf("'%s' is expected to be a single %s.", "float", "character (one of 'none', 'float', 'wrap-r', 'wrap-l', 'wrap-i', 'wrap-o')"), call. = FALSE)
   }
+  if( !is.logical(caption_repeat) || length(caption_repeat) != 1) {
+    stop(sprintf("'%s' is expected to be a single %s.", "logical"), call. = FALSE)
+  }
 
   z <- list(tabcolsep = tabcolsep,
             arraystretch = arraystretch,
             float = float,
             default_line_color = default_line_color,
+            caption_repeat = caption_repeat,
             fonts_ignore = fonts_ignore)
   class(z) <- "opts_ft_pdf"
   z

@@ -78,12 +78,18 @@ body_add_flextable <- function(x, value,
 }
 
 #' @export
-#' @rdname body_add_flextable
-#' @param bookmark bookmark id
-#' @section body_replace_flextable_at_bkm:
+#' @title Add flextable at boorkmark location in a Word document
+#' @description
 #' Use this function if you want to replace a paragraph containing
 #' a bookmark with a flextable. As a side effect, the bookmark will be lost.
+#' @param x an rdocx object
+#' @param value `flextable` object
+#' @param bookmark bookmark id
+#' @param align left, center (default) or right.
+#' @param split set to TRUE if you want to activate Word
+#' option 'Allow row to break across pages'.
 #' @importFrom officer cursor_bookmark
+#' @importFrom xml2 xml_replace as_xml_document xml_find_first xml_parent
 body_replace_flextable_at_bkm <- function(x, bookmark, value, align = "center", split = FALSE) {
   x <- cursor_bookmark(x, bookmark)
   x <- body_add_flextable(x = x, value = value, pos = "on", align = align, split = split)
@@ -97,17 +103,17 @@ body_replace_flextable_at_bkm <- function(x, bookmark, value, align = "center", 
 #' within a paragraph; i.e., a bookmark along two or more paragraphs is invalid,
 #' a bookmark set on a whole paragraph is also invalid, but bookmarking few words
 #' inside a paragraph is valid.
-#' @importFrom xml2 xml_replace as_xml_document xml_find_first xml_parent
 #' @param x an rdocx object
 #' @param bookmark bookmark id
 #' @param value a flextable object
 #' @keywords internal
 headers_flextable_at_bkm <- function(x, bookmark, value) {
   stopifnot(inherits(x, "rdocx"), inherits(value, "flextable"))
+  .Deprecated(new = "use `prop_section(header_default = block_list(your_flextable))`")
   str <- gen_raw_wml(value, doc = x)
   xml_elt <- as_xml_document(str)
   for (header in x$headers) {
-    node <- xml_find_first(header$get(), '//w:bookmarkStart[@w:name="hd_summary_tbl"]')
+    node <- xml_find_first(header$get(), sprintf('//w:bookmarkStart[@w:name="%s"]', bookmark))
     if (!inherits(node, "xml_missing")) {
       node <- xml_parent(node)
       xml_replace(node, xml_elt)
@@ -130,10 +136,11 @@ headers_flextable_at_bkm <- function(x, bookmark, value) {
 #' @keywords internal
 footers_flextable_at_bkm <- function(x, bookmark, value) {
   stopifnot(inherits(x, "rdocx"), inherits(value, "flextable"))
+  .Deprecated(new = "use `prop_section(footer_default = block_list(your_flextable))`")
   str <- gen_raw_wml(value, doc = x)
   xml_elt <- as_xml_document(str)
   for (footer in x$footers) {
-    node <- xml_find_first(footer$get(), '//w:bookmarkStart[@w:name="hd_summary_tbl"]')
+    node <- xml_find_first(footer$get(), sprintf('//w:bookmarkStart[@w:name="%s"]', bookmark))
     if (!inherits(node, "xml_missing")) {
       node <- xml_parent(node)
       xml_replace(node, xml_elt)

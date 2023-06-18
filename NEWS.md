@@ -1,3 +1,35 @@
+# flextable 0.9.2
+
+## Issues
+
+- rmarkdown expect list of dependencies to be unnamed.
+This property is used in HTML or LaTeX deps resolution to know 
+when to be recursive 
+- `dim_pretty()` returns correct numbers when not 'inches'
+- `as_flextable.table()` now propagates `...` as expected
+- pdf: when table was on two pages, there were duplicated caption entries,
+this is fixed thanks to Christophe Dervieux and Nick Bart. Repeating 
+the caption along pages can be desactivated with command 
+`set_table_properties(opts_pdf = list(caption_repeat = FALSE))`.
+- `as_flextable()` now works on tabular objects and `R < 4.1`.
+- `to_html(type = "img")` now use the correct width and height
+
+## Changes
+
+- bookdown has now bookmarks associated with captions and flextable benefits
+from this feature.
+- In 'Quarto' captions are ignored, which make Quarto captions valid with HTML
+and PDF outputs; the responsibility for managing captions lies with the
+Quarto framework itself. It does not work with Quarto for Word and should be
+possible with Quarto `1.4`.
+- `as_flextable.tabular()` now generate tabulated content only if the sub group
+contains more than a single row. When possible, row titles are tabulated.
+
+## Deprecated functions
+
+- The functions `footers_flextable_at_bkm` and `headers_flextable_at_bkm` are deprecated.
+Instead, we recommend using the `prop_section()` and `block_list()` functions from the `officer` package as alternative solutions. These functions provide more reliable and flexible options for managing footers and headers. 
+
 # flextable 0.9.1
 
 ## breaking change

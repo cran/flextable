@@ -77,25 +77,34 @@ formatted chunks whereas with the former, caption will not be
 associated with any formatting.
 }
 \details{
-The values defined by \code{set_caption()} will be preferred when possible, i.e. the
-caption ID, the associated paragraph style, etc. Why specify "where possible"?
-Because the principles differ from tool to tool. Here is what we have noticed
-and tried to respect (if you think we are wrong, let us know):
+The behavior of captions in the 'flextable' package varies depending on the formats
+and technologies used.
+
+The values set by the \code{set_caption()} function will be prioritized whenever
+possible, including the caption ID and associated paragraph style.
+However, it's important to note that the behavior may differ across different tools.
+Here's what we have observed and attempted to respect, but please inform us
+if you believe our observations are incorrect:
 \itemize{
-\item Word and HTML documents made with 'rmarkdown', i.e. with \code{rmarkdown::word_document()}
-and \code{rmarkdown::html_document()} are not supposed to have numbered and cross-referenced captions.
-\item PDF documents made with 'rmarkdown' \code{rmarkdown::pdf_document()} automatically add numbers
-before the caption.
-\item Word and HTML documents made with 'bookdown' are supposed to have numbered and
-cross-referenced captions. This is achieved by 'bookdown' but for technical reasons,
-the caption must not be defined in an HTML or XML block. So with flextable we lose
-the ability to format the caption content; surprisingly this is not the case with PDF.
-\item HTML and PDF documents created with Quarto will manage captions and cross-references
-differently; Quarto will replace captions with \code{tbl-cap} and \code{label} values.
-\item Word documents made with Quarto are another specific case, Quarto does not
-inject captions from the \code{tbl-cap} and \code{label} values. This is a temporary
-situation that should evolve later. flextable' will evolve according to the
-evolution of Quarto.
+\item In Word and HTML documents created with 'rmarkdown' \code{rmarkdown::word_document()}
+and \code{rmarkdown::html_document()}, numbered and cross-referenced captions are not
+typically expected.
+\item In PDF documents created with 'rmarkdown' \code{rmarkdown::pdf_document()}, numbers
+are automatically added before the caption.
+\item In Word and HTML documents created with 'bookdown', numbered and cross-referenced
+captions are expected. 'bookdown' handles this functionality, but due to
+technical reasons, the caption should not be defined within an HTML or XML block.
+Therefore, when using 'flextable', the ability to format the caption content is
+lost (this limitation does not apply to PDF documents).
+\item HTML and PDF documents created with Quarto handle captions and
+cross-references differently. Quarto replaces captions with 'tbl-cap' and 'label'
+values.
+\item Word documents created with Quarto present another specific case.
+Currently, Quarto does not inject captions using the 'tbl-cap' and label values.
+However, this is a temporary situation that is expected to change in the future.
+The 'flextable' package will adapt accordingly as Quarto evolves.
+\item When using the \code{body_add_flextable()} function, all the options
+specified with \code{set_caption()} will be enabled.
 }
 
 Using \code{\link[=body_add_flextable]{body_add_flextable()}} enable all options specified with \code{set_caption()}.
@@ -138,42 +147,61 @@ See \link{knit_print.flextable} for more details.
 \section{Formatting the caption}{
 
 
-You can build your caption with \code{as_paragraph()}.
-This is recommended if your captions need complex content. The caption is build
-with a paragraph made of chunks (for example, a red bold text + Arial italic
-text).
+To create captions in R Markdown using the 'flextable' package and 'officer'
+package, you can utilize the \code{as_paragraph()} function. This approach is
+recommended when your captions require complex content, such as a combination of
+different text styles or the inclusion of images and equations.
 
-The user will then have the ability to format text and to add images
-and equations. If no format is specified (using \code{"a string"}
-or \code{as_chunk("a string")}), \code{\link[=fp_text_default]{fp_text_default()}} is used to define
-font settings (font family, bold, italic, color, etc...).
-The default values can be changed with set_flextable_defaults().
-It is recommended to explicitly use  \code{as_chunk()}.
+The caption is constructed as a paragraph consisting of multiple chunks. Each
+chunk represents a specific portion of the caption with its desired formatting,
+such as red bold text or Arial italic text.
 
-The counterpart is that the style properties of the caption will
-not take precedence over those of the formatted elements. You will
-have to specify the font to use:
+By default, if no specific formatting is specified (using either "a string" or
+\code{as_chunk("a string")}), the \code{fp_text_default()} function sets the font settings
+for the caption, including the font family, boldness, italics, color, etc. The
+default values can be modified using the \code{set_flextable_defaults()} function.
+However, it is recommended to explicitly use \code{as_chunk()} to define the desired
+formatting.
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{ftab <- flextable(head(cars)) \%>\%
+It's important to note that the style properties of the caption will not
+override the formatting of the individual elements within it. Therefore, you
+need to explicitly specify the font to be used for the caption.
+
+Here's an example of how to set a caption for a flextable in R Markdown using
+the 'officer' package:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{library(flextable)
+library(officer)
+
+ftab <- flextable(head(cars)) \%>\%
   set_caption(
     as_paragraph(
       as_chunk("caption", props = fp_text_default(font.family = "Cambria"))
-    ), word_stylename = "Table Caption")
+    ), word_stylename = "Table Caption"
+  )
+
 print(ftab, preview = "docx")
 }\if{html}{\out{</div>}}
+
+In this example, the \code{set_caption()} function sets the caption for the
+flextable. The caption is created using \code{as_paragraph()} with a single chunk
+created using \code{as_chunk("caption", props = fp_text_default(font.family = "Cambria"))}. The \code{word_stylename} parameter is used to specify the table
+caption style in the resulting Word document. Finally, the \code{print()} function
+generates the flextable with the caption, and \code{preview = "docx"} displays a
+preview of the resulting Word document.
 }
 
 \section{Using 'Quarto'}{
 
 
-'Quarto' manage captions and cross-references instead of flextable. That's why
-\code{set_caption()} is not that useful in a 'Quarto' document except for Word documents
-where 'Quarto' does not manage captions yet (when output is raw xml which is the
-case for flextable).
-
-knitr options are almost the same than those detailled in the R Markdown section (see upper),
-but be aware that 'Quarto' manage captions and it can be overwrite what has
-been defined by flextable. See Quarto documentation for more information.
+In 'Quarto', captions and cross-references are handled differently
+compared to 'R Markdown', where flextable takes care of the job.
+In Quarto, the responsibility for managing captions lies with the Quarto
+framework itself. Consequently, the \code{set_caption()} function in 'flextable'
+is not as useful in a 'Quarto' document. The formatting and numbering of
+captions are determined by Quarto rather than flextable. Please refer to
+the Quarto documentation for more information on how to work with captions
+in Quarto.
 }
 
 \examples{

@@ -160,12 +160,32 @@ to_html.flextable <- function(x, type = c("table", "img"), ...) {
     gen_raw_html(x, class = "tabwid", caption = "", manual_css = paste0(manual_css, collapse = "\n"))
   } else {
     tmp <- tempfile(fileext = ".png")
-    dir.create(dirname(tmp), showWarnings = FALSE, recursive = TRUE)
-    save_as_image(x, path = tmp, expand = 0, res = 200)
+
+    gr <- gen_grob(x, fit = "fixed", just = "center")
+    dims <- dim(gr)
+    expand <- 10
+    width <- dims$width + expand/72
+    height <- dims$height + expand/72
+
+    agg_png(
+      filename = tmp,
+      width = dims$width + expand/72,
+      height = dims$height + expand/72,
+      res = 200, units = "in",
+      background = "transparent")
+
+    tryCatch(
+      {
+        plot(gr)
+      },
+      finally = {
+        dev.off()
+      }
+    )
+
     base64_string <- image_to_base64(tmp)
-    width <- flextable_dim(x)$width
-    height <- flextable_dim(x)$height
-    sprintf("<img style=\"width:%.0fpx;height:%.0fpx;\" src=\"%s\" />", width * 72, height * 72, base64_string)
+
+    sprintf("<img style=\"width:%.3fin;height:%.3fin;\" src=\"%s\" />", width, height, base64_string)
   }
 }
 
@@ -199,7 +219,7 @@ knit_to_html <- function(x, bookdown = FALSE, quarto = FALSE) {
     caption_str <- caption_bookdown_html(x)
     manual_css <- attr(caption_str, "css")
   } else if (quarto) {
-    caption_str <- caption_quarto_html(x)
+    caption_str <- ""
   } else {
     caption_str <- caption_default_html(x)
     manual_css <- attr(caption_str, "css")
@@ -248,6 +268,8 @@ knit_to_wml <- function(x, bookdown = FALSE, quarto = FALSE) {
   }
   if (bookdown) {
     caption <- caption_bookdown_docx_md(x)
+  } else if (quarto) {
+    caption <- ""
   } else {
     caption <- caption_default_docx_openxml(
       x,
@@ -323,7 +345,7 @@ knit_to_latex <- function(x, bookdown, quarto = FALSE) {
   tab_props <- opts_current_table()
   topcaption <- tab_props$topcaption
   if (quarto) {
-    caption_str <- caption_quarto_latex(x)
+    caption_str <- ""
   } else if (bookdown) {
     caption_str <- caption_bookdown_latex(x)
   } else {
@@ -453,7 +475,7 @@ print.flextable <- function(x, preview = "html", align = "center", ...) {
 
 
 
-#' @title Render flextable in rmarkdown
+#' @title Render flextable with 'knitr'
 #' @description Function used to render flextable in knitr/rmarkdown documents.
 #'
 #' You should not call this method directly. This function is used by the knitr
@@ -650,7 +672,7 @@ knit_print.flextable <- function(x, ...) {
     str <- knit_to_latex(x, bookdown = is_bookdown, quarto = is_quarto)
     str <- raw_latex(
       x = str,
-      meta = list_latex_dep(float = TRUE, wrapfig = TRUE)
+      meta = unname(list_latex_dep(float = TRUE, wrapfig = TRUE))
     )
   } else if (grepl("docx", opts_knit$get("rmarkdown.pandoc.to"))) { # docx
     if (pandoc_version() < numeric_version("2")) {
@@ -694,18 +716,22 @@ knit_print.flextable <- function(x, ...) {
 #' @examples
 #' ft1 <- flextable(head(iris))
 #' tf1 <- tempfile(fileext = ".html")
-#' save_as_html(ft1, path = tf1)
-#' # browseURL(tf1)
+#' if (rmarkdown::pandoc_available()) {
+#'   save_as_html(ft1, path = tf1)
+#'   # browseURL(tf1)
+#' }
 #'
 #' ft2 <- flextable(head(mtcars))
 #' tf2 <- tempfile(fileext = ".html")
-#' save_as_html(
-#'   `iris table` = ft1,
-#'   `mtcars table` = ft2,
-#'   path = tf2,
-#'   title = "rhoooo"
-#' )
-#' # browseURL(tf2)
+#' if (rmarkdown::pandoc_available()) {
+#'   save_as_html(
+#'     `iris table` = ft1,
+#'     `mtcars table` = ft2,
+#'     path = tf2,
+#'     title = "rhoooo"
+#'   )
+#'   # browseURL(tf2)
+#' }
 #' @family flextable print function
 #' @importFrom htmltools save_html
 save_as_html <- function(..., values = NULL, path,
@@ -1029,6 +1055,9 @@ plot.flextable <- function(x, ...) {
 #' @description save a flextable as an image and return the corresponding
 #' raster. This function has been implemented to let flextable be printed
 #' on a ggplot object.
+#'
+#' The function is no longer very useful since [gen_grob()] exists and
+#' will be deprecated in a future version.
 #' @note This function requires package 'magick'.
 #' @param x a flextable object
 #' @param ... additional arguments passed to other functions
@@ -1042,6 +1071,7 @@ plot.flextable <- function(x, ...) {
 #' }
 #' }
 #' @family flextable print function
+#' @keywords internal
 as_raster <- function(x, ...) {
   if (!requireNamespace("magick", quietly = TRUE)) {
     stop(sprintf(

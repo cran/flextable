@@ -16,7 +16,7 @@
 #' @importFrom knitr knit_meta_add
 add_latex_dep <- function(float = FALSE, wrapfig = FALSE){
 
-  knit_meta_add(list_latex_dep(float = float, wrapfig = wrapfig))
+  knit_meta_add(unname(list_latex_dep(float = float, wrapfig = wrapfig)))
 
   invisible(NULL)
 }
@@ -201,6 +201,12 @@ gen_raw_latex <- function(x, lat_container = latex_container_none(),
     align_tag, paste(column_sizes_latex, collapse = "")
   )
   table_end <- "\\end{longtable}"
+
+  if (x$properties$opts_pdf$caption_repeat && topcaption) {
+    second_caption <- gsub("\\caption", "\\caption[]", caption)
+    txt_data$part_sep <- gsub("\\endfirsthead", paste("\\endfirsthead", second_caption), txt_data$part_sep, fixed = TRUE)
+  }
+
   latex <- paste0(txt_data$txt, txt_data$part_sep, collapse = "\n\n")
 
   if (inherits(lat_container, "latex_container_wrap")) {
@@ -210,9 +216,9 @@ gen_raw_latex <- function(x, lat_container = latex_container_none(),
   latex <- paste(
     cline_cmd,
     table_start,
-    if (topcaption) caption,
+    if (topcaption && !quarto) caption,
     latex,
-    if (!topcaption) caption,
+    if (!topcaption && !quarto) caption,
     table_end,
     sep = "\n\n"
   )
@@ -316,7 +322,7 @@ augment_part_separators <- function(z, no_container = TRUE) {
     merge(z[, list(ft_row_id = max(.SD$ft_row_id)), by = "part"],
       data.frame(
         part = factor(c("header", "body", "footer"), levels = c("header", "body", "footer")),
-        part_sep = if(no_container) c("\\endhead", "", "\\endfoot") else c("\\endhead", "", ""),
+        part_sep = if(no_container) c("\\endfirsthead", "", "\\endfoot") else c("\\endfirsthead", "", ""),
         stringsAsFactors = FALSE
       ),
       by = c("part")
@@ -327,6 +333,14 @@ augment_part_separators <- function(z, no_container = TRUE) {
   setorderv(part_separators, c("part", "ft_row_id"))
 
   z <- merge(z, part_separators, by = c("part", "ft_row_id"))
+
+  if ("header" %in% z$part) {
+    z_header <- z[z$part %in% "header",]
+    z_header$ft_row_id <- z_header$ft_row_id + max(z_header$ft_row_id)
+    z_header$part_sep[nrow(z_header)] <- "\\endhead"
+    z <- rbind(z[z$part %in% "header",], z_header, z[!z$part %in% "header",])
+  }
+
   z
 }
 
@@ -380,8 +394,8 @@ calc_column_size <- function(df, levels) {
 
 # tools ----
 merge_table_properties <- function(x) {
-  cell_data <- fortify_style(x, "cells")
-  par_data <- fortify_style(x, "pars")
+  cell_data <- fortify_cells_properties(x)
+  par_data <- fortify_paragraphs_properties(x)
   setDT(cell_data)
   setDT(par_data)
 

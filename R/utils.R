@@ -1,5 +1,5 @@
 #' @importFrom data.table rbindlist setDF
-rbind.match.columns <- function(list_df) {
+rbind_match_columns <- function(list_df) {
   df <- rbindlist(list_df, use.names = TRUE, fill = TRUE)
   setDF(df)
   row.names(df) <- NULL
@@ -110,6 +110,15 @@ convin <- function(unit, x) {
   unit <- match.arg(unit, choices = c("in", "cm", "mm"), several.ok = FALSE)
   if (!identical("in", unit)) {
     x <- do.call(paste0(unit, "_to_inches"), list(x = x))
+  }
+  x
+}
+convmeters <- function(unit, x) {
+  unit <- match.arg(unit, choices = c("in", "cm", "mm"), several.ok = FALSE)
+  if (identical("cm", unit)) {
+    x <- x * 2.54
+  } else if (identical("mm", unit)) {
+    x <- x * 254
   }
   x
 }
