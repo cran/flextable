@@ -71,7 +71,9 @@ range (e.g. low, normal, or high) at baseline and at selected time points
 or intervals.
 }
 \examples{
-\dontrun{
+\dontshow{
+data.table::setDTthreads(1)
+}
 library(data.table)
 library(flextable)
 
@@ -162,6 +164,5 @@ ft_1 <- as_flextable(
                  BASELINE = "Reference Range Indicator"))
 
 ft_1
-}
 }
 \concept{tools for clinical reporting}

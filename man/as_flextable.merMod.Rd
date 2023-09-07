@@ -10,22 +10,25 @@
 \alias{as_flextable.glmmadmb}
 \title{Transform a mixed model into a flextable}
 \usage{
-\method{as_flextable}{merMod}(x, ...)
+\method{as_flextable}{merMod}(x, add.random = TRUE, ...)
 
-\method{as_flextable}{lme}(x, ...)
+\method{as_flextable}{lme}(x, add.random = TRUE, ...)
 
-\method{as_flextable}{gls}(x, ...)
+\method{as_flextable}{gls}(x, add.random = TRUE, ...)
 
-\method{as_flextable}{nlme}(x, ...)
+\method{as_flextable}{nlme}(x, add.random = TRUE, ...)
 
-\method{as_flextable}{brmsfit}(x, ...)
+\method{as_flextable}{brmsfit}(x, add.random = TRUE, ...)
 
-\method{as_flextable}{glmmTMB}(x, ...)
+\method{as_flextable}{glmmTMB}(x, add.random = TRUE, ...)
 
-\method{as_flextable}{glmmadmb}(x, ...)
+\method{as_flextable}{glmmadmb}(x, add.random = TRUE, ...)
 }
 \arguments{
 \item{x}{a mixed model}
+
+\item{add.random}{TRUE or FALSE, if TRUE random effects are
+added to the table.}
 
 \item{...}{unused argument}
 }
@@ -33,6 +36,9 @@
 produce a flextable describing a
 mixed model. The function is only using package 'broom.mixed'
 that provides the data presented in the resulting flextable.
+
+You can remove significance stars by setting options
+\code{options(show.signif.stars = FALSE)}.
 }
 \examples{
 if(require("broom.mixed") && require("nlme")){

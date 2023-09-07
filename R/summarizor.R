@@ -11,81 +11,45 @@
 #' @param x dataset
 #' @param by columns names to be used as grouping columns
 #' @param overall_label label to use as overall label
+#' @param num_stats available statistics for numerical columns
+#' to show, available options are "mean_sd", "median_iqr" and "range".
+#' @param hide_null_na if TRUE (default), NA counts will not be shown when 0.
 #' @seealso [fmt_summarizor()], [labelizor()]
 #' @examples
-#' \dontrun{
+#' \dontshow{
+#' data.table::setDTthreads(1)
+#' }
 #' z <- summarizor(CO2[-c(1, 4)],
-#'   by = "Treatment",
-#'   overall_label = "Overall"
+#'                 by = "Treatment",
+#'                 overall_label = "Overall"
 #' )
 #' ft_1 <- as_flextable(z)
 #' ft_1
 #'
-#' # version 2 with your own functions ----
-#' n_format <- function(n, percent) {
-#'   z <- character(length = length(n))
-#'   wcts <- !is.na(n)
-#'   z[wcts] <- sprintf("%.0f (%.01f %%)",
-#'     n[wcts], percent[wcts] * 100)
-#'   z
-#' }
-#'
-#' stat_format <- function(stat, num1, num2,
-#'                         num1_mask = "%.01f",
-#'                         num2_mask = "(%.01f)") {
-#'   z_num <- character(length = length(num1))
-#'
-#'   is_mean_sd <- !is.na(num1) & !is.na(num2) & stat %in% "mean_sd"
-#'   is_median_iqr <- !is.na(num1) & !is.na(num2) &
-#'     stat %in% "median_iqr"
-#'   is_range <- !is.na(num1) & !is.na(num2) & stat %in% "range"
-#'   is_num_1 <- !is.na(num1) & is.na(num2)
-#'
-#'   z_num[is_num_1] <- sprintf(num1_mask, num1[is_num_1])
-#'
-#'   z_num[is_mean_sd] <- paste0(
-#'     sprintf(num1_mask, num1[is_mean_sd]),
-#'     " ",
-#'     sprintf(num2_mask, num2[is_mean_sd])
-#'   )
-#'   z_num[is_median_iqr] <- paste0(
-#'     sprintf(num1_mask, num1[is_median_iqr]),
-#'     " ",
-#'     sprintf(num2_mask, num2[is_median_iqr])
-#'   )
-#'   z_num[is_range] <- paste0(
-#'     "[",
-#'     sprintf(num1_mask, num1[is_range]),
-#'     " - ",
-#'     sprintf(num1_mask, num2[is_range]),
-#'     "]"
-#'   )
-#'
-#'   z_num
-#' }
-#'
-#' tab_2 <- tabulator(z,
-#'   rows = c("variable", "stat"),
-#'   columns = "Treatment",
-#'   `Est.` = as_paragraph(
-#'     as_chunk(stat_format(stat, value1, value2))),
-#'   `N` = as_paragraph(as_chunk(n_format(cts, percent)))
-#' )
-#'
-#' ft_2 <- as_flextable(tab_2, separate_with = "variable")
+#' ft_2 <- as_flextable(z, sep_w = 0, spread_first_col=TRUE)
 #' ft_2
-#' }
+#'
+#' z <- summarizor(CO2[-c(1, 4)])
+#' ft_3 <- as_flextable(z, sep_w = 0, spread_first_col=TRUE)
+#' ft_3
 #' @export
 summarizor <- function(
     x, by = character(),
-    overall_label = NULL
+    overall_label = NULL,
+    num_stats = c("mean_sd", "median_iqr", "range"),
+    hide_null_na = TRUE
     ){
 
-  stopifnot(`by can not be empty` = length(by)>0)
+  if (length(by) < 1) {
+    by <- ".overall"
+    x[[by]] <- by
+    last_by <- character()
+  } else {
+    last_by <- by[length(by)]
+  }
 
   x <- as.data.frame(x)
 
-  last_by <- by[length(by)]
   if(length(last_by) > 0 && !is.null(overall_label) ){
     xoverall <- x
     z <- xoverall[[last_by]]
@@ -107,6 +71,14 @@ summarizor <- function(
   setDF(datn)
   dat <- dtx[, list(data=list(.SD)), by = by, .SDcols = cols]
   dat$data <- lapply(dat$data, dataset_describe)
+
+  dat$data = lapply(dat$data, function(dat, drop_stats) {
+    dat <- dat[!dat$stat %in% drop_stats,]
+    if (hide_null_na) {
+      dat <- dat[!(dat$stat %in% "missing" & dat$cts < 1),]
+    }
+    dat
+  }, drop_stats = setdiff(c("mean_sd", "median_iqr", "range"), num_stats))
 
   for(i in seq_len(nrow(dat))){
     w <- as.data.frame(dat$data[[i]])
@@ -144,7 +116,9 @@ summarizor <- function(
 #' @param ... arguments for [as_flextable.tabulator()]
 #' @family as_flextable methods
 #' @examples
-#' \dontrun{
+#' \dontshow{
+#' data.table::setDTthreads(1)
+#' }
 #' z <- summarizor(CO2[-c(1, 4)],
 #'   by = "Treatment",
 #'   overall_label = "Overall"
@@ -155,7 +129,6 @@ summarizor <- function(
 #'   as_chunk("\t"))
 #' ft_1 <- autofit(ft_1)
 #' ft_1
-#' }
 as_flextable.summarizor <- function(x, ...) {
 
   tab <- tabulator(
@@ -173,6 +146,7 @@ as_flextable.summarizor <- function(x, ...) {
     )
   )
   ft <- as_flextable(tab, ...)
+  ft <- labelizor(ft, labels = c(".overall" = "Statistic"), part = "header")
 
   ft
 }

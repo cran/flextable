@@ -1,3 +1,36 @@
+# flextable 0.9.3
+
+## new features
+
+- The `summarizor()` function has been enhanced to offer three new options: 
+  - an empty `by` argument meaning 'no grouping,' 
+  - the ability for users to select numeric statistics to display ("mean_sd," "median_iqr," "range"), 
+  - and the option to specify whether or not to show all NA counts.
+
+## Changes
+
+- `as_flextable.data.frame()` always shows the number of rows even if less than 10 
+(because I need it!).
+
+## Issues
+
+- Make sure 'gfm' format is rendered as an image.
+- As adviced by Ben Bolker, functions `as_flextable.lm()`, `as_flextable.gam()`,
+`as_flextable.glm()`, `as_flextable.merMod()` and `as_flextable.htest()`
+now respect the global value of `getOption("show.signif.stars")`.
+- new argument `add.random` in `as_flextable.merMod()` to let add or not
+random effects in the final table.
+- drop superfluous semicolons when include.row_percent = FALSE
+- Super and subscripts are now correctly
+rendered in PDF (thanks to Philippe Grosjean).
+- argument `max_iter` of function `fit_to_width` is not
+ignored anymore.
+
+## Internals
+
+- rename technical column `part` to `.part` so that
+column named `part` can be used.
+
 # flextable 0.9.2
 
 ## Issues

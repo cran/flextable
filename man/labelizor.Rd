@@ -26,7 +26,9 @@ not replace the values in the underlying dataset but replace the defined
 content in the flextable (as defined with \code{\link[=compose]{compose()}}).
 }
 \examples{
-\dontrun{
+\dontshow{
+data.table::setDTthreads(1)
+}
 z <- summarizor(
   x = CO2[-c(1, 4)],
   by = "Treatment",
@@ -45,7 +47,6 @@ ft_1 <- labelizor(
 )
 
 ft_1
-}
 }
 \seealso{
 \code{\link[=mk_par]{mk_par()}}, \code{\link[=append_chunks]{append_chunks()}}, \code{\link[=prepend_chunks]{prepend_chunks()}}

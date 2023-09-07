@@ -48,7 +48,9 @@
 #' ```
 #'
 #' @examples
-#' \dontrun{
+#' \dontshow{
+#' data.table::setDTthreads(1)
+#' }
 #' library(data.table)
 #' library(flextable)
 #'
@@ -79,7 +81,6 @@
 #'
 #' save_as_docx(ft_1, path = tempfile(fileext = ".docx"))
 #' save_as_rtf(ft_1, path = tempfile(fileext = ".rtf"))
-#' }
 paginate <- function(
     x,
     init = NULL,

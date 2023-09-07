@@ -16,7 +16,9 @@
 with method \code{\link[=as_flextable]{as_flextable()}}.
 }
 \examples{
-\dontrun{
+\dontshow{
+data.table::setDTthreads(1)
+}
 z <- summarizor(CO2[-c(1, 4)],
   by = "Treatment",
   overall_label = "Overall"
@@ -27,7 +29,6 @@ ft_1 <- prepend_chunks(ft_1,
   as_chunk("\t"))
 ft_1 <- autofit(ft_1)
 ft_1
-}
 }
 \seealso{
 Other as_flextable methods: 

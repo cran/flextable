@@ -66,7 +66,9 @@ of group and an algorithm for determining the groups.
 }\if{html}{\out{</div>}}
 }
 \examples{
-\dontrun{
+\dontshow{
+data.table::setDTthreads(1)
+}
 library(data.table)
 library(flextable)
 
@@ -97,5 +99,4 @@ ft_1 <- autofit(x = ft_1, add_w = .05) |>
 
 save_as_docx(ft_1, path = tempfile(fileext = ".docx"))
 save_as_rtf(ft_1, path = tempfile(fileext = ".rtf"))
-}
 }
