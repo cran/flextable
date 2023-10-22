@@ -1,3 +1,19 @@
+# flextable 0.9.4
+
+## Issues
+
+- `ph_with.flextable()` formats widths and heights correctly.
+- move image shown in add_footer to footnote where it should be.
+- update the documentation and automatically change alignment
+'justify' to 'left' for latex output.
+- borders'width for grid output are fixed
+
+## new features
+
+- new functions `delete_columns()` and `delete_rows()` 
+to let users delete rows or columns.
+- `save_as_image()` now supports svg export with 'svglite'.
+
 # flextable 0.9.3
 
 ## new features

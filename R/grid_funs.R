@@ -1,4 +1,3 @@
-
 # grid_data ---------------------------------------------------------------
 
 #' @importFrom data.table data.table rbindlist rleid .SD .N first fcase fifelse
@@ -108,11 +107,40 @@ get_grid_data <- function(x, autowidths, wrapping) {
   grid_data
 }
 
+
 grid_data_add_cell_info <- function(grid_data, x) {
-  cell_data <- fortify_cells_properties(x)
+  keycols <- c(".part", "ft_row_id", "col_id")
+  spans <- fortify_span(x) # redondant avec get_grid_data, pas bien
+  cell_data <- merge(
+    as.data.table(fortify_cells_properties(x)),
+    spans,
+    by = keycols
+  )
+  fortify_borders_data <- fortify_latex_borders(cell_data)
+  fortify_borders_data <- fortify_borders_data[
+    , .SD,
+    .SDcols = c(
+      ".part", "ft_row_id", "col_id", "border.color.top", "border.color.bottom",
+      "border.width.left", "border.color.left", "border.width.right",
+      "border.color.right", "border.width.top", "border.width.bottom"
+    )
+  ]
+
+  cell_data <- cell_data[, .SD,
+    .SDcols =
+      setdiff(
+        colnames(cell_data),
+        c(
+          "border.color.top", "border.color.bottom",
+          "border.width.left", "border.color.left", "border.width.right",
+          "border.color.right", "border.width.top", "border.width.bottom"
+        )
+      )
+  ]
+
+  cell_data <- merge(cell_data, fortify_borders_data, by = keycols)
 
   # merge with grid_data to keep only active cells
-  keycols <- c(".part", "ft_row_id", "col_id")
   cell_data <- merge(grid_data[, keycols, with = FALSE], cell_data, by = keycols)
 
   # generate argument list for creating the cell background rect
@@ -403,7 +431,6 @@ grid_data_add_chunk_info <- function(grid_data, x, autowidths, wrapping) {
 
   # handle wrapping
   if (wrapping) {
-
     # create chunk word data (parts split by whitespace)
     word_data <- part_data
     word_data[, "wrapping" := fifelse(
@@ -814,7 +841,7 @@ gpar_border <- function(width, color, style) {
   if (isTRUE(width > 0 && !is.na(color) && !color %in% "transparent" &&
     (style %in% gpar_ltys || style %in% names(gpar_ltys)))) {
     gpar(
-      lwd = width,
+      lwd = width * 72.27 / 25.4,
       col = color,
       lty = style
     )

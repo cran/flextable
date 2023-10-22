@@ -39,35 +39,46 @@ ft02 <- fp_text_default(color = "orange")
 
 pars <- as_paragraph(
   as_chunk(c("(1)", "(2)"), props = ft02), " ",
-  as_chunk(c("My tailor is rich",
-    "My baker is rich"), props = ft01)
+  as_chunk(c(
+    "My tailor is rich",
+    "My baker is rich"
+  ), props = ft01)
 )
 
 ft_1 <- flextable(head(mtcars))
-ft_1 <- add_header_row(ft_1, values = pars,
-  colwidths = c(5, 6), top = FALSE)
-ft_1 <- add_header_row(ft_1, values = pars,
-  colwidths = c(3, 8), top = TRUE)
+ft_1 <- add_header_row(ft_1,
+  values = pars,
+  colwidths = c(5, 6), top = FALSE
+)
+ft_1 <- add_header_row(ft_1,
+  values = pars,
+  colwidths = c(3, 8), top = TRUE
+)
 ft_1
 
 ft_2 <- flextable(head(airquality))
-ft_2 <- add_header_row(ft_2, values = c("Measure", "Time"),
-  colwidths = c(4, 2), top = TRUE)
+ft_2 <- add_header_row(ft_2,
+  values = c("Measure", "Time"),
+  colwidths = c(4, 2), top = TRUE
+)
 ft_2 <- theme_box(ft_2)
 ft_2
 }
 \seealso{
 \code{\link[=flextable]{flextable()}}, \code{\link[=set_caption]{set_caption()}}
 
-Other functions to add rows in a flextable: 
+Other functions for row and column operations in a flextable: 
 \code{\link{add_body_row}()},
 \code{\link{add_body}()},
 \code{\link{add_footer_lines}()},
 \code{\link{add_footer_row}()},
 \code{\link{add_footer}()},
 \code{\link{add_header}()},
+\code{\link{delete_columns}()},
+\code{\link{delete_part}()},
+\code{\link{delete_rows}()},
 \code{\link{separate_header}()},
 \code{\link{set_header_footer_df}},
 \code{\link{set_header_labels}()}
 }
-\concept{functions to add rows in a flextable}
+\concept{functions for row and column operations in a flextable}

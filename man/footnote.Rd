@@ -41,36 +41,55 @@ Symbols are added to the cells designated by the selection \code{i}
 and \code{j}. If you use i = c(1,3) and j = c(2,5), then you will
 add the symbols (or the repeated symbol) to cells \verb{[1,2]}
 and \verb{[3,5]}.
+
+\if{html}{\out{
+<img src="https://www.ardata.fr/img/flextable-imgs/flextable-016.png" alt="add_footer illustration" style="width:100\%;">
+
+See https://www.ardata.fr/en/flextable-gallery/2022-06-23-separate-headers/ for the example
+shown
+}}
 }
 \examples{
 ft_1 <- flextable(head(iris))
-ft_1 <- footnote( ft_1, i = 1, j = 1:3,
-            value = as_paragraph(
-              c("This is footnote one",
-                "This is footnote two",
-                "This is footnote three")
-            ),
-            ref_symbols = c("a", "b", "c"),
-            part = "header")
+ft_1 <- footnote(ft_1,
+  i = 1, j = 1:3,
+  value = as_paragraph(
+    c(
+      "This is footnote one",
+      "This is footnote two",
+      "This is footnote three"
+    )
+  ),
+  ref_symbols = c("a", "b", "c"),
+  part = "header"
+)
 ft_1 <- valign(ft_1, valign = "bottom", part = "header")
 ft_1 <- autofit(ft_1)
 
 ft_2 <- flextable(head(iris))
 ft_2 <- autofit(ft_2)
-ft_2 <- footnote( ft_2, i = 1, j = 1:2,
-               value = as_paragraph(
-                c("This is footnote one",
-                   "This is footnote two")
-               ),
-               ref_symbols = c("a", "b"),
-               part = "header", inline = TRUE)
-ft_2 <- footnote( ft_2, i = 1, j = 3:4,
-               value = as_paragraph(
-                 c("This is footnote three",
-                   "This is footnote four")
-               ),
-               ref_symbols = c("c","d"),
-               part = "header", inline = TRUE)
+ft_2 <- footnote(ft_2,
+  i = 1, j = 1:2,
+  value = as_paragraph(
+    c(
+      "This is footnote one",
+      "This is footnote two"
+    )
+  ),
+  ref_symbols = c("a", "b"),
+  part = "header", inline = TRUE
+)
+ft_2 <- footnote(ft_2,
+  i = 1, j = 3:4,
+  value = as_paragraph(
+    c(
+      "This is footnote three",
+      "This is footnote four"
+    )
+  ),
+  ref_symbols = c("c", "d"),
+  part = "header", inline = TRUE
+)
 ft_2
 
 ft_3 <- flextable(head(iris))

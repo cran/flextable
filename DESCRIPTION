@@ -1,7 +1,7 @@
 Package: flextable
 Type: Package
 Title: Functions for Tabular Reporting
-Version: 0.9.3
+Version: 0.9.4
 Authors@R: c(
     person("David", "Gohel", role = c("aut", "cre"),
     email = "david.gohel@ardata.fr"),
@@ -37,14 +37,14 @@ RoxygenNote: 7.2.3
 Suggests: testthat (>= 2.1.0), magick, equatags, commonmark, ggplot2,
         scales, doconv (>= 0.3.0), xtable, tables (>= 0.9.17), broom,
         broom.mixed, mgcv, cluster, lme4, nlme, bookdown (>= 0.34),
-        pdftools, officedown, pkgdown (>= 2.0.0), webshot2
+        pdftools, officedown, pkgdown (>= 2.0.0), webshot2, svglite
 Encoding: UTF-8
 URL: https://ardata-fr.github.io/flextable-book/,
         https://davidgohel.github.io/flextable/
 BugReports: https://github.com/davidgohel/flextable/issues
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2023-09-07 19:24:53 UTC; davidgohel
+Packaged: 2023-10-22 20:47:44 UTC; davidgohel
 Author: David Gohel [aut, cre],
   ArData [cph],
   Clementine Jager [ctb],
@@ -61,4 +61,4 @@ Author: David Gohel [aut, cre],
   Samuel Jobert [ctb] (work on pagination)
 Maintainer: David Gohel <david.gohel@ardata.fr>
 Repository: CRAN
-Date/Publication: 2023-09-07 20:20:02 UTC
+Date/Publication: 2023-10-22 22:00:03 UTC
