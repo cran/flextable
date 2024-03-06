@@ -37,13 +37,14 @@ Other sugar functions for table style:
 \code{\link{bold}()},
 \code{\link{color}()},
 \code{\link{empty_blanks}()},
-\code{\link{fontsize}()},
 \code{\link{font}()},
+\code{\link{fontsize}()},
 \code{\link{highlight}()},
 \code{\link{italic}()},
 \code{\link{keep_with_next}()},
 \code{\link{line_spacing}()},
 \code{\link{padding}()},
-\code{\link{rotate}()}
+\code{\link{rotate}()},
+\code{\link{tab_settings}()}
 }
 \concept{sugar functions for table style}

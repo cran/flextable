@@ -30,7 +30,7 @@ full_dump_txt <-
     "", "0.0% ; 50.0%", "", "", "", "50.0% ; 50.0%", "", "", "Total",
     "Count", "9,894 (98.9%)", "", "104 (1.0%)", "", "2 (0.0%)", "",
     "10,000 (100.0%)", "", " (1)", " Columns and rows percentages",
-    " (1)", " (1)", " (1)", " (1)", " (1)"
+    "", "", "", "", ""
   )
 single_dump_txt <-
   c(
@@ -59,9 +59,9 @@ test_that("proc_freq executes without errors", {
 
 test_that("proc_freq content", {
   ft <- proc_freq(dat, row = "o", col = "p")
-  expect_equal(flextable:::fortify_run(ft)$txt, full_dump_txt)
+  expect_equal(information_data_chunk(ft)$txt, full_dump_txt)
   ft <- proc_freq(dat, row = "o")
-  expect_equal(flextable:::fortify_run(ft)$txt, single_dump_txt)
+  expect_equal(information_data_chunk(ft)$txt, single_dump_txt)
 
   ft <- proc_freq(dat,
     row = "o", col = "p",
@@ -69,7 +69,7 @@ test_that("proc_freq content", {
     include.row_percent = FALSE,
     include.column_percent = FALSE
   )
-  expect_equal(flextable:::fortify_run(ft)$txt, count_only_dump_txt)
+  expect_equal(information_data_chunk(ft)$txt, count_only_dump_txt)
 
   expect_error(proc_freq(dat))
 })

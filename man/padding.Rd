@@ -38,6 +38,10 @@ padding(
 \description{
 change paddings of selected rows and columns of a flextable.
 }
+\note{
+Padding is not implemented in PDF due to technical infeasibility but
+it can be replaced with \code{set_table_properties(opts_pdf = list(tabcolsep = 1))}.
+}
 \examples{
 ft_1 <- flextable(head(iris))
 ft_1 <- theme_vader(ft_1)
@@ -56,13 +60,14 @@ Other sugar functions for table style:
 \code{\link{bold}()},
 \code{\link{color}()},
 \code{\link{empty_blanks}()},
-\code{\link{fontsize}()},
 \code{\link{font}()},
+\code{\link{fontsize}()},
 \code{\link{highlight}()},
 \code{\link{italic}()},
 \code{\link{keep_with_next}()},
 \code{\link{line_spacing}()},
 \code{\link{rotate}()},
+\code{\link{tab_settings}()},
 \code{\link{valign}()}
 }
 \concept{sugar functions for table style}

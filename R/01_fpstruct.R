@@ -1,7 +1,3 @@
-add_rows <- function(x, ...) {
-  UseMethod("add_rows")
-}
-
 # fpstruct ------
 
 fpstruct <- function(nrow, keys, default) {
@@ -13,40 +9,32 @@ fpstruct <- function(nrow, keys, default) {
   class(x) <- "fpstruct"
   x
 }
-`[<-.fpstruct` <- function(x, i, j, value) {
-  x$data[i, j] <- value
-  x
-}
 
 delete_row_from_fpstruct <- function(x, i) {
-  x$content$data <- x$content$data[-i, , drop = FALSE]
-  x$content$nrow <- x$content$nrow - 1L
+  x$data <- x$data[-i, , drop = FALSE]
+  x$nrow <- x$nrow - length(i)
   x
 }
 delete_col_from_fpstruct <- function(x, j) {
-  if(!is.null(x$data)) {
-    x$data <- x$data[, !colnames(x$data) %in% j, drop = FALSE]
-    x$ncol <- x$ncol - 1L
-    x$keys <- setdiff(x$keys, j)
-  } else if(!is.null(x$content)) {
-    x$content$data <- x$content$data[, !colnames(x$content$data) %in% j, drop = FALSE]
-    x$content$ncol <- x$content$ncol - 1L
-    x$content$keys <- setdiff(x$content$keys, j)
-  }
+
+  if(is.null(x$data)) stop("unexpected error, could not find any data to drop")
+  x$data <- x$data[, !colnames(x$data) %in% j, drop = FALSE]
+  x$ncol <- x$ncol - length(j)
+  x$keys <- setdiff(x$keys, j)
 
   x
 }
 
-`[.fpstruct` <- function(x, i, j) {
+get_fpstruct_elements <- function(x, i, j) {
+  if (is.null(x$data)) {
+    stop("data coumpound does not exits.")
+  }
   x$data[i, j, drop = FALSE]
-}
-print.fpstruct <- function(x, ...) {
-  print(x$data)
 }
 
 
 #' @importFrom utils head tail
-add_rows.fpstruct <- function(x, nrows, first, default = x$default, ...) {
+add_rows_fpstruct <- function(x, nrows, first, default = x$default, ...) {
   if (nrow(x$data) < 1) {
     new <- matrix(rep(default, x$ncol * nrows), ncol = x$ncol)
   } else if (first) {
@@ -90,20 +78,23 @@ text_struct <- function(nrow, keys,
   x
 }
 
-`[<-.text_struct` <- function(x, i, j, property, value) {
+set_text_struct_values <- function(x, i, j, property, value) {
+  if (is.null(j)) j <- x$color$keys
+  if (is.null(i)) i <- seq_len(x$color$nrow)
+
   if (inherits(value, "fp_text")) {
     for (property in intersect(names(value), names(x))) {
-      x[[property]][i, j] <- value[[property]]
+      x[[property]]$data[i, j] <- value[[property]]
     }
   } else if (property %in% names(x)) {
-    x[[property]][i, j] <- value
+    x[[property]]$data[i, j] <- value
   }
 
   x
 }
-`[.text_struct` <- function(x, i, j, property, value) {
-  x[[property]][i, j]
-}
+# `[.text_struct` <- function(x, i, j, property, value) {
+#   x[[property]][i, j]
+# }
 
 delete_style_row <- function(x, i) {
   for (property in names(x)) {
@@ -118,14 +109,9 @@ delete_style_col <- function(x, j) {
   x
 }
 
-print.text_struct <- function(x, ...) {
-  dims <- dim(x$color$data)
-  cat("a text_struct with ", dims[1], " rows and ", dims[2], " columns", sep = "")
-}
-
-add_rows.text_struct <- function(x, nrows, first, ...) {
+add_rows_to_struct <- function(x, nrows, first, ...) {
   for (i in seq_len(length(x))) {
-    x[[i]] <- add_rows(x[[i]], nrows, first = first)
+    x[[i]] <- add_rows_fpstruct(x[[i]], nrows, first = first)
   }
   x
 }
@@ -134,10 +120,10 @@ text_struct_to_df <- function(object, ...) {
   data <- lapply(object, function(x) {
     as.vector(x$data)
   })
-  data$ft_row_id <- rep(seq_len(nrow(object$color$data)), ncol(object$color$data))
-  data$col_id <- rep(object$color$keys, each = nrow(object$color$data))
+  data$.row_id <- rep(seq_len(nrow(object$color$data)), ncol(object$color$data))
+  data$.col_id <- rep(object$color$keys, each = nrow(object$color$data))
   data <- as.data.frame(data, stringsAsFactors = FALSE)
-  data$col_id <- factor(data$col_id, levels = object$color$keys)
+  data$.col_id <- factor(data$.col_id, levels = object$color$keys)
   data
 }
 
@@ -152,6 +138,7 @@ par_struct <- function(nrow, keys,
                        border.color.bottom = "transparent", border.color.top = "transparent", border.color.left = "transparent", border.color.right = "transparent",
                        border.style.bottom = "solid", border.style.top = "solid", border.style.left = "solid", border.style.right = "solid",
                        keep_with_next = FALSE,
+                       tabs = NA_character_,
                        shading.color = "transparent", ...) {
   x <- list(
     text.align = fpstruct(nrow = nrow, keys = keys, default = text.align),
@@ -173,53 +160,39 @@ par_struct <- function(nrow, keys,
     border.style.left = fpstruct(nrow = nrow, keys = keys, default = border.style.left),
     border.style.right = fpstruct(nrow = nrow, keys = keys, default = border.style.right),
     shading.color = fpstruct(nrow = nrow, keys = keys, default = shading.color),
-    keep_with_next = fpstruct(nrow = nrow, keys = keys, default = keep_with_next)
+    keep_with_next = fpstruct(nrow = nrow, keys = keys, default = keep_with_next),
+    tabs = fpstruct(nrow = nrow, keys = keys, default = tabs)
   )
   class(x) <- "par_struct"
   x
 }
 
+set_par_struct_values <- function(x, i, j, property, value) {
 
-print.par_struct <- function(x, ...) {
-  dims <- dim(x$text.align$data)
-  cat("a par_struct with ", dims[1], " rows and ", dims[2], " columns", sep = "")
-}
+  if (is.null(j)) j <- x$text.align$keys
+  if (is.null(i)) i <- seq_len(x$text.align$nrow)
 
-
-add_rows.par_struct <- function(x, nrows, first, ...) {
-  for (i in seq_len(length(x))) {
-    x[[i]] <- add_rows(x[[i]], nrows, first = first)
-  }
-  x
-}
-
-
-`[<-.par_struct` <- function(x, i, j, property, value) {
   if (inherits(value, "fp_par")) {
+    if (!is.null(value$tabs)) value$tabs <- as.character(value$tabs)
     value <- cast_borders(value)
     for (property in intersect(names(value), names(x))) {
-      x[[property]][i, j] <- value[[property]]
+      x[[property]]$data[i, j] <- value[[property]]
     }
   } else if (property %in% names(x)) {
-    x[[property]][i, j] <- value
+    x[[property]]$data[i, j] <- value
   }
 
   x
-}
-
-
-`[.par_struct` <- function(x, i, j, property) {
-  x[[property]][i, j]
 }
 
 par_struct_to_df <- function(object, ...) {
   data <- lapply(object, function(x) {
     as.vector(x$data)
   })
-  data$ft_row_id <- rep(seq_len(nrow(object$text.align$data)), ncol(object$text.align$data))
-  data$col_id <- rep(object$text.align$keys, each = nrow(object$text.align$data))
+  data$.row_id <- rep(seq_len(nrow(object$text.align$data)), ncol(object$text.align$data))
+  data$.col_id <- rep(object$text.align$keys, each = nrow(object$text.align$data))
   data <- as.data.frame(data, stringsAsFactors = FALSE)
-  data$col_id <- factor(data$col_id, levels = object$text.align$keys)
+  data$.col_id <- factor(data$.col_id, levels = object$text.align$keys)
   data
 }
 
@@ -265,89 +238,179 @@ cell_struct <- function(nrow, keys,
   x
 }
 
-add_rows.cell_struct <- function(x, nrows, first, ...) {
-  for (i in seq_len(length(x))) {
-    x[[i]] <- add_rows(x[[i]], nrows, first = first)
-  }
-  x
-}
-
-`[<-.cell_struct` <- function(x, i, j, property, value) {
-  if (inherits(value, "fp_cell")) {
-    value <- cast_borders(value)
-    for (property in intersect(names(value), names(x))) {
-      x[[property]][i, j] <- value[[property]]
-    }
-  } else if (property %in% names(x)) {
-    x[[property]][i, j] <- value
-  }
-
-  x
-}
-`[.cell_struct` <- function(x, i, j, property) {
-  x[[property]][i, j]
-}
-
-print.cell_struct <- function(x, ...) {
-  dims <- dim(x$background.color$data)
-  cat("a cell_struct with ", dims[1], " rows and ", dims[2], " columns", sep = "")
-}
-
 cell_struct_to_df <- function(object, ...) {
   data <- lapply(object, function(x) {
     as.vector(x$data)
   })
 
-  data$ft_row_id <- rep(seq_len(nrow(object$background.color$data)), ncol(object$background.color$data))
-  data$col_id <- rep(object$background.color$keys, each = nrow(object$background.color$data))
+  data$.row_id <- rep(seq_len(nrow(object$background.color$data)), ncol(object$background.color$data))
+  data$.col_id <- rep(object$background.color$keys, each = nrow(object$background.color$data))
   data <- as.data.frame(data, stringsAsFactors = FALSE)
-  data$col_id <- factor(data$col_id, levels = object$background.color$keys)
+  data$.col_id <- factor(data$.col_id, levels = object$background.color$keys)
   data
 }
 
 
 # chunkset_struct ---------------------------------------------------------
 
-chunkset_struct <- function(nrow, keys) {
-  x <- list(
-    content = fpstruct(nrow = nrow, keys = keys, default = as_paragraph(as_chunk("")))
-  )
-  class(x) <- "chunkset_struct"
-  x
+# This object is used to capture paragraphs of a part of a flextable
+# It is a matrix, each column is a colkey, each row is a row
+# It contains paragraphs, paragraphs are made of chunks
+new_chunkset_struct <- function(col_keys, data) {
+  chunkdata <- fpstruct(nrow = nrow(data), keys = col_keys, default = as_paragraph(as_chunk("")))
+  class(chunkdata) <- c("chunkset_struct")
+
+  if (nrow(data) > 0) {
+    newchunkdata <- lapply(
+      data[col_keys],
+      function(x) {
+        as_paragraph(as_chunk(x, formatter = format_fun.default))
+      }
+    )
+    newchunkdata <- matrix(
+      do.call(c, newchunkdata),
+      ncol = length(col_keys),
+      dimnames = list(NULL, col_keys))
+    chunkdata <- set_chunkset_struct_element(
+      x = chunkdata,
+      i = seq_len(nrow(data)),
+      j = col_keys,
+      value = newchunkdata)
+  }
+  chunkdata
 }
 
-add_rows.chunkset_struct <- function(x, nrows, first, data, ...) {
-  old_nrow <- x$content$nrow
-  x$content <- add_rows(x$content, nrows, first = first, default = as_paragraph(as_chunk("")))
+add_rows_to_chunkset_struct <- function(x, nrows, first, data, ...) {
+  names_ <- names(data)
+  stopifnot(!is.null(names_))
+
+  x <- add_rows_fpstruct(x, nrows, first = first, default = as_paragraph(as_chunk("")))
   if (first) {
     id <- seq_len(nrows)
   } else {
-    id <- rev(rev(seq_len(x$content$nrow))[seq_len(nrows)])
+    id <- rev(rev(seq_len(x$nrow))[seq_len(nrows)])
   }
 
-  newcontent <- lapply(data[x$content$keys], function(x) as_paragraph(as_chunk(x, formatter = format_fun)))
-  x$content[id, x$content$keys] <- Reduce(append, newcontent)
+  newchunkdata <- lapply(data[x$keys], function(x) as_paragraph(as_chunk(x, formatter = format_fun.default)))
+  newchunkdata <- matrix(
+    do.call(c, newchunkdata),
+    ncol = length(x$keys),
+    dimnames = list(NULL, x$keys))
+
+  x <- set_chunkset_struct_element(
+    x = x,
+    i = id, j = x$keys, value = newchunkdata)
   x
 }
 
+as_chunkset_struct <- function(l_paragraph, keys, i = NULL) {
+  if (!is.null(i) &&
+      length(l_paragraph) == length(i) &&
+      length(keys) > 1) {
+    l_paragraph <- rep(l_paragraph, length(keys))
+  }
+  # temp fix for ftExtra
+  l_paragraph[] <- lapply(l_paragraph, function(x) {
+    .names <- colnames(x)
+    .names[.names %in% "seq_index"] <- ".chunk_index"
+    colnames(x) <- .names
+    x
+  })
 
-length.chunkset_struct <- function(x) {
-  length(x$content$data)
+  matrix(
+    data = l_paragraph,
+    ncol = length(keys),
+    dimnames = list(NULL, keys)
+  )
 }
 
-print.chunkset_struct <- function(x, ...) {
-  dims <- dim(x$content$data)
-  cat("a chunkset_struct with ", dims[1], " rows and ", dims[2], " columns", sep = "")
-}
+is_paragraph <- function(x) {
+  chunk_str_names <- c("txt", "font.size", "italic", "bold", "underlined", "color",
+                       "shading.color", "font.family", "hansi.family", "eastasia.family",
+                       "cs.family", "vertical.align", "width", "height", "url", "eq_data",
+                       "word_field_data", "img_data",
+                       ".chunk_index")
+  is.data.frame(x) &&
+    all(colnames(x) %in% chunk_str_names)
 
-`[<-.chunkset_struct` <- function(x, i, j, value) {
-  x$content[i, j] <- value
+}
+set_chunkset_struct_element <- function(x, i, j, value) {
+
+  names_ <- colnames(value)
+  stopifnot(
+    is.matrix(value),
+    !is.null(names_),
+    mode(value) == "list",
+    all(sapply(value, is_paragraph)),
+    all(names_ %in% x$keys)
+  )
+
+  x$data[i, j] <- value
   x
 }
 
+append_chunkset_struct_element <- function(x, i, j, chunk_data, last = TRUE) {
+  chunk_str_names <- c("txt", "font.size", "italic", "bold", "underlined", "color",
+                   "shading.color", "font.family", "hansi.family", "eastasia.family",
+                   "cs.family", "vertical.align", "width", "height", "url", "eq_data",
+                   "word_field_data", "img_data")
+  stopifnot(
+    is.data.frame(chunk_data),
+    all(chunk_str_names %in% colnames(chunk_data))
+  )
+  chunk_data <- chunk_data[, chunk_str_names, drop = FALSE]
 
-`[.chunkset_struct` <- function(x, i, j) {
-  x$content[i, j]
+  chunk_data_length <- nrow(chunk_data)
+  i_length <- length(i)
+  j_length <- length(j)
+  expected_length <- j_length * i_length
+
+  if (chunk_data_length == 1L && i_length != chunk_data_length) {
+    chunk_data <- rep(list(chunk_data), i_length)
+    chunk_data <- rbind_match_columns(chunk_data)
+  }
+
+  if (expected_length / nrow(chunk_data) == j_length) {
+    chunk_data <- rep(list(chunk_data), j_length)
+    chunk_data <- rbind_match_columns(chunk_data)
+  }
+
+  stopifnot(nrow(chunk_data) == expected_length)
+
+  if (nrow(chunk_data) == 1) {
+    chunk_data <- list(chunk_data)
+  } else {
+    chunk_data <- split(chunk_data, seq_len(expected_length))
+    names(chunk_data) <- NULL
+  }
+
+  values <- get_chunkset_struct_element(x, i = i, j = j)
+  values <- do.call(c, apply(values, 2, function(x) x))
+  names(values) <- NULL
+
+  values <- mapply(
+    function(x, y, last = TRUE) {
+      if (last) {
+        y$.chunk_index <- max(x$.chunk_index, na.rm = TRUE) + 1
+        x <- rbind_match_columns(list(x, y))
+      } else {
+        y$.chunk_index <- min(x$.chunk_index, na.rm = TRUE) - 1
+        x <- rbind_match_columns(list(y, x))
+      }
+      x$.chunk_index <- rleid(x$.chunk_index)
+      x
+    },
+    x = values,
+    y = chunk_data, SIMPLIFY = FALSE,
+    MoreArgs = list(last = last)
+  )
+
+  x$data[i, j] <- values
+  x
+}
+
+get_chunkset_struct_element <- function(x, i, j) {
+  x$data[i, j, drop = FALSE]
 }
 
 replace_missing_fptext_by_default <- function(x, default) {

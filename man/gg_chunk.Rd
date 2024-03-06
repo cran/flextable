@@ -51,7 +51,7 @@ if (require("ggplot2")) {
       scale_fill_gradient2(
         low = "blue",
         mid = "white", high = "red", limits = c(-1, 1),
-        guide = FALSE
+        guide = "none"
       ) +
       theme_void()
   }
@@ -69,13 +69,13 @@ if (require("ggplot2")) {
 }
 \seealso{
 Other chunk elements for paragraph: 
-\code{\link{as_bracket}()},
 \code{\link{as_b}()},
+\code{\link{as_bracket}()},
 \code{\link{as_chunk}()},
 \code{\link{as_equation}()},
 \code{\link{as_highlight}()},
-\code{\link{as_image}()},
 \code{\link{as_i}()},
+\code{\link{as_image}()},
 \code{\link{as_sub}()},
 \code{\link{as_sup}()},
 \code{\link{as_word_field}()},

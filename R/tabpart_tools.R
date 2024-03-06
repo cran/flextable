@@ -54,8 +54,10 @@ span_columns <- function(x, columns = NULL, target = columns, combine = FALSE) {
     for (k in seq_along(columns)) {
       column <- columns[k]
       if (column %in% x$col_keys) {
-        values <- sapply(x$content[, columns[k]], function(x) {
-          paste(x$txt, collapse = "")
+        values <- sapply(
+          get_chunkset_struct_element(x$content, j = columns[k]),
+          function(x) {
+            paste(x$txt, collapse = "")
         })
       } else {
         values <- format(x$dataset[[column]], trim = TRUE, justify = "left")
@@ -69,9 +71,11 @@ span_columns <- function(x, columns = NULL, target = columns, combine = FALSE) {
     for (k in seq_along(columns)) {
       column <- columns[k]
       if (column %in% x$col_keys) {
-        values <- sapply(x$content[, columns[k]], function(x) {
-          paste(x$txt, collapse = "")
-        })
+        values <- sapply(
+          get_chunkset_struct_element(x$content, j = columns[k]),
+          function(x) {
+            paste(x$txt, collapse = "")
+          })
       } else {
         values <- format(x$dataset[[column]], trim = TRUE, justify = "left")
       }
@@ -93,10 +97,10 @@ span_cells_at <- function(x, columns = NULL, rows = NULL) {
   stopifnot(all(columns %in% x$col_keys))
 
   row_id <- match(rows, seq_len(nrow(x$dataset)))
-  col_id <- match(columns, x$col_keys)
+  .col_id <- match(columns, x$col_keys)
 
   test_valid_r <- (length(row_id) > 1 && all(diff(row_id) == 1)) || length(row_id) == 1
-  test_valid_c <- (length(col_id) > 1 && all(diff(col_id) == 1)) || length(col_id) == 1
+  test_valid_c <- (length(.col_id) > 1 && all(diff(.col_id) == 1)) || length(.col_id) == 1
 
   if (!test_valid_r) {
     stop("selected rows should all be consecutive")
@@ -105,10 +109,10 @@ span_cells_at <- function(x, columns = NULL, rows = NULL) {
     stop("selected columns should all be consecutive")
   }
 
-  x$spans$columns[row_id, col_id] <- 0
-  x$spans$rows[row_id, col_id] <- 0
-  x$spans$columns[row_id[1], col_id] <- length(row_id)
-  x$spans$rows[row_id, col_id[1]] <- length(col_id)
+  x$spans$columns[row_id, .col_id] <- 0
+  x$spans$rows[row_id, .col_id] <- 0
+  x$spans$columns[row_id[1], .col_id] <- length(row_id)
+  x$spans$rows[row_id, .col_id[1]] <- length(.col_id)
 
   check_merge(x)
 }
@@ -117,9 +121,11 @@ span_rows <- function(x, rows = NULL) {
   row_id <- get_rows_id(x, i = rows)
 
   for (rowi in row_id) {
-    values <- sapply(x$content[rowi, ], function(x) {
-      paste(x$txt, collapse = "")
-    })
+    values <- sapply(
+      get_chunkset_struct_element(x$content, i = rowi),
+      function(x) {
+        paste(x$txt, collapse = "")
+      })
     x$spans$rows[rowi, ] <- merge_rle(values)
   }
 

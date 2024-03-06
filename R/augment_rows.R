@@ -28,6 +28,16 @@
 #'   )
 #' )
 #' ft
+#'
+#' ft <- flextable(head(iris))
+#' ft <- set_header_labels(
+#'   x = ft,
+#'   values = c(
+#'     "Sepal length",
+#'     "Sepal width", "Petal length",
+#'     "Petal width", "Species")
+#' )
+#' ft
 #' @export
 #' @family functions for row and column operations in a flextable
 set_header_labels <- function(x, ..., values = NULL) {
@@ -41,16 +51,46 @@ set_header_labels <- function(x, ..., values = NULL) {
       stop("there is no header row to be replaced")
     }
   }
+
   names_ <- names(values)
   if (is.null(names_)) {
     if (length(values) != ncol_keys(x)) {
       stop("if unamed, the labels must have the same length than col_keys.")
     }
-    x$header$content[nrow_part(x, "header"), ] <- as_paragraph(as_chunk(values))
+
+    newcontent <- as_paragraph(as_chunk(values))
+    newcontent <- as_chunkset_struct(
+      l_paragraph = newcontent,
+      keys = x$col_keys)
+    x$header$content <- set_chunkset_struct_element(
+      x = x$header$content,
+      i = nrow_part(x, "header"),
+      j = x$col_keys,
+      value = newcontent
+    )
   } else {
     names_ <- names_[names_ %in% x$col_keys]
     values <- values[names_]
-    x$header$content[nrow_part(x, "header"), names_] <- as_paragraph(as_chunk(unlist(values)))
+    if (length(values) < 1) {
+      return(x)
+    }
+    newcontent <- lapply(
+      values,
+      function(x) {
+        as_paragraph(as_chunk(x, formatter = format_fun.default))
+      }
+    )
+
+    newcontent <- as_chunkset_struct(
+      l_paragraph = do.call(c, newcontent),
+      keys = names_)
+
+    x$header$content <- set_chunkset_struct_element(
+      x = x$header$content,
+      i = nrow_part(x, "header"),
+      j = names_,
+      value = newcontent
+    )
   }
 
   x
@@ -145,6 +185,9 @@ delete_rows <- function(x, i = NULL, part = "body") {
 
   check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i)
+  if (length(i) < 1) {
+    return(x)
+  }
   x[[part]] <- delete_rows_from_part(x[[part]], i = i)
   x
 }
@@ -165,6 +208,7 @@ delete_colums_from_part <- function(x, j) {
 
   # content
   x$content <- delete_col_from_fpstruct(x$content, j)
+  x$col_keys <- x$content$keys
   x
 }
 
@@ -230,10 +274,10 @@ add_rows_to_tabpart <- function(x, rows, first = FALSE) {
   ncol <- length(x$col_keys)
   nrow <- nrow(rows)
 
-  x$styles$cells <- add_rows(x$styles$cells, nrows = nrow, first = first)
-  x$styles$pars <- add_rows(x$styles$pars, nrows = nrow, first = first)
-  x$styles$text <- add_rows(x$styles$text, nrows = nrow, first = first)
-  x$content <- add_rows(x$content, nrows = nrow, first = first, rows)
+  x$styles$cells <- add_rows_to_struct(x$styles$cells, nrows = nrow, first = first)
+  x$styles$pars <- add_rows_to_struct(x$styles$pars, nrows = nrow, first = first)
+  x$styles$text <- add_rows_to_struct(x$styles$text, nrows = nrow, first = first)
+  x$content <- add_rows_to_chunkset_struct(x$content, nrows = nrow, first = first, rows)
 
   span_new <- matrix(1, ncol = ncol, nrow = nrow)
   rowheights <- x$rowheights
@@ -1008,29 +1052,24 @@ set_footer_df <- function(x, mapping = NULL, key = "col_keys") {
 
 #' @importFrom data.table tstrsplit
 #' @export
-#' @title Separate collapsed colnames into multiple rows
-#' @description If your variable names contain
-#' multiple delimited labels, they will be separated
-#' and placed in their own rows.
+#' @title Split column names using a separator into multiple rows
+#' @description This function is used to separate and place individual
+#' labels in their own rows if your variable names contain multiple
+#' delimited labels.
 #' \if{html}{\out{
 #' <img src="https://www.ardata.fr/img/flextable-imgs/flextable-016.png" alt="add_header illustration" style="width:100\%;">
 #' }}
 #' @param x a flextable object
-#' @param opts optional treatments to apply
-#' to the resulting header part as a character
-#' vector with multiple supported values.
+#' @param opts Optional treatments to apply to the resulting header part.
+#' This should be a character vector with support for multiple values.
 #'
-#' The supported values are:
+#' Supported values include:
 #'
-#' * "span-top": span empty cells with the
-#' first non empty cell, this operation is made
-#' column by column.
-#' * "center-hspan": center the cells that are
-#' horizontally spanned.
-#' * "bottom-vspan": bottom align the cells treated
-#' when "span-top" is applied.
-#' * "default-theme": apply to the new header part
-#' the theme set in `set_flextable_defaults(theme_fun = ...)`.
+#' - "span-top": This operation spans empty cells with the first non-empty
+#' cell, applied column by column.
+#' - "center-hspan": Center the cells that are horizontally spanned.
+#' - "bottom-vspan": Aligns to the bottom the cells treated at the  when "span-top" is applied.
+#' - "default-theme": Applies the theme set in `set_flextable_defaults(theme_fun = ...)` to the new header part.
 #' @param split a regular expression (unless `fixed = TRUE`)
 #' to use for splitting.
 #' @param fixed logical. If TRUE match `split` exactly,
@@ -1105,11 +1144,12 @@ separate_header <- function(x,
     for (j in seq_len(nrow(ref_list))) {
       if (ref_list[j, 1]) {
         to <- rle(ref_list[j, ])$lengths[1] + 1
-
-        x <- merge_at(
-          x = x, i = seq(1, to), j = j,
-          part = "header"
-        )
+        if (all(x$header$spans$rows[seq(1, to), j] %in% 1)) {#can be v-merged
+          x <- merge_at(
+            x = x, i = seq(1, to), j = j,
+            part = "header"
+          )
+        }
 
         if ("bottom-vspan" %in% opts) {
           x <- valign(
@@ -1125,7 +1165,7 @@ separate_header <- function(x,
     nr <- nrow(x[["header"]]$spans$rows)
     header_spans <- fortify_span(x, parts = "header")
     header_spans <- header_spans[header_spans$rowspan > 1, ]
-    header_spans <- split(header_spans$col_id, header_spans$ft_row_id)
+    header_spans <- split(header_spans$.col_id, header_spans$.row_id)
     for (i in seq_along(header_spans)) {
       x <- align(
         x = x, i = i, j = as.character(header_spans[[i]]),

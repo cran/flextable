@@ -30,7 +30,7 @@ to install necessary dependencies.
 }
 \examples{
 library(flextable)
-if (require("equatags") && mathjax_available()) {
+if (require("equatags")) {
   eqs <- c(
     "(ax^2 + bx + c = 0)",
     "a \\\\ne 0",
@@ -52,12 +52,12 @@ if (require("equatags") && mathjax_available()) {
 }
 \seealso{
 Other chunk elements for paragraph: 
-\code{\link{as_bracket}()},
 \code{\link{as_b}()},
+\code{\link{as_bracket}()},
 \code{\link{as_chunk}()},
 \code{\link{as_highlight}()},
-\code{\link{as_image}()},
 \code{\link{as_i}()},
+\code{\link{as_image}()},
 \code{\link{as_sub}()},
 \code{\link{as_sup}()},
 \code{\link{as_word_field}()},

@@ -58,15 +58,26 @@ style <- function(x, i = NULL, j = NULL,
   j <- get_columns_id(x[[part]], j)
 
   if (!is.null(pr_t)) {
-    x[[part]]$styles$text[i, j] <- pr_t
+    x[[part]]$styles$text <- set_text_struct_values(
+      x = x[[part]]$styles$text, i = i, j = j,
+      value = pr_t
+    )
   }
 
   if (!is.null(pr_p)) {
-    x[[part]]$styles$pars[i, j] <- pr_p
+    x[[part]]$styles$pars <- set_par_struct_values(
+      x = x[[part]]$styles$pars,
+      i = i,
+      j = j,
+      value = pr_p
+    )
   }
 
   if (!is.null(pr_c)) {
-    x[[part]]$styles$cells[i, j] <- pr_c
+    pr_c <- cast_borders(pr_c)
+    for (property in intersect(names(pr_c), names(x[[part]]$styles$cells))) {
+      x[[part]]$styles$cells[[property]]$data[i, j] <- pr_c[[property]]
+    }
   }
 
   x
@@ -113,7 +124,10 @@ bold <- function(x, i = NULL, j = NULL, bold = TRUE, part = "body") {
     bold <- rep(bold, each = length(i))
   }
 
-  x[[part]]$styles$text[i, j, "bold"] <- bold
+  x[[part]]$styles$text <- set_text_struct_values(
+    x = x[[part]]$styles$text, i = i, j = j,
+    property = "bold", value = bold
+  )
 
   x
 }
@@ -153,7 +167,10 @@ fontsize <- function(x, i = NULL, j = NULL, size = 11, part = "body") {
   check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i)
   j <- get_columns_id(x[[part]], j)
-  x[[part]]$styles$text[i, j, "font.size"] <- size
+  x[[part]]$styles$text <- set_text_struct_values(
+    x = x[[part]]$styles$text, i = i, j = j,
+    property = "font.size", value = size
+  )
 
   x
 }
@@ -196,7 +213,10 @@ italic <- function(x, i = NULL, j = NULL, italic = TRUE, part = "body") {
     italic <- rep(italic, each = length(i))
   }
 
-  x[[part]]$styles$text[i, j, "italic"] <- italic
+  x[[part]]$styles$text <- set_text_struct_values(
+    x = x[[part]]$styles$text, i = i, j = j,
+    property = "italic", value = italic
+  )
 
   x
 }
@@ -270,7 +290,10 @@ highlight <- function(x, i = NULL, j = NULL, color = "yellow", part = "body", so
     color <- rep(color, each = length(i))
   }
 
-  x[[part]]$styles$text[i, j, "shading.color"] <- color
+  x[[part]]$styles$text <- set_text_struct_values(
+    x = x[[part]]$styles$text, i = i, j = j,
+    property = "shading.color", value = color
+  )
 
   x
 }
@@ -357,7 +380,10 @@ color <- function(x, i = NULL, j = NULL, color, part = "body", source = j) {
     color <- rep(color, each = length(i))
   }
 
-  x[[part]]$styles$text[i, j, "color"] <- color
+  x[[part]]$styles$text <- set_text_struct_values(
+    x = x[[part]]$styles$text, i = i, j = j,
+    property = "color", value = color
+  )
 
   x
 }
@@ -443,10 +469,22 @@ font <- function(x, i = NULL, j = NULL, fontname, part = "body", cs.family = fon
     eastasia.family <- rep(eastasia.family, each = length(i))
   }
 
-  x[[part]]$styles$text[i, j, "font.family"] <- fontname
-  x[[part]]$styles$text[i, j, "cs.family"] <- cs.family
-  x[[part]]$styles$text[i, j, "hansi.family"] <- hansi.family
-  x[[part]]$styles$text[i, j, "eastasia.family"] <- eastasia.family
+  x[[part]]$styles$text <- set_text_struct_values(
+    x = x[[part]]$styles$text, i = i, j = j,
+    property = "font.family", value = fontname
+  )
+  x[[part]]$styles$text <- set_text_struct_values(
+    x = x[[part]]$styles$text, i = i, j = j,
+    property = "cs.family", value = cs.family
+  )
+  x[[part]]$styles$text <- set_text_struct_values(
+    x = x[[part]]$styles$text, i = i, j = j,
+    property = "hansi.family", value = hansi.family
+  )
+  x[[part]]$styles$text <- set_text_struct_values(
+    x = x[[part]]$styles$text, i = i, j = j,
+    property = "eastasia.family", value = eastasia.family
+  )
   x
 }
 
@@ -455,6 +493,9 @@ font <- function(x, i = NULL, j = NULL, fontname, part = "body", cs.family = fon
 #' @export
 #' @title Set paragraph paddings
 #' @description change paddings of selected rows and columns of a flextable.
+#' @note
+#' Padding is not implemented in PDF due to technical infeasibility but
+#' it can be replaced with `set_table_properties(opts_pdf = list(tabcolsep = 1))`.
 #' @param x a flextable object
 #' @param i rows selection
 #' @param j columns selection
@@ -513,16 +554,40 @@ padding <- function(x, i = NULL, j = NULL, padding = NULL,
 
 
   if (!is.null(padding.top)) {
-    x[[part]]$styles$pars[i, j, "padding.top"] <- padding.top
+    x[[part]]$styles$pars <- set_par_struct_values(
+      x = x[[part]]$styles$pars,
+      i = i,
+      j = j,
+      property = "padding.top",
+      value = padding.top
+    )
   }
   if (!is.null(padding.bottom)) {
-    x[[part]]$styles$pars[i, j, "padding.bottom"] <- padding.bottom
+    x[[part]]$styles$pars <- set_par_struct_values(
+      x = x[[part]]$styles$pars,
+      i = i,
+      j = j,
+      property = "padding.bottom",
+      value = padding.bottom
+    )
   }
   if (!is.null(padding.left)) {
-    x[[part]]$styles$pars[i, j, "padding.left"] <- padding.left
+    x[[part]]$styles$pars <- set_par_struct_values(
+      x = x[[part]]$styles$pars,
+      i = i,
+      j = j,
+      property = "padding.left",
+      value = padding.left
+    )
   }
   if (!is.null(padding.right)) {
-    x[[part]]$styles$pars[i, j, "padding.right"] <- padding.right
+    x[[part]]$styles$pars <- set_par_struct_values(
+      x = x[[part]]$styles$pars,
+      i = i,
+      j = j,
+      property = "padding.right",
+      value = padding.right
+    )
   }
 
   x
@@ -570,8 +635,14 @@ align <- function(x, i = NULL, j = NULL, align = c("left", "center", "right", "j
   if (length(align_value) == length(j)) {
     align_value <- rep(align_value, each = length(i))
   }
-  x[[part]]$styles$pars[i, j, "text.align"] <- align_value
 
+  x[[part]]$styles$pars <- set_par_struct_values(
+    x = x[[part]]$styles$pars,
+    i = i,
+    j = j,
+    property = "text.align",
+    value = align_value
+  )
   x
 }
 
@@ -617,7 +688,76 @@ keep_with_next <- function(x, i = NULL, value = TRUE, part = "body") {
 
   check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i)
-  x[[part]]$styles$pars[i, , "keep_with_next"] <- value
+  x[[part]]$styles$pars <- set_par_struct_values(
+    x = x[[part]]$styles$pars,
+    i = i,
+    j = NULL,
+    property = "keep_with_next",
+    value = value
+  )
+
+  x
+}
+
+#' @export
+#' @title Set tabulation marks configuration
+#' @description Define tabulation marks configuration.
+#' Specifying positions and types of tabulation marks in table
+#' paragraphs helps to organize the content, especially in clinical tables
+#' by aligning numbers properly.
+#' @param x a flextable object
+#' @param i rows selection
+#' @param j columns selection
+#' @param part partname of the table (one of 'all', 'body', 'header', 'footer')
+#' @param value an object of generated by [officer::fp_tabs()].
+#' @family sugar functions for table style
+#' @examples
+#' library(officer)
+#' library(flextable)
+#'
+#' z <- data.frame(
+#'   Statistic = c("Median (Q1 ; Q3)", "Min ; Max"),
+#'   Value = c(
+#'     "\t999.99\t(99.9 ; 99.9)",
+#'     "\t9.99\t(9999.9 ; 99.9)"
+#'   )
+#' )
+#'
+#' ts <- fp_tabs(
+#'   fp_tab(pos = 0.4, style = "decimal"),
+#'   fp_tab(pos = 1.4, style = "decimal")
+#' )
+#'
+#' zz <- flextable(z) |>
+#'   tab_settings(j = 2, value = ts) |>
+#'   width(width = c(1.5, 2))
+#'
+#'
+#' save_as_docx(zz, path = tempfile(fileext = ".docx"))
+tab_settings <- function(x, i = NULL, j = NULL, value = TRUE, part = "body") {
+  part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE)
+
+  if (part == "all") {
+    for (p in c("header", "body", "footer")) {
+      x <- tab_settings(x = x, i = i, value = value, part = p)
+    }
+    return(x)
+  }
+
+  if (nrow_part(x, part) < 1) {
+    return(x)
+  }
+
+  check_formula_i_and_part(i, part)
+  i <- get_rows_id(x[[part]], i)
+  j <- get_columns_id(x[[part]], j)
+  x[[part]]$styles$pars <- set_par_struct_values(
+    x = x[[part]]$styles$pars,
+    i = i,
+    j = NULL,
+    property = "tabs",
+    value = as.character(value)
+  )
 
   x
 }
@@ -654,7 +794,13 @@ line_spacing <- function(x, i = NULL, j = NULL, space = 1, part = "body") {
   check_formula_i_and_part(i, part)
   i <- get_rows_id(x[[part]], i)
   j <- get_columns_id(x[[part]], j)
-  x[[part]]$styles$pars[i, j, "line_spacing"] <- space
+  x[[part]]$styles$pars <- set_par_struct_values(
+    x = x[[part]]$styles$pars,
+    i = i,
+    j = j,
+    property = "line_spacing",
+    value = space
+  )
 
   x
 }
@@ -777,7 +923,7 @@ bg <- function(x, i = NULL, j = NULL, bg, part = "body", source = j) {
     bg <- rep(bg, each = length(i))
   }
 
-  x[[part]]$styles$cells[i, j, "background.color"] <- bg
+  x[[part]]$styles$cells[["background.color"]]$data[i, j] <- bg
 
   x
 }
@@ -843,7 +989,7 @@ valign <- function(x, i = NULL, j = NULL, valign = "center", part = "body") {
   i <- get_rows_id(x[[part]], i)
   j <- get_columns_id(x[[part]], j)
 
-  x[[part]]$styles$cells[i, j, "vertical.align"] <- valign
+  x[[part]]$styles$cells[["vertical.align"]]$data[i, j] <- valign
 
   x
 }
@@ -942,9 +1088,9 @@ rotate <- function(x, i = NULL, j = NULL, rotation, align = NULL, part = "body")
   i <- get_rows_id(x[[part]], i)
   j <- get_columns_id(x[[part]], j)
 
-  x[[part]]$styles$cells[i, j, "text.direction"] <- rotation
+  x[[part]]$styles$cells[["text.direction"]]$data[i, j] <- rotation
   if (!is.null(align)) {
-    x[[part]]$styles$cells[i, j, "vertical.align"] <- align
+    x[[part]]$styles$cells[["vertical.align"]]$data[i, j] <- align
   }
 
   x

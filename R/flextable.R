@@ -484,6 +484,8 @@ regulartable <- function(data, col_keys = names(data), cwidth = .75, cheight = .
 #' not supported by pdflatex, whereas with the xelatex and lualatex engines they are.
 #' - 'caption_repeat': a boolean that indicates if the caption should be
 #' repeated along pages. Its default value is `TRUE`.
+#' - 'footer_repeat': a boolean that indicates if the footer should be
+#' repeated along pages. Its default value is `TRUE`.
 #' - 'default_line_color': default line color, restored globally after
 #' the flextable is produced.
 #' @param word_title alternative text for Word table (used as title of the table)
@@ -519,7 +521,7 @@ regulartable <- function(data, col_keys = names(data), cwidth = .75, cheight = .
 #' ft_4
 #' @family flextable dimensions
 set_table_properties <- function(x, layout = "fixed", width = 0,
-                                 align = "center",
+                                 align = NULL,
                                  opts_html = list(),
                                  opts_word = list(),
                                  opts_pdf = list(),
@@ -544,7 +546,7 @@ set_table_properties <- function(x, layout = "fixed", width = 0,
   x$properties <- list(
     layout = layout,
     width = width,
-    align = align,
+    align = if (is.null(align)) get_flextable_defaults()$table_align else align,
     opts_html = do.call(opts_ft_html, opts_html),
     opts_word = do.call(opts_ft_word, opts_word),
     opts_pdf = do.call(opts_ft_pdf, opts_pdf),
@@ -585,6 +587,7 @@ opts_ft_pdf <- function(tabcolsep = get_flextable_defaults()$tabcolsep,
                         float = get_flextable_defaults()$float,
                         fonts_ignore = get_flextable_defaults()$fonts_ignore,
                         caption_repeat = TRUE,
+                        footer_repeat = FALSE,
                         default_line_color = "black") {
   if (!is.logical(fonts_ignore) || length(fonts_ignore) != 1) {
     stop(sprintf("'%s' is expected to be a single %s.", "fonts_ignore", "logical"), call. = FALSE)
@@ -608,6 +611,7 @@ opts_ft_pdf <- function(tabcolsep = get_flextable_defaults()$tabcolsep,
     float = float,
     default_line_color = default_line_color,
     caption_repeat = caption_repeat,
+    footer_repeat = footer_repeat,
     fonts_ignore = fonts_ignore
   )
   class(z) <- "opts_ft_pdf"

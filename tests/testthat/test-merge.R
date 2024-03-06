@@ -55,3 +55,4 @@ test_that("merged cells can be un-merged", {
   ft <- merge_none(ft)
   expect_true(all(ft$body$spans$columns == 1))
 })
+

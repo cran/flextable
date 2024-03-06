@@ -161,6 +161,8 @@ dataset_describe <- function(dataset) {
       colnames(z) <- c("stat", "cts")
       z$percent <- z$cts / sum(z$cts)
       z$data_type <- "discrete"
+      z$value1 <- rep(NA_real_, nrow(z))
+      z$value2 <- rep(NA_real_, nrow(z))
       z
     } else if (is.numeric(x)) {
       z <- data.frame(
@@ -195,14 +197,7 @@ dataset_describe <- function(dataset) {
 #' deviation or a median absolute deviation.
 #' @param cts a count to display
 #' @param pcts a percentage to display
-#' @param num1_mask format associated with `num1`, a format string
-#' used by [sprintf()].
-#' @param num2_mask format associated with `num2`, a format string
-#' used by [sprintf()].
-#' @param cts_mask format associated with `cts`, a format string
-#' used by [sprintf()].
-#' @param pcts_mask format associated with `pcts`, a format string
-#' used by [sprintf()].
+#' @param ... unused arguments
 #' @seealso [summarizor()], [tabulator()], [mk_par()]
 #' @family text formatter functions
 #' @examples
@@ -236,9 +231,7 @@ dataset_describe <- function(dataset) {
 #' )
 #' ft_1 <- autofit(ft_1)
 #' ft_1
-fmt_2stats <- function(stat, num1, num2, cts, pcts,
-                       num1_mask = "%.01f", num2_mask = "(%.01f)",
-                       cts_mask = "%.0f", pcts_mask = "(%.02f%%)") {
+fmt_2stats <- function(stat, num1, num2, cts, pcts, ...) {
   z_num <- character(length = length(num1))
   z_cts <- character(length = length(num1))
 
@@ -249,30 +242,31 @@ fmt_2stats <- function(stat, num1, num2, cts, pcts,
   is_cts_2 <- !is.na(cts) & !is.na(pcts)
   is_cts_1 <- !is.na(cts) & is.na(pcts)
 
-  z_num[is_num_1] <- sprintf(num1_mask, num1[is_num_1])
+  z_num[is_num_1] <- fmt_dbl(num1[is_num_1])
 
   z_num[is_mean_sd] <- paste0(
-    sprintf(num1_mask, num1[is_mean_sd]),
-    " ",
-    sprintf(num2_mask, num2[is_mean_sd])
+    fmt_dbl(num1[is_mean_sd]),
+    " (",
+    fmt_dbl(num2[is_mean_sd]), ")"
   )
   z_num[is_median_iqr] <- paste0(
-    sprintf(num1_mask, num1[is_median_iqr]),
-    " ",
-    sprintf(num2_mask, num2[is_median_iqr])
+    fmt_dbl(num1[is_median_iqr]),
+    " (",
+    fmt_dbl(num2[is_median_iqr]),
+    ")"
   )
   z_num[is_range] <- paste0(
-    sprintf(num1_mask, num1[is_range]),
+    fmt_dbl(num1[is_range]),
     " - ",
-    sprintf(num1_mask, num2[is_range])
+    fmt_dbl(num2[is_range])
   )
 
   z_cts[is_cts_2] <- paste0(
-    sprintf(cts_mask, cts[is_cts_2]),
-    " ",
-    sprintf(pcts_mask, pcts[is_cts_2] * 100)
+    fmt_int(cts[is_cts_2]),
+    " (",
+    fmt_pct(pcts[is_cts_2]), ")"
   )
-  z_cts[is_cts_1] <- sprintf(cts_mask, cts[is_cts_1])
+  z_cts[is_cts_1] <- fmt_int(cts[is_cts_1])
 
   paste0(z_num, z_cts)
 }
@@ -414,8 +408,8 @@ fmt_pct <- function(x) {
 }
 
 #' @export
-#' @title Format numerical data as percentages
-#' @description The function formats numeric vectors as percentages.
+#' @title Format numerical data
+#' @description The function formats numeric vectors.
 #' @param x numeric values
 #' @seealso [tabulator()], [mk_par()]
 #' @family text formatter functions
@@ -472,3 +466,57 @@ fmt_avg_dev <- function(avg, dev, digit1 = 1, digit2 = 1) {
   z2[!is.na(dev)] <- sprintf(paste0(" (%.", digit2, "f)"), dev[!is.na(dev)])
   paste0(z1, z2)
 }
+
+#' @export
+#' @title Format with significant figures after zeros
+#' @description Rounds significant figures after zeros in numeric vectors.
+#' The number of digits displayed after the leading zeros is
+#' customizable using the `digits` parameter.
+#' @param x numeric values
+#' @param digits number of digits displayed after the leading zeros
+#' @seealso [tabulator()], [mk_par()]
+#' @family text formatter functions
+#' @examples
+#' x <- data.frame(
+#'   x = c(0.00000004567, 2.000003456, 3, pi)
+#' )
+#' ft_1 <- flextable(x)
+#' ft_1 <- align(x = ft_1, j = 1, align = "left")
+#' mk_par(ft_1, value = as_paragraph(
+#'   fmt_signif_after_zeros(x)))
+fmt_signif_after_zeros <- function(x, digits = 3) {
+
+  na_str = flextable_global$defaults$na_str
+  nan_str = flextable_global$defaults$nan_str
+  decimal.mark = flextable_global$defaults$decimal.mark
+
+  wisna <- is.na(x)
+  wisnan <- is.nan(x)
+
+  # as character
+  str_rounded <- formatC(x, format = "f", digits = 64)
+
+  # decimal point index
+  decimal_index <- regexpr("\\.", str_rounded)
+
+  # decimal part extraction
+  decimal_part <- substr(str_rounded, decimal_index + 1, nchar(str_rounded))
+
+  # first non zero index
+  regex_non0 <- regexpr("^[0]+", decimal_part)
+  pos_non0 <- attr(regex_non0, "match.length")
+  pos_non0[pos_non0 < 0] <- nchar(decimal_part)[pos_non0 < 0]
+
+  dec_str <- substr(decimal_part, start = regex_non0, stop = pos_non0 + digits)
+  dec_str[regex_non0 < 0] <- substr(decimal_part[regex_non0 < 0], start = 1, stop = digits)
+  which_have_dec <- grepl("[^0]", dec_str)
+  dec_str[which_have_dec] <- paste0(decimal.mark, dec_str[which_have_dec])
+  dec_str[!which_have_dec] <- ""
+
+  out <- paste0(round(x, 0), dec_str)
+
+  out[wisna] <- na_str
+  out[wisnan] <- nan_str
+  out
+}
+

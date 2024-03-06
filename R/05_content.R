@@ -150,13 +150,18 @@ default_fptext_prop <- structure(
 #' ft
 as_chunk <- function(x, props = NULL, formatter = format_fun, ...) {
   if (is.function(x)) {
-    stop("argument `x` in function `as_chunk` cannot be a function", call. = FALSE)
+    stop("argument `x` in function `as_chunk` cannot be a function")
+  }
+  if (!is.function(formatter)) {
+    stop("argument `formatter` in function `as_chunk` should be a function")
   }
 
   text <- formatter(x, ...)
 
   if (is.null(props)) {
     props <- default_fptext_prop
+  } else if (!inherits(props, "fp_text")) {
+    stop("argument `props` should be an object of class 'fp_text'.")
   }
 
   if (inherits(props, "fp_text")) {
@@ -481,7 +486,7 @@ hyperlink_text <- function(x, props = NULL, formatter = format_fun, url, ...) {
 #' @family chunk elements for paragraph
 #' @examples
 #' library(flextable)
-#' if (require("equatags") && mathjax_available()) {
+#' if (require("equatags")) {
 #'   eqs <- c(
 #'     "(ax^2 + bx + c = 0)",
 #'     "a \\ne 0",
@@ -766,7 +771,7 @@ as_paragraph <- function(..., list_values = NULL) {
   }
 
   data <- mapply(function(x, index) {
-    x$seq_index <- rep(index, nrow(x))
+    x$.chunk_index <- rep(index, nrow(x))
     x
   }, list_values, seq_along(list_values), SIMPLIFY = FALSE, USE.NAMES = FALSE)
   data <- rbind_match_columns(data)

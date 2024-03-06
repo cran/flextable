@@ -7,9 +7,11 @@ library(rmarkdown)
 
 
 test_that("void works as expected", {
+  expect_error(void(12, part = "all"))
+
   ftab <- flextable(head(mtcars))
   ftab <- void(ftab, part = "all")
-  expect_true(all(flextable:::fortify_run(ftab)$txt %in% ""))
+  expect_true(all(information_data_chunk(ftab)$txt %in% ""))
 })
 
 z <-
@@ -46,7 +48,7 @@ test_that("flextable_defaults values for cell content", {
       "1 116 933", "dark", "01/01/2011 09:09:09", "Adrien Dupuy", "29 02 2028",
       "2", "53,58175", "167,7560", "1 009 038", "dark", "01/01/2011 09:09:09"
     )
-  expect_equivalent(object = flextable:::fortify_run(ft)$txt, expected)
+  expect_equivalent(object = information_data_chunk(ft)$txt, expected)
 
   init_flextable_defaults()
 })
@@ -83,7 +85,7 @@ test_that("colformat_* functions", {
       "-26/02/2011-", "-c-", "-b-", "-12,566-", "-4-", "-NON-", "-01/01/2011 090905-",
       "-27/02/2011-"
     )
-  expect_equivalent(object = flextable:::fortify_run(ft)$txt, expected)
+  expect_equivalent(object = information_data_chunk(ft)$txt, expected)
 
   ft <- colformat_num(x = ft, big.mark = "", decimal.mark = ".", prefix = "+", suffix = "+")
   expected <-
@@ -95,12 +97,16 @@ test_that("colformat_* functions", {
       "-26/02/2011-", "-c-", "-b-", "+12.566371+", "+4+", "-NON-",
       "-01/01/2011 090905-", "-27/02/2011-"
     )
-  expect_equivalent(object = flextable:::fortify_run(ft)$txt, expected)
+  expect_equivalent(object = information_data_chunk(ft)$txt, expected)
 })
 
 
 
 test_that("append and prepend chunks structure", {
+
+  expect_error(append_chunks(12))
+  expect_error(prepend_chunks(12))
+
   ftab <- flextable(head(cars, n = 3))
   ftab <- append_chunks(ftab,
     j = 1,
@@ -108,7 +114,7 @@ test_that("append and prepend chunks structure", {
     colorize(as_i(" Shodown"), color = "magenta")
   )
 
-  expect_equal(flextable:::fortify_run(ftab)$txt,
+  expect_equal(information_data_chunk(ftab)$txt,
     expected = c(
       "speed", "dist", "4", " Samurai", " Shodown", "2", "4", " Samurai",
       " Shodown", "10", "7", " Samurai", " Shodown", "4"
@@ -122,10 +128,32 @@ test_that("append and prepend chunks structure", {
     colorize(as_i(" Shodown "), color = "magenta")
   )
 
-  expect_equal(flextable:::fortify_run(ftab)$txt,
+  expect_equal(information_data_chunk(ftab)$txt,
     expected = c(
       "speed", "dist", "Samurai", " Shodown ", "4", "2", "Samurai",
       " Shodown ", "4", "10", "Samurai", " Shodown ", "7", "4"
     )
   )
+})
+
+test_that("delete rows and columns", {
+  ftab <- flextable(head(iris))
+  ftab <- delete_columns(ftab, j = 1:3)
+  ftab <- delete_rows(ftab, i = 1:5, part = "body")
+  ftab <- autofit(ftab)
+
+
+  expect_equal(information_data_chunk(ftab)$txt,
+    expected = c("Petal.Width", "Species", "0.4", "setosa")
+  )
+  expect_equal(ftab$col_keys,
+    expected = c("Petal.Width", "Species")
+  )
+  expect_equal(ftab$body$content$nrow,
+    expected = 1L
+  )
+  expect_equal(ftab$body$content$ncol,
+    expected = 2L
+  )
+
 })

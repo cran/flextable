@@ -83,24 +83,57 @@
 #'
 #' @return a grob (gTree) object made with package `grid`
 #' @examples
+#' \dontshow{
+#' data.table::setDTthreads(1)
+#' }
+#' library(ragg)
+#' library(gdtools)
+#' register_liberationsans()
+#'
+#' set_flextable_defaults(font.family = "Liberation Sans")
+#'
 #' ft <- flextable(head(mtcars))
-#' ft <- autofit(ft)
+#'
 #' gr <- gen_grob(ft)
 #'
-#' used_family <- get_flextable_defaults()$font.family
-#' if (gdtools::font_family_exists(used_family) &&
-#'   require("ragg")) {
-#'   png_f <- tempfile(fileext = ".png")
-#'   # get the size
-#'   dims <- dim(gr)
-#'   dims
+#' png_f_1 <- tempfile(fileext = ".png")
+#' ragg::agg_png(
+#'   filename = png_f_1, width = 4, height = 2,
+#'   units = "in", res = 150)
+#' plot(gr)
+#' dev.off()
+#'
+#' png_f_2 <- tempfile(fileext = ".png")
+#' # get the size
+#' dims <- dim(gr)
+#' dims
+#' ragg::agg_png(
+#'   filename = png_f_2, width = dims$width + .1,
+#'   height = dims$height + .1, units = "in", res = 150
+#' )
+#' plot(gr)
+#' dev.off()
+#'
+#'
+#' if (require("ggplot2")) {
+#'   png_f_3 <- tempfile(fileext = ".png")
+#'   z <- summarizor(iris, by = "Species") |>
+#'     as_flextable(spread_first_col = TRUE) |>
+#'     color(color = "gray", part = "all")
+#'   gg <- ggplot(data = iris, aes(Sepal.Length, Petal.Width)) +
+#'     annotation_custom(
+#'       gen_grob(z, scaling = "full"),
+#'       xmin  = 4.5, xmax = 7.5, ymin = 0.25, ymax = 2.25) +
+#'     geom_point() +
+#'     theme_minimal()
 #'   ragg::agg_png(
-#'     filename = png_f, width = dims$width + .1,
-#'     height = dims$height + .1, units = "in", res = 150
+#'     filename = png_f_3, width = 7,
+#'     height = 7, units = "in", res = 150
 #'   )
-#'   plot(gr)
+#'   print(gg)
 #'   dev.off()
 #' }
+#'
 #'
 #' @family flextable print function
 #' @importFrom grid gTree
@@ -475,13 +508,13 @@ arrange_contents_grob <- function(x,
         params$paddingy) * height_factor
     }
 
-    child_count <- seq_index <- width <- NULL
+    child_count <- .chunk_index <- width <- NULL
     if (params$wrapping) {
       filtered <- c(
         unlist(dat[child_count > 0 & width * cex <= max_width, "children_index"]),
-        unlist(dat[child_count > 0 & width * cex > max_width, "seq_index"])
+        unlist(dat[child_count > 0 & width * cex > max_width, ".chunk_index"])
       )
-      dat <- dat[!seq_index %in% filtered, , drop = FALSE]
+      dat <- dat[!.chunk_index %in% filtered, , drop = FALSE]
     }
     n <- nrow(dat)
     if (n > 1) {
@@ -594,7 +627,7 @@ arrange_contents_grob <- function(x,
   }
 
   make_col_grob <- function(col_index, chunk_index,
-                            txt_data, from_seq_index, to_seq_index,
+                            txt_data, from_.chunk_index, to_.chunk_index,
                             width, height) {
     gr <- x$ftgrobs[[chunk_index]]
     params <- gr$ftpar
@@ -606,7 +639,7 @@ arrange_contents_grob <- function(x,
         is_bold = params$is_bold,
         is_italic = params$is_italic
       )
-      gr$name <- paste(gr$name, "seq", from_seq_index, "to", to_seq_index, sep = "_")
+      gr$name <- paste(gr$name, "seq", from_.chunk_index, "to", to_.chunk_index, sep = "_")
     }
     gr$vp <- viewport(
       layout.pos.row = 1,
@@ -627,8 +660,8 @@ arrange_contents_grob <- function(x,
   if (nrow(dat) > 1) {
     # group data by row, column and chunk
     col_dat <- dat[, list(
-      from = min(.SD$seq_index),
-      to = max(.SD$seq_index),
+      from = min(.SD$.chunk_index),
+      to = max(.SD$.chunk_index),
       txt_data = paste0(.SD$txt_data, collapse = ""),
       width = sum(.SD$width),
       height = max(.SD$ascent) + max(.SD$descent)
@@ -680,7 +713,7 @@ arrange_contents_grob <- function(x,
     if (do_update_grob) {
       children <- gList(make_col_grob(
         1L, dat$chunk_index,
-        dat$txt_data, dat$seq_index, dat$seq_index,
+        dat$txt_data, dat$.chunk_index, dat$.chunk_index,
         dat$width, dat$height
       ))
     }

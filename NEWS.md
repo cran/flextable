@@ -1,3 +1,33 @@
+# flextable 0.9.5
+
+## new features
+
+- new functions `tab_settings()` to set tabulation marks configuration
+for Word and RTF. It works with `officer::fp_tabs()`.
+- new function `fmt_signif_after_zero()` to round significant figures after zeros.
+
+## Issues
+
+- `summarizor()` don't stop anymore if table only contain discrete columns.
+- `as_flextable.data.frame()` supports 'data.table'
+- `footnote()` handle undefined `ref_symbols` argument
+- `delete_rows()` does not delete rows if the row selection is empty
+- improve `gen_grob()` alignments when wrapping text
+- fix horizontal border issue with `gen_grob()` when cells are vertically merged
+- Word captions set with `set_caption()` can have no bookmark and have
+autonumber used together.
+
+## Changes
+
+- default `tabcolsep` is now set to 2.
+- Deprecate `set_formatter_type()`.
+- renovate `fmt_2stats()` so that it uses global flextable settings, 
+i.e. digits, etc.
+- refactoring of data structure for content
+- footer along pages in PDF are now deactivated by default. It can be 
+activated with command `set_table_properties(opts_pdf = list(footer_repeat = TRUE))`.
+- more argument checkings in `as_chunk()`
+
 # flextable 0.9.4
 
 ## Issues

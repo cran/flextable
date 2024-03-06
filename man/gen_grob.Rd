@@ -101,24 +101,57 @@ The size of the flextable can be known by using the method
 }
 
 \examples{
+\dontshow{
+data.table::setDTthreads(1)
+}
+library(ragg)
+library(gdtools)
+register_liberationsans()
+
+set_flextable_defaults(font.family = "Liberation Sans")
+
 ft <- flextable(head(mtcars))
-ft <- autofit(ft)
+
 gr <- gen_grob(ft)
 
-used_family <- get_flextable_defaults()$font.family
-if (gdtools::font_family_exists(used_family) &&
-  require("ragg")) {
-  png_f <- tempfile(fileext = ".png")
-  # get the size
-  dims <- dim(gr)
-  dims
+png_f_1 <- tempfile(fileext = ".png")
+ragg::agg_png(
+  filename = png_f_1, width = 4, height = 2,
+  units = "in", res = 150)
+plot(gr)
+dev.off()
+
+png_f_2 <- tempfile(fileext = ".png")
+# get the size
+dims <- dim(gr)
+dims
+ragg::agg_png(
+  filename = png_f_2, width = dims$width + .1,
+  height = dims$height + .1, units = "in", res = 150
+)
+plot(gr)
+dev.off()
+
+
+if (require("ggplot2")) {
+  png_f_3 <- tempfile(fileext = ".png")
+  z <- summarizor(iris, by = "Species") |>
+    as_flextable(spread_first_col = TRUE) |>
+    color(color = "gray", part = "all")
+  gg <- ggplot(data = iris, aes(Sepal.Length, Petal.Width)) +
+    annotation_custom(
+      gen_grob(z, scaling = "full"),
+      xmin  = 4.5, xmax = 7.5, ymin = 0.25, ymax = 2.25) +
+    geom_point() +
+    theme_minimal()
   ragg::agg_png(
-    filename = png_f, width = dims$width + .1,
-    height = dims$height + .1, units = "in", res = 150
+    filename = png_f_3, width = 7,
+    height = 7, units = "in", res = 150
   )
-  plot(gr)
+  print(gg)
   dev.off()
 }
+
 
 }
 \seealso{
