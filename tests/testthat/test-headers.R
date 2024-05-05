@@ -1,8 +1,3 @@
-context("check headers")
-
-library(xml2)
-library(officer)
-
 test_that("set_header_labels", {
   col_keys <- c(
     "Species",

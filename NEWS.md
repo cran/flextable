@@ -1,3 +1,43 @@
+# flextable 0.9.6
+
+## Changes
+
+- `headers_flextable_at_bkm()` and `footers_flextable_at_bkm()` are defunct.
+- `flextable_to_rmd()` is now using `knit_child()` for safer usage from `for`
+  loops or `if` statements.
+- Add explanation about caption limitations in the manual of functions
+  `save_as_image()` and `ph_with.flextable()`.
+- Deprecate `as_raster()` since `gen_grob()` is easier to use and render
+  nicer.
+- BREAKING CHANGE: in `align()`, the default argument value for `align` is now
+  `"left"`, rather than `c("left", "center", "right", "justify")`. This
+  returns the default value to how it was in older versions of {flextable}.
+    - in `align()`, use of the old default `align` argument could cause an
+      error if the number of columns being adjusted was not a multiple of 4.
+    - The documentation specified that `align` had to be a single value, when
+      it could actually accept multiple values. This is why a default value of
+      `c("left", "center", "right", "justify")`, was problematic. This
+      documentation has now been updated and new examples included in the
+      documentation.
+    - The default `align` argument will now apply left alignment to all
+      columns in the body.
+    - If the user specifies an alignment that is invalid, a error will be
+      displayed.
+    - The `path` argument now has a signature of `part = c("body", "header",
+      "footer", "all")`, but because only a single value can be selected, it
+      will pick `"body"` by default, as before.
+- Deprecate `lollipop()` since it produces (ugly) results that can be replaced
+by nice results with `gg_chunk()` or `grid_chunk()`.
+
+## Issues
+
+- fix issue with `as_image()` when the table contains no text.
+- fix font instruction issue with PDF and quarto
+- fix issue with Quarto detection and R > 4.4
+- fix `align()` issue with recycling and update documentation
+that was wrong about argument `align` that is vectorized over 
+columns.
+
 # flextable 0.9.5
 
 ## new features

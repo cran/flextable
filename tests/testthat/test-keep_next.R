@@ -1,8 +1,3 @@
-context("check keep with next")
-
-library(officer)
-library(xml2)
-
 init_flextable_defaults()
 
 iris_sum <- summarizor(iris, by = "Species")

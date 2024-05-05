@@ -50,11 +50,14 @@ htmltools_value <- function(x, ft.align = NULL, ft.shadow = NULL,
   html_o
 }
 
+#' @importFrom knitr knit_child
 #' @export
-#' @title flextable raw code
+#' @title Knitr rendering in loops and if statements
 #'
-#' @description Print openxml, latex or html code of a
-#' flextable. The function is particularly useful when you want
+#' @description Print flextable in R Markdown or Quarto documents
+#' within `for` loop or `if` statement.
+#'
+#' The function is particularly useful when you want
 #' to generate flextable in a loop from a R Markdown document.
 #'
 #' Inside R Markdown document, chunk option `results` must be
@@ -85,49 +88,24 @@ htmltools_value <- function(x, ft.align = NULL, ft.shadow = NULL,
 flextable_to_rmd <- function(x, ...) {
   is_bookdown <- is_in_bookdown()
   is_quarto <- is_in_quarto()
-  x <- knitr_update_properties(x)
 
-  if (is.null(pandoc_to())) {
-    # for 'glossr' test
-    return(invisible("```{=html}\n<div class=\"tabwid tabwid_left\"><style></style></div>\n```\n"))
-  } else if (is_html_output()) { # html
-    type_output <- "html"
-  } else if (is_latex_output()) { # latex
-    type_output <- "pdf"
-  } else if (grepl("docx", opts_knit$get("rmarkdown.pandoc.to"))) { # docx
-    type_output <- "docx"
-  } else if (grepl("pptx", opts_knit$get("rmarkdown.pandoc.to"))) { # pptx
-    type_output <- "pptx"
+  x <- knitr_update_properties(x, bookdown = is_bookdown, quarto = is_quarto)
+
+  if (is_quarto) {
+    tmp_file <- tempfile(fileext = ".Rmd")
   } else {
-    type_output <- "html"
+    tmp_file <- tempfile(fileext = ".qmd")
   }
 
-  if ("html" %in% type_output) {
-    x <- flextable_global$defaults$post_process_all(x)
-    x <- flextable_global$defaults$post_process_html(x)
-    if (!is_bookdown) {
-      caption <- caption_default_html(x)
-      manual_css <- attr(caption, "css")
-    } else {
-      caption <- caption_bookdown_html(x)
-      manual_css <- ""
-    }
-    str <- gen_raw_html(x,
-      class = "tabwid",
-      caption = caption,
-      manual_css = manual_css
-    )
-    str <- raw_block(str, type = "html")
-  } else if ("docx" %in% type_output) {
-    str <- knit_to_wml(x, bookdown = is_bookdown, quarto = is_quarto)
-  } else if ("pptx" %in% type_output) {
-    str <- knit_to_pml(x)
-  } else if ("pdf" %in% type_output) {
-    str <- knit_to_latex(x, bookdown = is_bookdown, quarto = is_quarto)
-    add_latex_dep()
-    str <- raw_latex(x = str)
-  }
-  cat(str)
+  writeLines(
+    c("```{r echo=FALSE}",
+      "x", "```", ""),
+    tmp_file,
+    useBytes = TRUE)
+
+  z <- knit_child(input = tmp_file, envir = environment(), quiet = TRUE)
+  cat(z, sep = '\n')
+
   invisible("")
 }
 
@@ -977,6 +955,15 @@ save_as_rtf <- function(..., values = NULL, path, pr_section = NULL) {
 #' @export
 #' @title Save a flextable in a 'png' or 'svg' file
 #' @description Save a flextable as a png or svg image.
+#' This function uses R graphic system to create an image from the flextable,
+#' allowing for high-quality image output. See [gen_grob()] for more options.
+#'
+#' @section caption:
+#' It's important to note that captions are not part of the table itself.
+#' This means when exporting a table to PNG or SVG formats (image formats),
+#' the caption won't be included. Captions are intended for document outputs
+#' like Word, HTML, or PDF, where tables are embedded within the document
+#' itself.
 #' @param x a flextable object
 #' @param path image file to be created. It should end with '.png'
 #' or '.svg'.
@@ -1054,6 +1041,7 @@ save_as_image <- function(x, path, expand = 10, res = 200, ...) {
 #' should be used to ensure a correct rendering.
 #' @param x a flextable object
 #' @param ... additional arguments passed to [gen_grob()].
+#' @inheritSection save_as_image caption
 #' @examples
 #' library(gdtools)
 #' library(ragg)
@@ -1105,6 +1093,7 @@ plot.flextable <- function(x, ...) {
 #' @family flextable print function
 #' @keywords internal
 as_raster <- function(x, ...) {
+  .Deprecated(new = "gen_grob()")
   if (!requireNamespace("magick", quietly = TRUE)) {
     stop(sprintf(
       "'%s' package should be installed to create an image from a flextable.",
@@ -1128,7 +1117,18 @@ is_in_bookdown <- function() {
     isTRUE(!is_rdocx_document)
 }
 is_in_quarto <- function() {
-  isTRUE(knitr::opts_knit$get("quarto.version") > numeric_version("0"))
+  if (getRversion() >= numeric_version("4.4.0")) {
+    isTRUE(knitr::opts_knit$get("quarto.version") > 0)
+  } else {
+    isTRUE(knitr::opts_knit$get("quarto.version") > numeric_version("0"))
+  }
+}
+fake_quarto <- function() {
+  if (getRversion() >= numeric_version("4.4.0")) {
+    knitr::opts_knit$set("quarto.version" = 1)
+  } else {
+    knitr::opts_knit$set("quarto.version" = numeric_version("1.0"))
+  }
 }
 is_in_pkgdown <- function() {
   identical(Sys.getenv("IN_PKGDOWN"), "true") &&
