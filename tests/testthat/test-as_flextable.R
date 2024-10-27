@@ -156,11 +156,7 @@ test_that("partitioning around medoids works", {
   )
 })
 
-test_that("grouped data exports work", {
-  skip_if_not_local_testing(check_html = TRUE)
-  snap_folder_test_file <- "as_flextable"
-  defer_cleaning_snapshot_directory(snap_folder_test_file)
-
+test_that("grouped data structure", {
   init_flextable_defaults()
   set_flextable_defaults(
     post_process_pptx = function(x) {
@@ -173,7 +169,7 @@ test_that("grouped data exports work", {
     structure(
       list(
         Treatment = structure(c(3L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 4L, 4L),
-          levels = c("nonchilled", "chilled", "zoubi", "bisou"), class = "factor"
+                              levels = c("nonchilled", "chilled", "zoubi", "bisou"), class = "factor"
         ),
         conc = c(85L, 95L, 175L, 250L, 350L, 500L, 675L, 1000L, 95L, 175L, 250L, 350L, 500L, 675L, 1000L, NA, 1000L),
         Quebec = c(
@@ -195,44 +191,322 @@ test_that("grouped data exports work", {
   ft_1 <- colformat_double(ft_1, digits = 2)
   ft_1 <- set_table_properties(ft_1, layout = "autofit")
 
-  # pptx grouped-data
-  path <- save_as_pptx(ft_1, path = tempfile(fileext = ".pptx"))
-  handle_manual_snapshots(snap_folder_test_file, "pptx-grouped-data")
-  doconv::expect_snapshot_doc(name = "pptx-grouped-data", x = path, engine = "testthat")
+  # pptx testing
+  pptx_file <- tempfile(fileext = ".pptx")
+  save_as_pptx(ft_1, path = pptx_file)
+  doc <- read_pptx(pptx_file)
 
-  # docx grouped-data
-  path <- save_as_docx(ft_1, path = tempfile(fileext = ".docx"))
-  handle_manual_snapshots(snap_folder_test_file, "docx-grouped-data")
-  doconv::expect_snapshot_doc(x = path, name = "docx-grouped-data", engine = "testthat")
+  xml_body <- doc$slide$get_slide(1)$get()
+  xml_tbl <- xml_find_first(xml_body, "/p:sld/p:cSld/p:spTree/p:graphicFrame/a:graphic/a:graphicData/a:tbl")
 
-  # html grouped-data
-  path <- save_as_html(ft_1, path = tempfile(fileext = ".html"))
-  handle_manual_snapshots(snap_folder_test_file, "html-grouped-data")
-  doconv::expect_snapshot_html(name = "html-grouped-data", path, engine = "testthat")
+  xml_cell_2_1 <- xml_child(xml_tbl, "a:tr[2]/a:tc[1]")
+  expect_equal(xml_text(xml_cell_2_1), "Treatment: zoubi")
+  expect_equal(xml_attr(xml_cell_2_1, "gridSpan"), "3")
+  xml_cell_2_2 <- xml_child(xml_tbl, "a:tr[2]/a:tc[2]")
+  expect_equal(xml_text(xml_cell_2_2), "")
+  expect_equal(xml_attr(xml_cell_2_2, "hMerge"), "true")
+  xml_cell_2_3 <- xml_child(xml_tbl, "a:tr[2]/a:tc[3]")
+  expect_equal(xml_text(xml_cell_2_3), "")
+  expect_equal(xml_attr(xml_cell_2_3, "hMerge"), "true")
 
-  gdata <- as_grouped_data(
-    x = data_co2, groups = c("Treatment"),
-    expand_single = FALSE
-  )
+  xml_cell_3_1 <- xml_child(xml_tbl, "a:tr[3]/a:tc[1]")
+  expect_equal(xml_text(xml_cell_3_1), "85")
+  xml_cell_3_2 <- xml_child(xml_tbl, "a:tr[3]/a:tc[2]")
+  expect_equal(xml_text(xml_cell_3_2), "12.00")
+  xml_cell_3_3 <- xml_child(xml_tbl, "a:tr[3]/a:tc[3]")
+  expect_equal(xml_text(xml_cell_3_3), "10.00")
 
-  ft_2 <- as_flextable(gdata)
-  ft_2 <- colformat_double(ft_2, digits = 2)
-  ft_2 <- autofit(ft_2)
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[1]/a:tc[1]/a:tcPr/a:lnL"), "w"), "0")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[1]/a:tc[1]/a:tcPr/a:lnR"), "w"), "0")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[1]/a:tc[1]/a:tcPr/a:lnB"), "w"), "19050")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[1]/a:tc[1]/a:tcPr/a:lnT"), "w"), "19050")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[1]/a:tc[2]/a:tcPr/a:lnL"), "w"), "0")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[1]/a:tc[2]/a:tcPr/a:lnR"), "w"), "0")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[1]/a:tc[2]/a:tcPr/a:lnB"), "w"), "19050")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[1]/a:tc[2]/a:tcPr/a:lnT"), "w"), "19050")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[1]/a:tc[3]/a:tcPr/a:lnL"), "w"), "0")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[1]/a:tc[3]/a:tcPr/a:lnR"), "w"), "0")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[1]/a:tc[3]/a:tcPr/a:lnB"), "w"), "19050")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[1]/a:tc[3]/a:tcPr/a:lnT"), "w"), "19050")
 
-  # pptx grouped-data-no-single
-  path <- save_as_pptx(ft_2, path = tempfile(fileext = ".pptx"))
-  handle_manual_snapshots(snap_folder_test_file, "pptx-grouped-data-no-single")
-  doconv::expect_snapshot_doc(x = path, name = "pptx-grouped-data-no-single", engine = "testthat")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[2]/a:tc[1]/a:tcPr/a:lnL"), "w"), "0")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[2]/a:tc[1]/a:tcPr/a:lnR"), "w"), "0")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[2]/a:tc[1]/a:tcPr/a:lnB"), "w"), "0")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[2]/a:tc[1]/a:tcPr/a:lnT"), "w"), "0")
 
-  # docx grouped-data-no-single
-  path <- save_as_docx(ft_2, path = tempfile(fileext = ".docx"))
-  handle_manual_snapshots(snap_folder_test_file, "docx-grouped-data-no-single")
-  doconv::expect_snapshot_doc(x = path, name = "docx-grouped-data-no-single", engine = "testthat")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[22]/a:tc[1]/a:tcPr/a:lnL"), "w"), "0")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[22]/a:tc[1]/a:tcPr/a:lnR"), "w"), "0")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[22]/a:tc[1]/a:tcPr/a:lnB"), "w"), "19050")
+  expect_equal(xml_attr(xml_child(xml_tbl, "a:tr[22]/a:tc[1]/a:tcPr/a:lnT"), "w"), "0")
 
-  # html grouped-data-no-single
-  path <- save_as_html(ft_2, path = tempfile(fileext = ".html"))
-  handle_manual_snapshots(snap_folder_test_file, "html-grouped-data-no-single")
-  doconv::expect_snapshot_html(name = "html-grouped-data-no-single", path, engine = "testthat")
+
+  # docx testing
+  docx_file <- tempfile(fileext = ".docx")
+  save_as_docx(ft_1, path = docx_file)
+  doc <- read_docx(docx_file)
+  xml_doc <- docx_body_xml(doc)
+  xml_tbl <- xml_find_first(xml_doc, "/w:document/w:body/w:tbl")
+  xml_cell_2_1 <- xml_child(xml_tbl, "w:tr[2]/w:tc[1]")
+  expect_equal(xml_text(xml_cell_2_1), "Treatment: zoubi")
+  expect_equal(xml_attr(xml_child(xml_cell_2_1, "w:tcPr/w:gridSpan"), "val"), "3")
+  xml_cell_2_2 <- xml_child(xml_tbl, "w:tr[2]/w:tc[2]")
+  expect_s3_class(xml_cell_2_2, "xml_missing")
+
+  xml_cell_1_1 <- xml_child(xml_tbl, "w:tr[1]/w:tc[1]")
+  expect_equal(xml_text(xml_cell_1_1), "conc")
+  xml_cell_1_2 <- xml_child(xml_tbl, "w:tr[1]/w:tc[2]")
+  expect_equal(xml_text(xml_cell_1_2), "Quebec")
+  xml_cell_1_3 <- xml_child(xml_tbl, "w:tr[1]/w:tc[3]")
+  expect_equal(xml_text(xml_cell_1_3), "Mississippi")
+
+  expect_equal(xml_attr(xml_child(xml_cell_1_3, "w:tcPr/w:tcBorders/w:bottom"), "sz"), "12")
+  expect_equal(xml_attr(xml_child(xml_cell_1_3, "w:tcPr/w:tcBorders/w:top"), "sz"), "12")
+  expect_equal(xml_attr(xml_child(xml_cell_1_3, "w:tcPr/w:tcBorders/w:left"), "sz"), "0")
+  expect_equal(xml_attr(xml_child(xml_cell_1_3, "w:tcPr/w:tcBorders/w:right"), "sz"), "0")
+
+  expect_equal(xml_attr(xml_child(xml_cell_2_1, "w:tcPr/w:tcBorders/w:bottom"), "sz"), "0")
+  expect_equal(xml_attr(xml_child(xml_cell_2_1, "w:tcPr/w:tcBorders/w:top"), "sz"), "12")
+  expect_equal(xml_attr(xml_child(xml_cell_2_1, "w:tcPr/w:tcBorders/w:left"), "sz"), "0")
+  expect_equal(xml_attr(xml_child(xml_cell_2_1, "w:tcPr/w:tcBorders/w:right"), "sz"), "0")
+
+  # html testing
+  html_file <- tempfile(fileext = ".html")
+  save_as_html(ft_1, path = html_file)
+  xml_doc <- read_html(html_file)
+  xml_tbl <- xml_find_first(xml_doc, "//table")
+
+  xml_cell_2_1 <- xml_child(xml_tbl, "tbody/tr[1]/td[1]")
+  expect_equal(xml_text(xml_cell_2_1), "Treatment: zoubi")
+  expect_equal(xml_attr(xml_cell_2_1, "colspan"), "3")
+  xml_cell_2_2 <- xml_child(xml_tbl, "tbody/tr[1]/td[2]")
+  expect_s3_class(xml_cell_2_2, "xml_missing")
+
+  xml_cell_1_1 <- xml_child(xml_tbl, "thead/tr[1]/th[1]")
+  expect_equal(xml_text(xml_cell_1_1), "conc")
+  xml_cell_1_2 <- xml_child(xml_tbl, "thead/tr[1]/th[2]")
+  expect_equal(xml_text(xml_cell_1_2), "Quebec")
+  xml_cell_1_3 <- xml_child(xml_tbl, "thead/tr[1]/th[3]")
+  expect_equal(xml_text(xml_cell_1_3), "Mississippi")
+
 
   init_flextable_defaults()
+})
+
+labelled_df <- data.frame(
+  region =
+    structure(
+      c(1, 2, 1, 9, 2, 3),
+      labels = c(north = 1, south = 2, center = 3, missing = 9),
+      label = "Region of the respondent"
+    ),
+  sex =
+    structure(
+      c("f", "f", "m", "m", "m", "f"),
+      labels = c(female = "f", male = "m"),
+      label = "Sex of the respondent"
+    ),
+  value = 1:6
+)
+
+test_that("labelled data", {
+  ft <- flextable(labelled_df, use_labels = TRUE)
+  expected_txt <- c(
+    "Region of the respondent", "Sex of the respondent", "value",
+    "north", "female", "1", "south", "female", "2", "north", "male",
+    "3", "missing", "male", "4", "south", "male", "5", "center", "female",
+    "6")
+  expect_equal(
+    information_data_chunk(ft)$txt,
+    expected_txt
+  )
+
+  ft <- flextable(labelled_df, use_labels = FALSE)
+  expected_txt <- c(
+    "region", "sex", "value", "1", "f", "1", "2", "f", "2", "1",
+    "m", "3", "9", "m", "4", "2", "m", "5", "3", "f", "6"
+  )
+  expect_equal(
+    information_data_chunk(ft)$txt,
+    expected_txt
+  )
+
+  expected_txt <- c(
+    "region", "sex", "sex", "sex", "region", "female", "male",
+    "Total", "north", "1", "", "1", "", "2", "", "south", "1", "",
+    "1", "", "2", "", "center", "1", "", "", "", "1", "", "missing",
+    "", "", "1", "", "1", "", "Total", "3", "", "3", "", "6", ""
+  )
+  ft <- proc_freq(
+    labelled_df, row = "region", col = "sex",
+    include.row_percent = FALSE,
+    include.column_percent = FALSE,
+    include.table_percent = FALSE
+  )
+  expect_equal(
+    information_data_chunk(ft)$txt,
+    expected_txt
+  )
+
+  expected_txt <- c(
+    "", "", "", "Statistic", "<br>", "(N=6)", "Region of the respondent",
+    "north", "", "2 (33.3%)", "Region of the respondent", "south",
+    "", "2 (33.3%)", "Region of the respondent", "center", "", "1 (16.7%)",
+    "Region of the respondent", "Missing", "", "1 (16.7%)", "Sex of the respondent",
+    "female", "", "3 (50.0%)", "Sex of the respondent", "male", "",
+    "3 (50.0%)", "value", "Mean (SD)", "", "3.5 (1.9)", "value",
+    "Median (IQR)", "", "3.5 (2.5)", "value", "Range", "", "1.0 - 6.0"
+  )
+  ft <- as_flextable(summarizor(labelled_df))
+  expect_equal(
+    information_data_chunk(ft)$txt,
+    expected_txt
+  )
+})
+
+test_that("package tables", {
+
+  skip_if_not_installed("tables")
+  require("tables", quietly = TRUE)
+  x <- tabular((Factor(gear, "Gears") + 1) * ((n = 1) + Percent() +
+         (RowPct = Percent("row")) + (ColPct = Percent("col"))) ~
+         (Factor(carb, "Carburetors") + 1) * Format(digits = 1),
+    data = mtcars)
+
+  ft <- as_flextable(
+    x,
+    spread_first_col = TRUE,
+    row_title = as_paragraph(
+      colorize("Gears: ", color = "#666666"),
+      colorize(as_b(.row_title), color = "red")
+    )
+  )
+  idc <- information_data_chunk(ft)
+
+  expected_txt <- c(
+    "", "Carburetors", "", "", "", "", "", "", "", "1", "2", "3",
+    "4", "6", "8", "All"
+  )
+  expect_equal(
+    idc[idc$.part %in% "header",]$txt,
+    expected_txt
+  )
+
+  expected_txt <- c(
+    "Gears: ", "3", "", "", "", "", "", "", "", "n", "3", "4",
+    "3", "5", "0", "0", "15", "Percent", "9", "12", "9", "16", "0",
+    "0", "47", "RowPct", "20", "27", "20", "33", "0", "0", "100",
+    "ColPct", "43", "40", "100", "50", "0", "0", "47"
+  )
+  expect_equal(
+    idc[idc$.part %in% "body" & idc$.row_id < 6,]$txt,
+    expected_txt
+  )
+
+  idp <- information_data_paragraph(ft)
+  expect_equal(
+    idp[idp$.part %in% "header",]$text.align,
+    rep("center", 16)
+  )
+  expect_equal(
+    idp[idp$.part %in% "body" & idp$.row_id < 6 & idp$.row_id > 1,]$text.align,
+    rep("center", 32)
+  )
+
+
+})
+
+
+test_that("package xtable", {
+
+  skip_if_not_installed("xtable")
+  require("xtable", quietly = TRUE)
+
+  tli <- data.frame(
+    grade = c(6L, 7L, 5L, 3L, 8L, 5L, 8L, 4L, 6L, 7L),
+    sex = factor(c("M", "M", "F", "M", "M", "M", "F", "M", "M", "M")),
+    disadvg = factor(c("YES", "NO", "YES", "YES", "YES", "NO", "YES", "YES", "NO", "YES")),
+    ethnicty = factor(
+      c(
+        "HISPANIC", "BLACK", "HISPANIC", "HISPANIC", "WHITE", "BLACK", "HISPANIC",
+        "BLACK", "WHITE", "HISPANIC"
+      ),
+      levels = c("BLACK", "HISPANIC", "OTHER", "WHITE")
+    ),
+    tlimth = c(43L, 88L, 34L, 65L, 75L, 74L, 72L, 79L, 88L, 87L)
+  )
+
+  tli.table <- xtable(tli)
+  align(tli.table) <- rep("r", 6)
+  align(tli.table) <- "|r|r|clr|r|"
+  ft <- as_flextable(
+    tli.table,
+    rotate.colnames = TRUE,
+    include.rownames = FALSE)
+  ft <- height(ft, i = 1, part = "header", height = 1)
+
+  idc <- information_data_chunk(ft)
+
+  expected_txt <- c(
+    "grade", "sex", "disadvg", "ethnicty", "tlimth", "6", "M",
+    "YES", "HISPANIC", "43", "7", "M", "NO", "BLACK", "88", "5",
+    "F", "YES", "HISPANIC", "34", "3", "M", "YES", "HISPANIC", "65",
+    "8", "M", "YES", "WHITE", "75", "5", "M", "NO", "BLACK", "74",
+    "8", "F", "YES", "HISPANIC", "72", "4", "M", "YES", "BLACK",
+    "79", "6", "M", "NO", "WHITE", "88", "7", "M", "YES", "HISPANIC",
+    "87"
+  )
+  expect_equal(
+    idc$txt,
+    expected_txt
+  )
+
+  idc <- information_data_cell(ft)
+  expect_equal(
+    idc$text.direction,
+    c(rep("btlr", 5), rep("lrtb", 50))
+  )
+
+})
+
+test_that("gam models", {
+
+  skip_if_not_installed("mgcv")
+  require("mgcv", quietly = TRUE)
+
+  set.seed(2)
+  dat <- gamSim(1, n = 400, dist = "normal", scale = 2)
+  b <- gam(y ~ s(x0) + s(x1) + s(x2) + s(x3), data = dat)
+  options(show.signif.stars = FALSE)
+  ft <- as_flextable(b)
+  ft <- delete_part(ft, part = "footer")
+
+  idc <- information_data_chunk(ft)
+
+  expected_txt <- c(
+    "Component", "Term", "Estimate", "Std Error", "t-value", "p-value",
+    "A. parametric coefficients", "(Intercept)", "7.833", "0.099",
+    "79.303", "0.0000", "Component", "Term", "edf", "Ref. df", "F-value",
+    "p-value", "B. smooth terms", "s(x0)", "2.500", "3.115", "6.921",
+    "0.0001", "B. smooth terms", "s(x1)", "2.401", "2.984", "81.858",
+    "0.0000", "B. smooth terms", "s(x2)", "7.698", "8.564", "88.158",
+    "0.0000", "B. smooth terms", "s(x3)", "1.000", "1.000", "4.343",
+    "0.0378"
+  )
+  expect_equal(
+    idc$txt,
+    expected_txt
+  )
+
+  idp <- information_data_paragraph(ft)
+  expect_equal(
+    idp$text.align,
+    c(
+      "left", "left", "right", "right", "right", "right", "left",
+      "left", "right", "right", "right", "right", "left", "left", "right",
+      "right", "right", "right", "left", "left", "right", "right",
+      "right", "right", "left", "left", "right", "right", "right",
+      "right", "left", "left", "right", "right", "right", "right",
+      "left", "left", "right", "right", "right", "right"
+    )
+  )
 })

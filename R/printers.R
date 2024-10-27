@@ -2,10 +2,10 @@
 #' @export
 #' @title flextable as an 'HTML' object
 #'
-#' @description get a [div()] from a flextable object.
+#' @description get a [htmltools::div()] from a flextable object.
 #' This can be used in a shiny application. For an output within
 #' "R Markdown" document, use [knit_print.flextable].
-#' @return an object marked as [HTML] ready to be used within
+#' @return an object marked as [htmltools::HTML] ready to be used within
 #' a call to `shiny::renderUI` for example.
 #' @param x a flextable object
 #' @param ft.align flextable alignment, supported values are 'left', 'center' and 'right'.
@@ -20,6 +20,7 @@ htmltools_value <- function(x, ft.align = NULL, ft.shadow = NULL,
                             extra_dependencies = NULL) {
   x <- flextable_global$defaults$post_process_all(x)
   x <- flextable_global$defaults$post_process_html(x)
+  x <- fix_border_issues(x)
 
   if (!is.null(ft.align)) {
     x$properties$align <- ft.align
@@ -92,9 +93,9 @@ flextable_to_rmd <- function(x, ...) {
   x <- knitr_update_properties(x, bookdown = is_bookdown, quarto = is_quarto)
 
   if (is_quarto) {
-    tmp_file <- tempfile(fileext = ".Rmd")
-  } else {
     tmp_file <- tempfile(fileext = ".qmd")
+  } else {
+    tmp_file <- tempfile(fileext = ".Rmd")
   }
 
   writeLines(
@@ -103,7 +104,14 @@ flextable_to_rmd <- function(x, ...) {
     tmp_file,
     useBytes = TRUE)
 
-  z <- knit_child(input = tmp_file, envir = environment(), quiet = TRUE)
+  z <- knit_child(
+    input = tmp_file,
+    options = list(
+      fig.path=tempfile(),
+      eval = isTRUE(knitr::opts_current$get("eval"))
+    ),
+    envir = environment(), quiet = TRUE)
+
   cat(z, sep = '\n')
 
   invisible("")
@@ -136,6 +144,7 @@ to_html.flextable <- function(x, type = c("table", "img"), ...) {
   if ("table" %in% type_output) {
     x <- flextable_global$defaults$post_process_all(x)
     x <- flextable_global$defaults$post_process_html(x)
+    x <- fix_border_issues(x)
     manual_css <- readLines(system.file(package = "flextable", "web_1.1.3", "tabwid.css"), encoding = "UTF-8")
     gen_raw_html(x, class = "tabwid", caption = "", manual_css = paste0(manual_css, collapse = "\n"))
   } else {
@@ -174,6 +183,7 @@ to_html.flextable <- function(x, type = c("table", "img"), ...) {
 to_wml.flextable <- function(x, ...) {
   x <- flextable_global$defaults$post_process_all(x)
   x <- flextable_global$defaults$post_process_docx(x)
+  x <- fix_border_issues(x)
   x <- knitr_update_properties(x)
   gen_raw_wml(x)
 }
@@ -191,6 +201,7 @@ to_wml.flextable <- function(x, ...) {
 knit_to_html <- function(x, bookdown = FALSE, quarto = FALSE) {
   x <- flextable_global$defaults$post_process_all(x)
   x <- flextable_global$defaults$post_process_html(x)
+  x <- fix_border_issues(x)
 
   tab_props <- opts_current_table()
   topcaption <- tab_props$topcaption
@@ -224,6 +235,7 @@ knit_to_html <- function(x, bookdown = FALSE, quarto = FALSE) {
 knit_to_wml <- function(x, bookdown = FALSE, quarto = FALSE) {
   x <- flextable_global$defaults$post_process_all(x)
   x <- flextable_global$defaults$post_process_docx(x)
+  x <- fix_border_issues(x)
 
   is_rdocx_document <- opts_current$get("is_rdocx_document")
   if (is.null(is_rdocx_document)) is_rdocx_document <- FALSE
@@ -306,6 +318,7 @@ knit_to_latex <- function(x, bookdown, quarto = FALSE) {
 
   x <- flextable_global$defaults$post_process_all(x)
   x <- flextable_global$defaults$post_process_pdf(x)
+  x <- fix_border_issues(x)
 
   if ("none" %in% ft.latex.float) {
     lat_container <- latex_container_none()
@@ -380,6 +393,7 @@ knit_to_pml <- function(x) {
   }
   x <- flextable_global$defaults$post_process_all(x)
   x <- flextable_global$defaults$post_process_pptx(x)
+  x <- fix_border_issues(x)
 
   uid <- as.integer(runif(n = 1) * 10^9)
 
@@ -493,6 +507,10 @@ print.flextable <- function(x, preview = "html", align = "center", ...) {
 #'   PowerPoint (pptx) \tab >= 2.4 \cr
 #'   PDF               \tab >= 1.12
 #' }
+#'
+#' If the output format is not HTML, Word, or PDF (e.g., `rtf_document`,
+#' `github_document`, `beamer_presentation`), an image will be generated
+#' instead.
 #' @section Chunk options:
 #'
 #' Some features, often specific to an output format, are available to help you
@@ -647,6 +665,13 @@ knit_print.flextable <- function(x, ...) {
   } else if (!is.null(getOption("xaringan.page_number.offset"))) { # xaringan
     str <- knit_to_html(x, bookdown = FALSE, quarto = FALSE)
     str <- asis_output(str, meta = html_dependencies_list(x))
+  } else if(is_html_output(excludes = "gfm") && isTRUE(knitr::opts_knit$get("is.paged.js"))) {
+    x$properties$opts_html$extra_class <- c(
+      x$properties$opts_html$extra_class,
+      "no-shadow-dom"
+    )
+    str <- knit_to_html(x, bookdown = FALSE, quarto = is_quarto)
+    str <- raw_html(str, meta = html_dependencies_list(x))
   } else if (is_html_output(excludes = "gfm")) { # html
     str <- knit_to_html(x, bookdown = is_bookdown, quarto = is_quarto)
     str <- raw_html(str, meta = html_dependencies_list(x))
@@ -725,6 +750,7 @@ save_as_html <- function(..., values = NULL, path,
   values <- Filter(function(x) inherits(x, "flextable"), values)
   values <- lapply(values, flextable_global$defaults$post_process_all)
   values <- lapply(values, flextable_global$defaults$post_process_html)
+  values <- lapply(values, fix_border_issues)
   values <- lapply(values, htmltools_value)
   titles <- names(values)
   show_names <- !is.null(titles)
@@ -803,7 +829,7 @@ save_as_pptx <- function(..., values = NULL, path) {
 #' @param values a list (possibly named), each element is a flextable object. If named objects, names are
 #' used as titles. If provided, argument `...` will be ignored.
 #' @param path Word file to be created
-#' @param pr_section a [prop_section] object that can be used to define page
+#' @param pr_section a [officer::prop_section] object that can be used to define page
 #' layout such as orientation, width and height.
 #' @param align left, center (default) or right.
 #' @return a string containing the full name of the generated file
@@ -878,7 +904,7 @@ save_as_docx <- function(..., values = NULL, path, pr_section = NULL, align = "c
 #' @param values a list (possibly named), each element is a flextable object. If named objects, names are
 #' used as titles. If provided, argument `...` will be ignored.
 #' @param path Word file to be created
-#' @param pr_section a [prop_section] object that can be used to define page
+#' @param pr_section a [officer::prop_section] object that can be used to define page
 #' layout such as orientation, width and height.
 #' @return a string containing the full name of the generated file
 #' @family flextable print function
@@ -1009,7 +1035,7 @@ save_as_image <- function(x, path, expand = 10, res = 200, ...) {
     if (!requireNamespace("svglite", quietly = TRUE)) {
       stop(sprintf(
         "'%s' package should be installed to save a flextable in a '%s' image.",
-        "svglite"
+        "svglite", "svg"
       ))
     }
     svglite::svglite(

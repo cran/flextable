@@ -164,7 +164,8 @@ runs_as_latex <- function(x, chunk_data = information_data_chunk(x), ls_df = NUL
 
   dat[runs_types_lst$is_text == TRUE, c("txt") := list(sanitize_latex_str(.SD$txt))]
   dat[runs_types_lst$is_equation == TRUE, c("txt") := list(paste0("$", .SD$eq_data, "$"))]
-  dat[runs_types_lst$is_hlink, c("txt") := list(paste0("\\href{", sanitize_latex_str(.SD$url), "}{", .SD$txt, "}"))]
+  dat[runs_types_lst$is_hlink & grepl("^#", dat$url), c("txt") := list(paste0("\\hyperref[", gsub("^#", "", .SD$url), "]{", .SD$txt, "}"))]
+  dat[runs_types_lst$is_hlink & !grepl("^#", dat$url), c("txt") := list(paste0("\\href{", sanitize_latex_str(.SD$url), "}{", .SD$txt, "}"))]
   dat[runs_types_lst$is_raster == TRUE, c("txt", "left", "right") := list(img_to_latex(.SD$img_data, .SD$width, .SD$height), "", "")]
   dat[runs_types_lst$is_word_field == TRUE, c("left", "right", "txt") := list("", "", "")]
   dat[runs_types_lst$is_soft_return == TRUE, c("txt") := list("\\linebreak ")]
@@ -381,6 +382,7 @@ runs_as_pml <- function(value) {
   txt_data[runs_types_lst$is_equation, c("opening_tag", "closing_tag") := list("", "")]
   txt_data[runs_types_lst$is_soft_return, c("opening_tag", "closing_tag") := list("<a:br>", "</a:br>")]
 
+  txt_data_is_empty <- txt_data[, list(is_empty = all(.SD$text_nodes_str %in% "<a:t></a:t>")) ,by = c(".part", ".row_id", ".col_id")]
   txt_data[, c("par_nodes_str") := list(
     paste0(.SD$opening_tag, .SD$rpr, .SD$text_nodes_str, .SD$closing_tag)
   )]
@@ -397,6 +399,7 @@ runs_as_pml <- function(value) {
     by = c(".part", ".row_id", ".col_id"),
     .SDcols = "par_nodes_str"
   ]
+  txt_data <- merge(txt_data, txt_data_is_empty, by = c(".part", ".row_id", ".col_id"))
   setDF(txt_data)
   txt_data
 }

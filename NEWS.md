@@ -1,3 +1,30 @@
+# flextable 0.9.7
+
+## new features
+
+- Added support for labelled datasets.
+
+## Changes
+
+- The `fix_border_issues` function is now useless for users, as it is now 
+called automatically before printing.
+
+## Issues
+
+- fix caption issue that came with no version of bookdown (issue #645),
+'bookdown' management of caption has been simplified.
+- fix vertical overlapping lines with grid output (issue #644)
+- fix broken internal links in PDF file, probably due to a change in knitr or 
+rmarkdown (issue #632)
+- fix right outer border issue in grid format (issue #650)
+- fix `flextable_to_rmd()` issue with images in pdf (issue #651)
+- fix `flextable_to_rmd()` issue with local chunk `eval` option (issue #631)
+- `proc_freq` can now display only the table percentages without the count 
+using `include.table_count = FALSE`.
+- bring back support for 'pagedown' with `pagedown >= 0.20.2`
+- flextable now applies defined text-format to empty cells for Word and
+Powerpoint outputs.
+
 # flextable 0.9.6
 
 ## Changes
@@ -346,7 +373,7 @@ with the argument `align_with_table=FALSE`.
 - new theme 'APA', `theme_apa` (@rempsyc #426)
 - method `as_flextable.tabulator()` gains an argument `spread_first_col` to enable 
 spreading of the first column of the table as a line separator.
-
+- fix doc links to functions from other packages for future releases
 
 ## Issues
 

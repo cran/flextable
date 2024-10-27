@@ -41,15 +41,16 @@ Other contributors:
 \itemize{
   \item ArData [copyright holder]
   \item Clementine Jager [contributor]
+  \item Eli Daniels [contributor]
   \item Quentin Fazilleau [contributor]
-  \item Maxim Nazarov (rmarkdown for docx output) [contributor]
+  \item Maxim Nazarov [contributor]
   \item Titouan Robert [contributor]
-  \item Michael Barrowman (inline footnotes) [contributor]
-  \item Atsushi Yasumoto (support for bookdown cross reference) [contributor]
-  \item Paul Julian (support for gam objects) [contributor]
-  \item Sean Browning (work on footnote positioning system) [contributor]
-  \item Rémi Thériault (\href{https://orcid.org/0000-0003-4315-6788}{ORCID}) (theme_apa) [contributor]
-  \item Samuel Jobert (work on pagination) [contributor]
+  \item Michael Barrowman [contributor]
+  \item Atsushi Yasumoto [contributor]
+  \item Paul Julian [contributor]
+  \item Sean Browning [contributor]
+  \item Rémi Thériault (\href{https://orcid.org/0000-0003-4315-6788}{ORCID}) [contributor]
+  \item Samuel Jobert [contributor]
   \item Keith Newman [contributor]
 }
 

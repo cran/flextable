@@ -58,6 +58,9 @@
 #' the dataset, they will be added as blank columns by default.
 #' @param cwidth,cheight initial width and height to use for cell sizes in inches.
 #' @param defaults,theme_fun deprecated, use [set_flextable_defaults()] instead.
+#' @param use_labels Logical; if TRUE, any column labels or value labels
+#' present in the dataset will be used for display purposes. Defaults
+#' to TRUE.
 #' @examples
 #' ft <- flextable(head(mtcars))
 #' ft
@@ -67,7 +70,8 @@
 #' [compose()], [footnote()], [set_caption()]
 flextable <- function(data, col_keys = names(data),
                       cwidth = .75, cheight = .25,
-                      defaults = list(), theme_fun = theme_booktabs) {
+                      defaults = list(), theme_fun = theme_booktabs,
+                      use_labels = TRUE) {
   stopifnot(is.data.frame(data), ncol(data) > 0)
   if (any(duplicated(col_keys))) {
     stop(sprintf(
@@ -75,6 +79,8 @@ flextable <- function(data, col_keys = names(data),
       paste0(unique(col_keys[duplicated(col_keys)]), collapse = ", ")
     ))
   }
+  list_lbls <- collect_labels(dataset = data, use_labels = use_labels)
+
   if (inherits(data, "data.table") || inherits(data, "tbl_df") || inherits(data, "tbl")) {
     data <- as.data.frame(data, stringsAsFactors = FALSE)
   }
@@ -112,7 +118,11 @@ flextable <- function(data, col_keys = names(data),
   out <- do.call(flextable_global$defaults$theme_fun, list(out))
   out <- set_table_properties(x = out, layout = flextable_global$defaults$table.layout)
 
-  out
+  if (length(list_lbls$variables_labels) > 0) {
+    out <- labelizor(out, labels = unlist(list_lbls$variables_labels), part = "header")
+  }
+
+  apply_labels(out, collected_labels = list_lbls)
 }
 
 #' @export
@@ -296,7 +306,7 @@ qflextable <- function(data) {
 #' is deprecated in favor of `word_stylename`. If the caption is defined with
 #' `as_paragraph()`, some of the formattings of the paragraph style will be
 #' replaced by the formattings associated with the chunks (such as the font).
-#' @param fp_p paragraph formatting properties associated with the caption, see [fp_par()].
+#' @param fp_p paragraph formatting properties associated with the caption, see [officer::fp_par()].
 #' It applies when possible, i.e. in HTML and 'Word' but not with bookdown.
 #' @param align_with_table if TRUE, caption is aligned as the flextable, if FALSE,
 #' `fp_p` will not be updated and alignement is as defined with `fp_p`.
@@ -460,6 +470,7 @@ regulartable <- function(data, col_keys = names(data), cwidth = .75, cheight = .
 #'     the first column is set as a *sticky* column.
 #'     - If the list has a value named `add_css` it will be used as extra
 #'     css to add, .i.e: `border:1px solid red;`.
+#' - 'extra_class': extra classes to add in the table tag
 #' @param opts_word Word options as a list. Supported elements are:
 #' - 'split':  Word option 'Allow row to break across pages' can be
 #' activated when TRUE.
@@ -558,6 +569,7 @@ set_table_properties <- function(x, layout = "fixed", width = 0,
 
 opts_ft_html <- function(extra_css = get_flextable_defaults()$extra_css,
                          scroll = get_flextable_defaults()$scroll,
+                         extra_class = NULL,
                          ...) {
   if (!is.character(extra_css) || length(extra_css) != 1 || any(is.na(extra_css))) {
     stop(sprintf("'%s' is expected to be a single %s.", "extra_css", "character"), call. = FALSE)
@@ -566,7 +578,7 @@ opts_ft_html <- function(extra_css = get_flextable_defaults()$extra_css,
     stop(sprintf("'%s' is expected to be %s.", "scroll", "NULL or a list"), call. = FALSE)
   }
 
-  z <- list(extra_css = extra_css, scroll = scroll)
+  z <- list(extra_css = extra_css, scroll = scroll, extra_class = extra_class)
   class(z) <- "opts_ft_html"
   z
 }

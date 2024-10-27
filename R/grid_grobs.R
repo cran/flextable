@@ -19,7 +19,7 @@
 #' It is not recommended to use this function for
 #' large tables because the calculations can be long.
 #'
-#' Limitations: equations (see [as_equation()]) and hyperlinks (see [hyperlink_ftext()])
+#' Limitations: equations (see [as_equation()]) and hyperlinks (see [officer::hyperlink_ftext()])
 #' will not be displayed.
 #'
 #' @inheritSection save_as_image caption
@@ -145,6 +145,10 @@ gen_grob <- function(x,
                      wrapping = TRUE,
                      autowidths = TRUE,
                      just = NULL) {
+
+  x <- flextable_global$defaults$post_process_all(x)
+  x <- fix_border_issues(x)
+
   dots <- list(...)
   debug <- isTRUE(dots$debug)
   if (identical(fit, TRUE)) fit <- "auto"
