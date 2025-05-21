@@ -753,9 +753,9 @@ keep_with_next <- function(x, i = NULL, value = TRUE, part = "body") {
 #'   fp_tab(pos = 1.4, style = "decimal")
 #' )
 #'
-#' zz <- flextable(z) |>
-#'   tab_settings(j = 2, value = ts) |>
-#'   width(width = c(1.5, 2))
+#' zz <- flextable(z)
+#' zz <- tab_settings(zz, j = 2, value = ts)
+#' zz <- width(zz, width = c(1.5, 2))
 #'
 #'
 #' save_as_docx(zz, path = tempfile(fileext = ".docx"))
@@ -764,7 +764,7 @@ tab_settings <- function(x, i = NULL, j = NULL, value = TRUE, part = "body") {
 
   if (part == "all") {
     for (p in c("header", "body", "footer")) {
-      x <- tab_settings(x = x, i = i, value = value, part = p)
+      x <- tab_settings(x = x, i = i, j = j, value = value, part = p)
     }
     return(x)
   }
@@ -779,7 +779,7 @@ tab_settings <- function(x, i = NULL, j = NULL, value = TRUE, part = "body") {
   x[[part]]$styles$pars <- set_par_struct_values(
     x = x[[part]]$styles$pars,
     i = i,
-    j = NULL,
+    j = j,
     property = "tabs",
     value = as.character(value)
   )

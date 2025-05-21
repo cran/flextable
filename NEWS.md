@@ -1,3 +1,14 @@
+# flextable 0.9.8
+
+## Issues
+
+- `tab_settings()` is now using j argument as expected (#635)
+- doc inconsistency for `set_table_properties()` with layout that defaults to 
+"fixed".
+- add_header_row produced an error after using `delete_column()` (#676)
+- `fmt_signif_after_zeros()` fixed issue with 0 rounding
+- `proc_freq` supports now non syntactically names
+
 # flextable 0.9.7
 
 ## new features

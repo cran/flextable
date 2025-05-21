@@ -22,6 +22,8 @@
 #' Limitations: equations (see [as_equation()]) and hyperlinks (see [officer::hyperlink_ftext()])
 #' will not be displayed.
 #'
+#' 'ragg' or 'svglite' or 'ggiraph' graphical device drivers
+#' should be used to ensure a correct rendering.
 #' @inheritSection save_as_image caption
 #' @section size:
 #'
@@ -118,12 +120,12 @@
 #'
 #' if (require("ggplot2")) {
 #'   png_f_3 <- tempfile(fileext = ".png")
-#'   z <- summarizor(iris, by = "Species") |>
-#'     as_flextable(spread_first_col = TRUE) |>
-#'     color(color = "gray", part = "all")
+#'   z <- summarizor(iris, by = "Species")
+#'   ft <- as_flextable(z, spread_first_col = TRUE)
+#'   ft <- color(ft, color = "gray", part = "all")
 #'   gg <- ggplot(data = iris, aes(Sepal.Length, Petal.Width)) +
 #'     annotation_custom(
-#'       gen_grob(z, scaling = "full"),
+#'       gen_grob(ft, scaling = "full"),
 #'       xmin  = 4.5, xmax = 7.5, ymin = 0.25, ymax = 2.25) +
 #'     geom_point() +
 #'     theme_minimal()

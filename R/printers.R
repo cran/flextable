@@ -809,7 +809,7 @@ save_as_pptx <- function(..., values = NULL, path) {
   show_names <- !is.null(titles)
   z <- read_pptx()
   for (i in seq_along(values)) {
-    z <- add_slide(z)
+    z <- add_slide(z, "Title and Content")
     if (show_names) {
       z <- ph_with(z, titles[i], location = ph_location_type(type = "title"))
     }
@@ -871,9 +871,7 @@ save_as_docx <- function(..., values = NULL, path, pr_section = NULL, align = "c
 
   if (is.null(pr_section)) {
     pr_section <- prop_section(
-      page_size = page_size(orient = "portrait", width = 8.3, height = 11.7),
-      type = "continuous",
-      page_margins = page_mar()
+      type = "continuous"
     )
   }
 
@@ -948,9 +946,7 @@ save_as_rtf <- function(..., values = NULL, path, pr_section = NULL) {
   show_names <- !is.null(titles)
   if (is.null(pr_section)) {
     pr_section <- prop_section(
-      page_size = page_size(orient = "portrait", width = 8.3, height = 11.7),
-      type = "continuous",
-      page_margins = page_mar()
+      type = "continuous"
     )
   }
 

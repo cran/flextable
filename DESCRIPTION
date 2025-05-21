@@ -1,7 +1,7 @@
 Type: Package
 Package: flextable
 Title: Functions for Tabular Reporting
-Version: 0.9.7
+Version: 0.9.8
 Authors@R: c(
     person("David", "Gohel", , "david.gohel@ardata.fr", role = c("aut", "cre")),
     person("ArData", role = "cph"),
@@ -48,7 +48,7 @@ Config/testthat/edition: 3
 Encoding: UTF-8
 RoxygenNote: 7.3.2
 NeedsCompilation: no
-Packaged: 2024-10-27 19:17:30 UTC; davidgohel
+Packaged: 2025-05-21 08:00:38 UTC; davidgohel
 Author: David Gohel [aut, cre],
   ArData [cph],
   Clementine Jager [ctb],
@@ -61,9 +61,9 @@ Author: David Gohel [aut, cre],
   Atsushi Yasumoto [ctb],
   Paul Julian [ctb],
   Sean Browning [ctb],
-  Rémi Thériault [ctb] (<https://orcid.org/0000-0003-4315-6788>),
+  Rémi Thériault [ctb] (ORCID: <https://orcid.org/0000-0003-4315-6788>),
   Samuel Jobert [ctb],
   Keith Newman [ctb]
 Maintainer: David Gohel <david.gohel@ardata.fr>
 Repository: CRAN
-Date/Publication: 2024-10-27 20:10:02 UTC
+Date/Publication: 2025-05-21 09:20:02 UTC

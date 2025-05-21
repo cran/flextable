@@ -92,6 +92,9 @@ large tables because the calculations can be long.
 
 Limitations: equations (see \code{\link[=as_equation]{as_equation()}}) and hyperlinks (see \code{\link[officer:hyperlink_ftext]{officer::hyperlink_ftext()}})
 will not be displayed.
+
+'ragg' or 'svglite' or 'ggiraph' graphical device drivers
+should be used to ensure a correct rendering.
 }
 \section{size}{
 
@@ -144,12 +147,12 @@ dev.off()
 
 if (require("ggplot2")) {
   png_f_3 <- tempfile(fileext = ".png")
-  z <- summarizor(iris, by = "Species") |>
-    as_flextable(spread_first_col = TRUE) |>
-    color(color = "gray", part = "all")
+  z <- summarizor(iris, by = "Species")
+  ft <- as_flextable(z, spread_first_col = TRUE)
+  ft <- color(ft, color = "gray", part = "all")
   gg <- ggplot(data = iris, aes(Sepal.Length, Petal.Width)) +
     annotation_custom(
-      gen_grob(z, scaling = "full"),
+      gen_grob(ft, scaling = "full"),
       xmin  = 4.5, xmax = 7.5, ymin = 0.25, ymax = 2.25) +
     geom_point() +
     theme_minimal()
