@@ -2,12 +2,13 @@
 % Please edit documentation in R/flextable_sizes.R
 \name{dim.flextable}
 \alias{dim.flextable}
-\title{Get widths and heights of flextable}
+\title{Get column widths and row heights of a flextable}
 \usage{
 \method{dim}{flextable}(x)
 }
 \arguments{
-\item{x}{flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 }
 \description{
 returns widths and heights for each table columns and rows.

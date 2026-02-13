@@ -2,7 +2,7 @@
 % Please edit documentation in R/05_content.R
 \name{as_bracket}
 \alias{as_bracket}
-\title{Chunk with values in brackets}
+\title{Bracket chunk}
 \usage{
 as_bracket(..., sep = ", ", p = "(", s = ")")
 }
@@ -46,6 +46,8 @@ Other chunk elements for paragraph:
 \code{\link{as_highlight}()},
 \code{\link{as_i}()},
 \code{\link{as_image}()},
+\code{\link{as_qmd}()},
+\code{\link{as_strike}()},
 \code{\link{as_sub}()},
 \code{\link{as_sup}()},
 \code{\link{as_word_field}()},

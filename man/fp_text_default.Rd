@@ -2,7 +2,7 @@
 % Please edit documentation in R/defaults.R
 \name{fp_text_default}
 \alias{fp_text_default}
-\title{Text formatting properties}
+\title{Create text formatting with flextable defaults}
 \usage{
 fp_text_default(
   color = flextable_global$defaults$font.color,
@@ -10,6 +10,7 @@ fp_text_default(
   bold = FALSE,
   italic = FALSE,
   underlined = FALSE,
+  strike = FALSE,
   font.family = flextable_global$defaults$font.family,
   cs.family = NULL,
   eastasia.family = NULL,
@@ -29,6 +30,8 @@ a valid color (e.g. "#000000" or "black").}
 \item{italic}{is italic}
 
 \item{underlined}{is underlined}
+
+\item{strike}{is strikethrough}
 
 \item{font.family}{single character value. Specifies the font to
 be used to format characters in the Unicode range (U+0000-U+007F).}
@@ -53,25 +56,14 @@ or \code{'subscript'} or \code{'superscript'}}
 a valid color (e.g. "#000000" or "black").}
 }
 \description{
-Create a \code{\link[officer:fp_text]{officer::fp_text()}} object that uses
-defaut values defined in the flextable it applies to.
+Create a \code{\link[officer:fp_text]{officer::fp_text()}} object whose unspecified
+arguments inherit from \code{\link[=set_flextable_defaults]{set_flextable_defaults()}} (font family, size, color).
 
-\code{fp_text_default()} is a handy function that will allow
-you to specify certain formatting values to be applied
-to a piece of text, the formatting values that are not
-specified will simply be the existing formatting values.
+Use \code{fp_text_default()} instead of \code{officer::fp_text()} when building
+chunks with \code{\link[=as_chunk]{as_chunk()}}: only override the properties you need,
+and the rest will match the table's default style.
 
-For example, if you set the text in the cell to red
-previously, using the code \code{fp_text_default(bold = TRUE)},
-the formatting will be 'bold' but it will also be 'red'.
-
-On the other hand, the \code{fp_text()} function forces you
-to specify all the parameters, so we strongly recommend
-working with \code{fp_text_default()} which was created
-to replace the use of the former.
-
-See also \code{\link[=set_flextable_defaults]{set_flextable_defaults()}} to modify flextable
-defaults formatting properties.
+See also \code{\link[=set_flextable_defaults]{set_flextable_defaults()}} to modify the inherited values.
 }
 \examples{
 library(flextable)

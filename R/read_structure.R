@@ -118,10 +118,11 @@ fortify_span <- function(x, parts = c("header", "body", "footer")) {
 #' @noRd
 distinct_text_properties <- function(x, add_columns = character(length = 0L)) {
   columns <- c(
-    "color", "font.size", "bold", "italic", "underlined", "font.family",
+    "color", "font.size", "bold", "italic", "underlined", "strike", "font.family",
     "hansi.family", "eastasia.family", "cs.family", "vertical.align",
     "shading.color", add_columns
   )
+  columns <- intersect(columns, colnames(x))
   dat <- as.data.table(x[columns])
   uid <- unique(dat)
   setDF(dat)
@@ -143,7 +144,7 @@ distinct_paragraphs_properties <- function(x) {
     "border.width.right", "border.color.bottom", "border.color.top",
     "border.color.left", "border.color.right", "border.style.bottom",
     "border.style.top", "border.style.left", "border.style.right",
-    "text.direction", "vertical.align", "tabs"
+    "text.direction", "vertical.align", "tabs", "word_style"
   )
   columns <- intersect(columns, colnames(x))
   dat <- as.data.frame(x)[columns]
@@ -252,13 +253,13 @@ information_data_default_chunk <- function(x) {
 
 #' @importFrom data.table rbindlist setDF setcolorder
 #' @export
-#' @title content chunk related information of a flextable
+#' @title Get chunk-level content information from a flextable
 #' @description
 #' This function takes a flextable object and returns a data.frame containing
 #' information about each text chunk within the flextable. The data.frame includes
 #' details such as the text content, formatting properties, position within the
 #' paragraph, paragraph row, and column.
-#' @param x a flextable object
+#' @inheritParams args_x_only
 #' @section don't use this:
 #'
 #' These data structures should not be used, as they
@@ -317,13 +318,13 @@ information_data_chunk <- function(x, expand_special_chars = TRUE) {
 
 
 #' @importFrom data.table rbindlist setDF
-#' @title paragraph related information of a flextable
+#' @title Get paragraph-level information from a flextable
 #' @description
 #' This function takes a flextable object and returns a data.frame containing
 #' information about each paragraph within the flextable. The data.frame includes
 #' details about formatting properties and position within the
 #' row and column.
-#' @param x a flextable object
+#' @inheritParams args_x_only
 #' @section don't use this:
 #'
 #' These data structures should not be used, as they
@@ -368,13 +369,13 @@ information_data_paragraph <- function(x) {
   dat
 }
 
-#' @title table cell related information of a flextable
+#' @title Get cell-level information from a flextable
 #' @description
 #' This function takes a flextable object and returns a data.frame containing
 #' information about each cell within the flextable. The data.frame includes
 #' details about formatting properties and position within the
 #' row and column.
-#' @param x a flextable object
+#' @inheritParams args_x_only
 #' @section don't use this:
 #'
 #' These data structures should not be used, as they

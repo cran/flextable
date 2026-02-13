@@ -2,17 +2,20 @@
 % Please edit documentation in R/merge_flextable.R
 \name{merge_none}
 \alias{merge_none}
-\title{Delete flextable merging informations}
+\title{Delete flextable merging information}
 \usage{
 merge_none(x, part = "all")
 }
 \arguments{
-\item{x}{\code{flextable} object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
-\item{part}{partname of the table where merge has to be done.}
+\item{part}{part selector, see section \emph{Part selection with the \code{part}
+parameter} in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.
+Value 'all' can be used.}
 }
 \description{
-Delete all merging informations from a flextable.
+Delete all merging information from a flextable.
 }
 \examples{
 typology <- data.frame(

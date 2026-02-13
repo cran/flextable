@@ -7,18 +7,23 @@
 italic(x, i = NULL, j = NULL, italic = TRUE, part = "body")
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
-\item{i}{rows selection}
+\item{i}{row selector, see section \emph{Row selection with the \code{i} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
-\item{j}{columns selection}
+\item{j}{column selector, see section \emph{Column selection with the \code{j} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
 \item{italic}{boolean value}
 
-\item{part}{partname of the table (one of 'all', 'body', 'header', 'footer')}
+\item{part}{part selector, see section \emph{Part selection with the \code{part}
+parameter} in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.
+Value 'all' can be used.}
 }
 \description{
-change font decoration of selected rows and columns of a flextable.
+Change the font decoration of selected rows and columns of a flextable.
 }
 \examples{
 ft <- flextable(head(mtcars))
@@ -38,6 +43,7 @@ Other sugar functions for table style:
 \code{\link{line_spacing}()},
 \code{\link{padding}()},
 \code{\link{rotate}()},
+\code{\link{style}()},
 \code{\link{tab_settings}()},
 \code{\link{valign}()}
 }

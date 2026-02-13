@@ -29,7 +29,8 @@ ooxml_ppr <- function(paragraphs_properties, type = "wml") {
       width = zz$border.width.left,
       style = zz$border.style.left
     )
-    if (!is.na(zz$tabs)) {
+
+    if (!is.na(zz$tabs) && !isFALSE(zz$tabs)) {
       fp_tabs_ <- strsplit(zz$tabs, "&")[[1]]
       fp_tabs_ <- lapply(strsplit(fp_tabs_, "_"), function(x) {
         fp_tab(pos = as.numeric(x[2]), style = x[1])
@@ -67,26 +68,6 @@ ooxml_ppr <- function(paragraphs_properties, type = "wml") {
   ]
   setDF(paragraphs_properties)
   paragraphs_properties
-}
-
-wml_spans <- function(value) {
-  span_data <- fortify_span(value)
-
-  gridspan <- rep("", nrow(span_data))
-  gridspan[span_data$rowspan > 1] <-
-    paste0(
-      "<w:gridSpan w:val=\"",
-      span_data$rowspan[span_data$rowspan > 1],
-      "\"/>"
-    )
-
-  vmerge <- rep("", nrow(span_data))
-  vmerge[span_data$colspan > 1] <- "<w:vMerge w:val=\"restart\"/>"
-  vmerge[span_data$colspan < 1] <- "<w:vMerge/>"
-
-  span_data$gridspan <- gridspan
-  span_data$vmerge <- vmerge
-  span_data
 }
 
 copy_border_bottom_to_next_border_top <- function(x, value) {
@@ -216,11 +197,15 @@ default_fp_text_wml <- function(value) {
 
   unique_text_props$fp_txt_default <- unname(rpr[unique_text_props$classname])
   setDT(default_chunks_properties)
+
+  by_cols <- c("color", "font.size", "bold", "italic", "underlined", "strike", "font.family",
+               "hansi.family", "eastasia.family", "cs.family", "vertical.align",
+               "shading.color")
+  by_cols <- intersect(by_cols, colnames(default_chunks_properties))
+  by_cols <- intersect(by_cols, colnames(unique_text_props))
   default_chunks_properties <- merge(
     default_chunks_properties, unique_text_props,
-    by = c("color", "font.size", "bold", "italic", "underlined", "font.family",
-           "hansi.family", "eastasia.family", "cs.family", "vertical.align",
-           "shading.color")
+    by = by_cols
   )
   setDF(default_chunks_properties)
   default_chunks_properties <- default_chunks_properties[, c(".part", ".row_id", ".col_id", "fp_txt_default")]
@@ -293,8 +278,9 @@ wml_rows <- function(value, split = FALSE, repeat_headers = TRUE) {
     drop = TRUE, fill = "", value.var = "wml",
     fun.aggregate = I
   )
-
-  wml <- apply(as.matrix(cells), 1, paste0, collapse = "")
+  setDF(cells)
+  col_ids <- setdiff(colnames(cells), c(".part", ".row_id"))
+  wml <- do.call(paste0, cells[col_ids])
 
   split_str <- ""
   if (!split) split_str <- "<w:cantSplit/>"

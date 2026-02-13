@@ -7,7 +7,8 @@
 theme_alafoli(x)
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 }
 \description{
 Apply alafoli theme
@@ -47,6 +48,7 @@ Other functions related to themes:
 \code{\link{set_flextable_defaults}()},
 \code{\link{theme_apa}()},
 \code{\link{theme_booktabs}()},
+\code{\link{theme_borderless}()},
 \code{\link{theme_box}()},
 \code{\link{theme_tron}()},
 \code{\link{theme_tron_legacy}()},

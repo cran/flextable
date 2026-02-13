@@ -1,4 +1,4 @@
-#' @title flextable creation
+#' @title Create a flextable from a data frame
 #'
 #' @description Create a flextable object with function `flextable`.
 #'
@@ -139,7 +139,7 @@ qflextable <- function(data) {
 }
 
 #' @export
-#' @title Set Caption
+#' @title Set flextable caption
 #' @description Set caption value in a flextable. The function
 #' can also be used to define formattings that will be applied
 #' if possible to Word and HTML outputs.
@@ -287,7 +287,7 @@ qflextable <- function(data) {
 #' the Quarto documentation for more information on how to work with captions
 #' in Quarto.
 #'
-#' @param x flextable object
+#' @inheritParams args_x_only
 #' @param caption caption value. The caption can be either a string either
 #' a call to [as_paragraph()]. In the latter case, users are free to format
 #' the caption with colors, italic fonts, also mixed with images or
@@ -327,7 +327,7 @@ qflextable <- function(data) {
 #' ftab
 #' @importFrom officer run_autonum
 #' @importFrom htmltools htmlEscape
-#' @seealso [flextable()]
+#' @seealso [flextable()], [knit_print.flextable()]
 set_caption <- function(x,
                         caption = NULL,
                         autonum = NULL,
@@ -350,7 +350,7 @@ set_caption <- function(x,
     caption_value <- caption[[1]]
 
     by_columns <- c(
-      "font.size", "italic", "bold", "underlined", "color", "shading.color",
+      "font.size", "italic", "bold", "underlined", "strike", "color", "shading.color",
       "font.family", "hansi.family", "eastasia.family", "cs.family",
       "vertical.align"
     )

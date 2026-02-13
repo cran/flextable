@@ -2,7 +2,7 @@
 % Please edit documentation in R/flextable.R
 \name{set_caption}
 \alias{set_caption}
-\title{Set Caption}
+\title{Set flextable caption}
 \usage{
 set_caption(
   x,
@@ -17,7 +17,8 @@ set_caption(
 )
 }
 \arguments{
-\item{x}{flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
 \item{caption}{caption value. The caption can be either a string either
 a call to \code{\link[=as_paragraph]{as_paragraph()}}. In the latter case, users are free to format
@@ -216,5 +217,5 @@ ftab <- set_caption(ftab, caption = "mtcars data", autonum = autonum)
 ftab
 }
 \seealso{
-\code{\link[=flextable]{flextable()}}
+\code{\link[=flextable]{flextable()}}, \code{\link[=knit_print.flextable]{knit_print.flextable()}}
 }

@@ -2,7 +2,7 @@
 #' @title Fit a flextable to a maximum width
 #' @description decrease font size for each cell incrementally until
 #' it fits a given max_width.
-#' @param x flextable object
+#' @inheritParams args_x_only
 #' @param max_width maximum width to fit in inches
 #' @param inc the font size decrease for each step
 #' @param max_iter maximum iterations
@@ -70,8 +70,7 @@ fit_to_width <- function(x, max_width, inc = 1L, max_iter = 20, unit = "in") {
 #' with `set_table_properties(layout = "autofit")`.
 #'
 #'
-#' @param x a [flextable()] object
-#' @param j columns selection
+#' @inheritParams args_x_j
 #' @param width width in inches
 #' @param unit unit for width, one of "in", "cm", "mm".
 #' @details
@@ -105,11 +104,9 @@ width <- function(x, j = NULL, width, unit = "in") {
 #' This function has no effect when the rule for line height is set to
 #' "auto" (see [hrule()]), which is the default case, except with PowerPoint
 #' which does not support this automatic line height adjustment feature.
-#' @param x flextable object
-#' @param i rows selection
+#' @inheritParams args_x_i_part_no_all
 #' @param height height in inches
 #' @param unit unit for height, one of "in", "cm", "mm".
-#' @param part partname of the table
 #' @examples
 #' ft_1 <- flextable(head(iris))
 #' ft_1 <- height(ft_1, height = .5)
@@ -140,19 +137,25 @@ height <- function(x, i = NULL, height, part = "body", unit = "in") {
 }
 
 #' @export
-#' @title Set flextable rule for rows heights
-#' @description control rules of each height for a part
-#' of the flextable, this is only for Word and PowerPoint outputs, it
-#' will not have any effect when output is HTML or PDF.
+#' @title Set how row heights are determined
+#' @description
+#' `hrule()` controls whether row heights are automatic,
+#' minimum or fixed. This only affects Word and PowerPoint
+#' outputs; it has no effect on HTML or PDF.
+#'
+#' * `"auto"` (default): the row height adjusts to fit the
+#'   content; any value set by [height()] is ignored.
+#' * `"atleast"`: the row is at least as tall as the value
+#'   set by [height()], but can grow if the content is taller.
+#' * `"exact"`: the row is exactly the height set by
+#'   [height()]; content that overflows is clipped.
 #'
 #' For PDF see the `ft.arraystretch` chunk option.
-#' @param x flextable object
-#' @param i rows selection
+#' @inheritParams args_x_i_part
 #' @param rule specify the meaning of the height. Possible values
 #' are "atleast" (height should be at least the value specified), "exact"
 #' (height should be exactly the value specified), or the default value "auto"
 #' (height is determined based on the height of the contents, so the value is ignored).
-#' @param part partname of the table, one of "all", "header", "body", "footer"
 #' @examples
 #'
 #' ft_1 <- flextable(head(iris))
@@ -228,13 +231,13 @@ height_all <- function(x, height, part = "all", unit = "in") {
 }
 
 #' @export
-#' @title Get width and height of a flextable object
+#' @title Get overall width and height of a flextable
 #' @description Returns the width, height and
 #' aspect ratio of a flextable in a named list.
 #' The aspect ratio is the ratio corresponding to `height/width`.
 #'
 #' Names of the list are `widths`, `heights` and `aspect_ratio`.
-#' @param x a flextable object
+#' @inheritParams args_x_only
 #' @param unit unit for returned values, one of "in", "cm", "mm".
 #' @examples
 #' ftab <- flextable(head(iris))
@@ -249,10 +252,10 @@ flextable_dim <- function(x, unit = "in") {
 }
 
 
-#' @title Get widths and heights of flextable
+#' @title Get column widths and row heights of a flextable
 #' @description returns widths and heights for each table columns and rows.
 #' Values are expressed in inches.
-#' @param x flextable object
+#' @inheritParams args_x_only
 #' @family functions for flextable size management
 #' @examples
 #' ftab <- flextable(head(iris))
@@ -281,11 +284,10 @@ dim.flextable <- function(x) {
 }
 
 #' @export
-#' @title Calculate pretty dimensions
+#' @title Calculate optimal column widths and row heights
 #' @description return minimum estimated widths and heights for
 #' each table columns and rows in inches.
-#' @param x flextable object
-#' @param part partname of the table (one of 'all', 'body', 'header' or 'footer')
+#' @inheritParams args_x_part
 #' @param unit unit for returned values, one of "in", "cm", "mm".
 #' @param hspans specifies how cells that are horizontally are included in the calculation.
 #' It must be one of the following values "none", "divided" or "included". If
@@ -327,7 +329,7 @@ dim_pretty <- function(x, part = "all", unit = "in", hspans = "none") {
 
 
 #' @export
-#' @title Adjusts cell widths and heights
+#' @title Adjust cell widths and heights
 #' @description compute and apply optimized widths and heights
 #' (minimum estimated widths and heights for each table columns and rows
 #' in inches returned by function [dim_pretty()]).
@@ -347,11 +349,10 @@ dim_pretty <- function(x, part = "all", unit = "in", hspans = "none") {
 #' well with HTML and Word output that can be set
 #' with `set_table_properties(layout = "autofit")`, see
 #' [set_table_properties()].
-#' @param x flextable object
+#' @inheritParams args_x_part
 #' @param add_w extra width to add in inches
 #' @param add_h extra height to add in inches
 #' @param unit unit for add_h and add_w, one of "in", "cm", "mm".
-#' @param part partname of the table (one of 'all', 'body', 'header' or 'footer')
 #' @param hspans specifies how cells that are horizontally are included in the calculation.
 #' It must be one of the following values "none", "divided" or "included". If
 #' "none", widths of horizontally spanned cells is set to 0 (then do not affect the
@@ -402,7 +403,7 @@ autofit <- function(x, add_w = 0.1, add_h = 0.1, part = c("body", "header"),
 
 
 
-#' @importFrom gdtools m_str_extents
+#' @importFrom gdtools strings_sizes
 optimal_sizes <- function(x, hspans = "none") {
   sizes <- text_metric(x)
 
@@ -520,23 +521,28 @@ text_metric <- function(x) {
   not_baseline <- !(txt_data$vertical.align %in% "baseline")
   fontsize[not_baseline] <- fontsize[not_baseline] / 2
 
-  extents_values <- m_str_extents(
+  extents_values <- gdtools::strings_sizes(
     txt_data$txt,
     fontname = txt_data$font.family,
     fontsize = fontsize,
     bold = txt_data$bold,
     italic = txt_data$italic
-  ) / 72
+  )
+  extents_values$height <- extents_values$ascent + extents_values$descent
+  extents_values$ascent <- NULL
+  extents_values$descent <- NULL
+  colnames(extents_values) <- c("width", "height")
 
-  extents_values[, 1] <- ifelse(
-    is.na(extents_values[, 1]) & !is.null(widths),
-    widths, extents_values[, 1]
+  extents_values$width <- ifelse(
+    !is.na(widths),
+    widths,
+    extents_values$width
   )
-  extents_values[, 2] <- ifelse(
-    is.na(extents_values[, 2]) & !is.null(heights),
-    heights, extents_values[, 2]
+  extents_values$height <- ifelse(
+    !is.na(heights),
+    heights,
+    extents_values$height
   )
-  dimnames(extents_values) <- list(NULL, c("width", "height"))
 
   txt_data <- cbind(txt_data, extents_values)
 

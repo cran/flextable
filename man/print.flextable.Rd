@@ -2,12 +2,13 @@
 % Please edit documentation in R/printers.R
 \name{print.flextable}
 \alias{print.flextable}
-\title{flextable printing}
+\title{Print a flextable}
 \usage{
 \method{print}{flextable}(x, preview = "html", align = "center", ...)
 }
 \arguments{
-\item{x}{flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
 \item{preview}{preview type, one of c("html", "pptx", "docx", "rtf", "pdf, "log").
 When \code{"log"} is used, a description of the flextable is printed.}
@@ -47,6 +48,7 @@ Other flextable print function:
 \code{\link{save_as_image}()},
 \code{\link{save_as_pptx}()},
 \code{\link{save_as_rtf}()},
-\code{\link{to_html.flextable}()}
+\code{\link{to_html.flextable}()},
+\code{\link{wrap_flextable}()}
 }
 \concept{flextable print function}

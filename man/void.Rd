@@ -2,19 +2,36 @@
 % Please edit documentation in R/empty.R
 \name{void}
 \alias{void}
-\title{Delete flextable content}
+\title{Clear the displayed content of selected columns}
 \usage{
 void(x, j = NULL, part = "body")
 }
 \arguments{
-\item{x}{\code{flextable} object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
-\item{j}{columns selection}
+\item{j}{column selector, see section \emph{Column selection with the \code{j} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
-\item{part}{partname of the table}
+\item{part}{part selector, see section \emph{Part selection with the \code{part}
+parameter} in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.
+Value 'all' can be used.}
 }
 \description{
-Set content display as a blank \code{" "}.
+\code{void()} replaces the visible text of the selected columns
+with an empty string. The columns themselves (and their
+headers) remain in the table, but the cell values are no
+longer displayed.
+
+This is useful when a column should stay in the layout
+(e.g. to preserve its width or to keep its header label)
+but its body values should be hidden, for instance
+after using \code{\link[=compose]{compose()}} to build a richer display in a
+neighbouring column that already incorporates those values.
+
+The underlying dataset is not modified; only the displayed
+content is affected. To remove a column entirely, use
+the \code{col_keys} argument of \code{\link[=flextable]{flextable()}} instead.
 }
 \examples{
 ftab <- flextable(head(mtcars))

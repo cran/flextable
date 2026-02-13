@@ -2,12 +2,13 @@
 % Please edit documentation in R/augment_rows.R
 \name{add_footer_lines}
 \alias{add_footer_lines}
-\title{Add labels as new rows in the footer}
+\title{Add full-width rows to the footer}
 \usage{
 add_footer_lines(x, values = character(0), top = FALSE)
 }
 \arguments{
-\item{x}{a \code{flextable} object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
 \item{values}{a character vector or a call to \code{\link[=as_paragraph]{as_paragraph()}}
 to get formated content, each element will
@@ -17,11 +18,9 @@ be added as a new row.}
 or the bottom. Default to TRUE.}
 }
 \description{
-Add labels as new rows in the footer,
-where all columns are merged.
-
-This is a sugar function to be used when you need to
-add labels in the footer, a footnote for example.
+Add one or more rows to the footer where each label
+spans all columns (all cells merged into one). Useful for adding
+footnotes or source notes below the table.
 }
 \examples{
 ft_1 <- flextable(head(iris))
@@ -37,10 +36,10 @@ Other functions for row and column operations in a flextable:
 \code{\link{add_footer}()},
 \code{\link{add_footer_row}()},
 \code{\link{add_header}()},
+\code{\link{add_header_lines}()},
 \code{\link{add_header_row}()},
 \code{\link{delete_columns}()},
 \code{\link{delete_part}()},
-\code{\link{delete_rows}()},
 \code{\link{separate_header}()},
 \code{\link{set_header_footer_df}},
 \code{\link{set_header_labels}()}

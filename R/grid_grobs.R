@@ -1,36 +1,38 @@
 # flextable grob ----------------------------------------------------------
 
 #' @export
-#' @title Convert a flextable to a grid grob object
-#' @description It uses Grid Graphics (package `grid`) to Convert a flextable
-#' into a grob object with scaling and text wrapping capabilities.
+#' @title Render a flextable as a graphic object
+#' @description
+#' `gen_grob()` converts a flextable into a Grid Graphics
+#' object (`grob`) that can be drawn on any R graphic device.
+#' This is the function behind [save_as_image()] and the
+#' patchwork integration ([wrap_flextable()]).
 #'
-#' This method can be used to insert a flextable inside a `ggplot2` plot,
-#' it can also be used with package 'patchwork' or 'cowplot' to combine
-#' ggplots and flextables into the same graphic.
+#' Typical uses:
+#' * embed a flextable in a `ggplot2` plot (via
+#'   [wrap_flextable()] or cowplot)
+#' * export a flextable as a PNG or SVG image (via
+#'   [save_as_image()])
 #'
-#' User can vary the size of the elements according to the size of the graphic window. The text
-#' behavior is controllable, user can decide to make the paragraphs (texts and images)
-#' distribute themselves correctly in the available space of the cell. It is possible
-#' to define resizing options, for example by using only the width, or by distributing
-#' the content so that it occupies the whole graphic space. It is also possible to
-#' freeze or not the size of the columns.
+#' Text wrapping and scaling are supported. The `fit`
+#' argument controls how the table adapts to the available
+#' space (fixed size, auto-fit width, or fill the device).
 #'
-#' It is not recommended to use this function for
-#' large tables because the calculations can be long.
+#' Not recommended for very large tables because the
+#' grid calculations can be slow.
 #'
-#' Limitations: equations (see [as_equation()]) and hyperlinks (see [officer::hyperlink_ftext()])
-#' will not be displayed.
+#' Limitations: equations ([as_equation()]) and hyperlinks
+#' ([officer::hyperlink_ftext()]) are not rendered.
 #'
-#' 'ragg' or 'svglite' or 'ggiraph' graphical device drivers
-#' should be used to ensure a correct rendering.
+#' Use a 'ragg', 'svglite' or 'ggiraph' device for correct
+#' rendering.
 #' @inheritSection save_as_image caption
 #' @section size:
 #'
 #' The size of the flextable can be known by using the method
 #' \link[=dim.flextableGrob]{dim} on the grob.
 #'
-#' @param x A flextable object
+#' @inheritParams args_x_only
 #'
 #' @param fit Determines the fitting/scaling of the grob on its parent viewport.
 #' One of `auto`, `width`, `fixed`, `TRUE`, `FALSE`:
@@ -96,48 +98,17 @@
 #' set_flextable_defaults(font.family = "Liberation Sans")
 #'
 #' ft <- flextable(head(mtcars))
-#'
 #' gr <- gen_grob(ft)
-#'
-#' png_f_1 <- tempfile(fileext = ".png")
-#' ragg::agg_png(
-#'   filename = png_f_1, width = 4, height = 2,
-#'   units = "in", res = 150)
-#' plot(gr)
-#' dev.off()
-#'
-#' png_f_2 <- tempfile(fileext = ".png")
-#' # get the size
-#' dims <- dim(gr)
-#' dims
-#' ragg::agg_png(
-#'   filename = png_f_2, width = dims$width + .1,
-#'   height = dims$height + .1, units = "in", res = 150
-#' )
-#' plot(gr)
-#' dev.off()
-#'
-#'
-#' if (require("ggplot2")) {
-#'   png_f_3 <- tempfile(fileext = ".png")
-#'   z <- summarizor(iris, by = "Species")
-#'   ft <- as_flextable(z, spread_first_col = TRUE)
-#'   ft <- color(ft, color = "gray", part = "all")
-#'   gg <- ggplot(data = iris, aes(Sepal.Length, Petal.Width)) +
-#'     annotation_custom(
-#'       gen_grob(ft, scaling = "full"),
-#'       xmin  = 4.5, xmax = 7.5, ymin = 0.25, ymax = 2.25) +
-#'     geom_point() +
-#'     theme_minimal()
-#'   ragg::agg_png(
-#'     filename = png_f_3, width = 7,
-#'     height = 7, units = "in", res = 150
-#'   )
-#'   print(gg)
-#'   dev.off()
+#' \dontshow{
+#' cap <- ragg::agg_capture(width = 7, height = 4, units = "in", res = 150)
+#' grDevices::dev.control("enable")
 #' }
-#'
-#'
+#' plot(gr)
+#' \dontshow{
+#' raster <- cap()
+#' dev.off()
+#' plot(as.raster(raster))
+#' }
 #' @family flextable print function
 #' @importFrom grid gTree
 gen_grob <- function(x,
@@ -380,6 +351,32 @@ makeContext.flextableGrob <- function(x) {
     # recalculate the heights
     heights <- calc_grob_heights(x, dat, params$dims)
     table_height <- sum(heights)
+
+    # flex_body: redistribute body row heights to fill the panel
+    if (isTRUE(params$flex_body)) {
+      n_h <- params$n_header_rows
+      n_b <- params$n_body_rows
+      n_f <- params$n_footer_rows
+      header_h <- if (n_h > 0) sum(heights[seq_len(n_h)]) else 0
+      footer_h <- if (n_f > 0) sum(heights[seq.int(n_h + n_b + 1L, length(heights))]) else 0
+      body_h <- norm_height - header_h - footer_h
+      if (body_h > 0 && n_b > 0) {
+        heights[seq.int(n_h + 1L, n_h + n_b)] <- body_h / n_b
+        table_height <- sum(heights)
+      }
+    }
+
+    # flex_cols: redistribute data column widths to fill the panel
+    if (isTRUE(params$flex_cols)) {
+      n_rh <- params$n_row_header_cols
+      n_dc <- params$n_data_cols
+      rh_w <- if (n_rh > 0) sum(widths[seq_len(n_rh)]) else 0
+      data_w <- norm_width - rh_w
+      if (data_w > 0 && n_dc > 0) {
+        widths[seq.int(n_rh + 1L, n_rh + n_dc)] <- data_w / n_dc
+        table_width <- sum(widths)
+      }
+    }
   }
 
   # create viewport

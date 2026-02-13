@@ -1,7 +1,7 @@
 Type: Package
 Package: flextable
 Title: Functions for Tabular Reporting
-Version: 0.9.10
+Version: 0.9.11
 Authors@R: c(
     person("David", "Gohel", , "david.gohel@ardata.fr", role = c("aut", "cre")),
     person("ArData", role = "cph"),
@@ -22,33 +22,33 @@ Authors@R: c(
   )
 Description: Use a grammar for creating and customizing pretty tables.
     The following formats are supported: 'HTML', 'PDF', 'RTF', 'Microsoft
-    Word', 'Microsoft PowerPoint' and R 'Grid Graphics'.  'R Markdown',
-    'Quarto' and the package 'officer' can be used to produce the result
-    files. The syntax is the same for the user regardless of the type of
-    output to be produced. A set of functions allows the creation,
-    definition of cell arrangement, addition of headers or footers,
-    formatting and definition of cell content with text and or images. The
-    package also offers a set of high-level functions that allow tabular
-    reporting of statistical models and the creation of complex cross
-    tabulations.
+    Word', 'Microsoft PowerPoint', R 'Grid Graphics' and 'patchwork'.
+    'R Markdown', 'Quarto' and the package 'officer' can be used to
+    produce the result files. The syntax is the same for the user
+    regardless of the type of output to be produced. A set of functions
+    allows the creation, definition of cell arrangement, addition of
+    headers or footers, formatting and definition of cell content with
+    text and or images. The package also offers a set of high-level
+    functions that allow tabular reporting of statistical models and the
+    creation of complex cross tabulations.
 License: GPL-3
 URL: https://ardata-fr.github.io/flextable-book/,
         https://davidgohel.github.io/flextable/
 BugReports: https://github.com/davidgohel/flextable/issues
-Imports: data.table (>= 1.13.0), gdtools (>= 0.4.0), graphics,
-        grDevices, grid, htmltools, knitr, officer (>= 0.6.10), ragg,
+Imports: data.table (>= 1.13.0), gdtools (>= 0.5.0), graphics,
+        grDevices, grid, htmltools, knitr, officer (>= 0.7.3), ragg,
         rlang, rmarkdown (>= 2.0), stats, utils, uuid (>= 0.1-4), xml2
 Suggests: bookdown (>= 0.40), broom, broom.mixed, chromote, cluster,
-        commonmark, doconv (>= 0.3.0), equatags, ggplot2, lme4, magick,
-        mgcv, nlme, officedown, pdftools, pkgdown (>= 2.0.0), scales,
-        svglite, tables (>= 0.9.17), testthat (>= 3.0.0), webshot2,
-        withr, xtable
+        commonmark, doconv (>= 0.3.0), equatags, ggplot2, gtable,
+        jsonlite, lme4, magick, mgcv, nlme, officedown, patchwork,
+        pdftools, pkgdown (>= 2.0.0), scales, svglite, tables (>=
+        0.9.17), testthat (>= 3.0.0), webshot2, withr, xtable
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Encoding: UTF-8
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 NeedsCompilation: no
-Packaged: 2025-08-24 09:29:14 UTC; davidgohel
+Packaged: 2026-02-12 17:16:00 UTC; davidgohel
 Author: David Gohel [aut, cre],
   ArData [cph],
   Clementine Jager [ctb],
@@ -66,4 +66,4 @@ Author: David Gohel [aut, cre],
   Keith Newman [ctb]
 Maintainer: David Gohel <david.gohel@ardata.fr>
 Repository: CRAN
-Date/Publication: 2025-08-24 10:30:02 UTC
+Date/Publication: 2026-02-13 07:00:42 UTC

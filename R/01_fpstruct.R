@@ -57,6 +57,7 @@ add_rows_fpstruct <- function(x, nrows, first, default = x$default, ...) {
 text_struct <- function(nrow, keys,
                         color = "black", font.size = 10,
                         bold = FALSE, italic = FALSE, underlined = FALSE,
+                        strike = FALSE,
                         font.family = "Arial",
                         hansi.family = "Arial", eastasia.family = "Arial", cs.family = "Arial",
                         vertical.align = "baseline",
@@ -67,6 +68,7 @@ text_struct <- function(nrow, keys,
     bold = fpstruct(nrow = nrow, keys = keys, default = bold),
     italic = fpstruct(nrow = nrow, keys = keys, default = italic),
     underlined = fpstruct(nrow = nrow, keys = keys, default = underlined),
+    strike = fpstruct(nrow = nrow, keys = keys, default = strike),
     font.family = fpstruct(nrow = nrow, keys = keys, default = font.family),
     hansi.family = fpstruct(nrow = nrow, keys = keys, default = hansi.family),
     eastasia.family = fpstruct(nrow = nrow, keys = keys, default = eastasia.family),
@@ -138,6 +140,7 @@ par_struct <- function(nrow, keys,
                        border.color.bottom = "transparent", border.color.top = "transparent", border.color.left = "transparent", border.color.right = "transparent",
                        border.style.bottom = "solid", border.style.top = "solid", border.style.left = "solid", border.style.right = "solid",
                        keep_with_next = FALSE,
+                       word_style = NA_character_,
                        tabs = NA_character_,
                        shading.color = "transparent", ...) {
   x <- list(
@@ -161,6 +164,7 @@ par_struct <- function(nrow, keys,
     border.style.right = fpstruct(nrow = nrow, keys = keys, default = border.style.right),
     shading.color = fpstruct(nrow = nrow, keys = keys, default = shading.color),
     keep_with_next = fpstruct(nrow = nrow, keys = keys, default = keep_with_next),
+    word_style = fpstruct(nrow = nrow, keys = keys, default = word_style),
     tabs = fpstruct(nrow = nrow, keys = keys, default = tabs)
   )
   class(x) <- "par_struct"
@@ -173,9 +177,9 @@ set_par_struct_values <- function(x, i, j, property, value) {
   if (is.null(i)) i <- seq_len(x$text.align$nrow)
 
   if (inherits(value, "fp_par")) {
-    if (!is.null(value$tabs)) {
+    if (!is.null(value$tabs) && !isFALSE(value$tabs)) {
       value$tabs <- as.character(value$tabs)
-    }
+    } else value$tabs <- as.character(fp_tabs())
     value <- cast_borders(value)
     for (property in intersect(names(value), names(x))) {
       x[[property]]$data[i, j] <- value[[property]]
@@ -327,10 +331,10 @@ as_chunkset_struct <- function(l_paragraph, keys, i = NULL) {
 }
 
 is_paragraph <- function(x) {
-  chunk_str_names <- c("txt", "font.size", "italic", "bold", "underlined", "color",
+  chunk_str_names <- c("txt", "font.size", "italic", "bold", "underlined", "strike", "color",
                        "shading.color", "font.family", "hansi.family", "eastasia.family",
                        "cs.family", "vertical.align", "width", "height", "url", "eq_data",
-                       "word_field_data", "img_data",
+                       "word_field_data", "qmd_data", "img_data",
                        ".chunk_index")
   is.data.frame(x) &&
     all(colnames(x) %in% chunk_str_names)
@@ -352,10 +356,10 @@ set_chunkset_struct_element <- function(x, i, j, value) {
 }
 
 append_chunkset_struct_element <- function(x, i, j, chunk_data, last = TRUE) {
-  chunk_str_names <- c("txt", "font.size", "italic", "bold", "underlined", "color",
+  chunk_str_names <- c("txt", "font.size", "italic", "bold", "underlined", "strike", "color",
                    "shading.color", "font.family", "hansi.family", "eastasia.family",
                    "cs.family", "vertical.align", "width", "height", "url", "eq_data",
-                   "word_field_data", "img_data")
+                   "word_field_data", "qmd_data", "img_data")
   stopifnot(
     is.data.frame(chunk_data),
     all(chunk_str_names %in% colnames(chunk_data))
@@ -417,10 +421,11 @@ get_chunkset_struct_element <- function(x, i, j) {
 
 replace_missing_fptext_by_default <- function(x, default) {
   by_columns <- c(
-    "font.size", "italic", "bold", "underlined", "color", "shading.color",
+    "font.size", "italic", "bold", "underlined", "strike", "color", "shading.color",
     "font.family", "hansi.family", "eastasia.family", "cs.family",
     "vertical.align"
   )
+  by_columns <- intersect(by_columns, names(default))
 
   keys <- default[, setdiff(names(default), by_columns), drop = FALSE]
   values <- default[, by_columns, drop = FALSE]

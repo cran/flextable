@@ -3,22 +3,27 @@
 \name{compose}
 \alias{compose}
 \alias{mk_par}
-\title{Define displayed values and mixed content}
+\title{Set cell content from paragraph chunks}
 \usage{
 compose(x, i = NULL, j = NULL, value, part = "body", use_dot = FALSE)
 
 mk_par(x, i = NULL, j = NULL, value, part = "body", use_dot = FALSE)
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
-\item{i}{rows selection}
+\item{i}{row selector, see section \emph{Row selection with the \code{i} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
-\item{j}{column selection}
+\item{j}{column selector, see section \emph{Column selection with the \code{j} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
 \item{value}{a call to function \code{\link[=as_paragraph]{as_paragraph()}}.}
 
-\item{part}{partname of the table (one of 'all', 'body', 'header', 'footer')}
+\item{part}{part selector, see section \emph{Part selection with the \code{part}
+parameter} in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.
+Value 'all' can be used.}
 
 \item{use_dot}{by default \code{use_dot=FALSE}; if \code{use_dot=TRUE},
 \code{value} is evaluated within a data.frame augmented of a column named \code{.}

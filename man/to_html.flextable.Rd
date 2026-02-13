@@ -7,7 +7,8 @@
 \method{to_html}{flextable}(x, type = c("table", "img"), ...)
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
 \item{type}{output type. one of "table" or "img".}
 
@@ -41,6 +42,7 @@ Other flextable print function:
 \code{\link{save_as_html}()},
 \code{\link{save_as_image}()},
 \code{\link{save_as_pptx}()},
-\code{\link{save_as_rtf}()}
+\code{\link{save_as_rtf}()},
+\code{\link{wrap_flextable}()}
 }
 \concept{flextable print function}

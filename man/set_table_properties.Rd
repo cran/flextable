@@ -2,7 +2,7 @@
 % Please edit documentation in R/table-properties.R
 \name{set_table_properties}
 \alias{set_table_properties}
-\title{Global table properties}
+\title{Set table layout and width properties}
 \usage{
 set_table_properties(
   x,
@@ -17,7 +17,8 @@ set_table_properties(
 )
 }
 \arguments{
-\item{x}{flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
 \item{layout}{'autofit' or 'fixed' algorithm. Default to 'fixed'.}
 
@@ -139,5 +140,6 @@ ft_4 <- set_table_properties(
 ft_4
 }
 \seealso{
-\code{\link[=flextable]{flextable()}}, \code{\link[=as_flextable]{as_flextable()}}, \code{\link[=autofit]{autofit()}}
+\code{\link[=flextable]{flextable()}}, \code{\link[=as_flextable]{as_flextable()}}, \code{\link[=autofit]{autofit()}},
+\code{\link[=knit_print.flextable]{knit_print.flextable()}}
 }

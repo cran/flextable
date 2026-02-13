@@ -19,27 +19,32 @@ align_text_col(x, align = "left", header = TRUE, footer = TRUE)
 align_nottext_col(x, align = "right", header = TRUE, footer = TRUE)
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
-\item{i}{rows selection}
+\item{i}{row selector, see section \emph{Row selection with the \code{i} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
-\item{j}{columns selection}
+\item{j}{column selector, see section \emph{Column selection with the \code{j} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
 \item{align}{text alignment - a single character value, or a vector of
 character values equal in length to the number of columns selected by \code{j}.
-Expected values must be from the set of ('left', 'right', 'center', or 'justify').
+Expected values must be from the set ('left', 'right', 'center', or 'justify').
 
 If the number of columns is a multiple of the length of the \code{align} parameter,
 then the values in \code{align} will be recycled across the remaining columns.}
 
-\item{part}{partname of the table (one of 'body', 'header', 'footer', 'all')}
+\item{part}{part selector, see section \emph{Part selection with the \code{part}
+parameter} in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.
+Value 'all' can be used.}
 
 \item{header}{should the header be aligned with the body}
 
 \item{footer}{should the footer be aligned with the body}
 }
 \description{
-change text alignment of selected rows and columns of a flextable.
+Change the text alignment of selected rows and columns of a flextable.
 }
 \examples{
 # Table of 6 columns
@@ -52,7 +57,8 @@ align(ft_car, align = "right", part = "all")
 align(
   ft_car,
   align = c("left", "right", "left", "center", "center", "right"),
-  part = "all")
+  part = "all"
+)
 
 # Center-align column 2 and left-align column 5
 align(ft_car, j = c(2, 5), align = c("center", "left"), part = "all")
@@ -78,6 +84,7 @@ Other sugar functions for table style:
 \code{\link{line_spacing}()},
 \code{\link{padding}()},
 \code{\link{rotate}()},
+\code{\link{style}()},
 \code{\link{tab_settings}()},
 \code{\link{valign}()}
 }

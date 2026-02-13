@@ -25,6 +25,7 @@
 #'   italic = c(FALSE, TRUE),
 #'   bold = c(FALSE, TRUE),
 #'   underlined = c(FALSE, TRUE),
+#'   strike = c(FALSE, TRUE),
 #'   color = c("black", "red"),
 #'   shading.color = c("transparent", "yellow"),
 #'   font.family = c("Arial", "Arial"),
@@ -42,6 +43,7 @@
 #'   italic = c(FALSE, TRUE),
 #'   bold = c(FALSE, TRUE),
 #'   underlined = c(FALSE, TRUE),
+#'   strike = c(FALSE, TRUE),
 #'   color = c("black", "red"),
 #'   shading.color = c("transparent", "yellow"),
 #'   font.family = c("Arial", "Arial"),
@@ -73,6 +75,7 @@ chunk_dataframe <- function(...) {
     italic = def_lgl,
     bold = def_lgl,
     underlined = def_lgl,
+    strike = def_lgl,
     color = def_chr,
     shading.color = def_chr,
     font.family = def_chr,
@@ -85,6 +88,7 @@ chunk_dataframe <- function(...) {
     url = def_chr,
     eq_data = def_chr,
     word_field_data = def_chr,
+    qmd_data = def_chr,
     stringsAsFactors = FALSE
   )
   data0$img_data <- def_lst
@@ -103,6 +107,7 @@ default_fptext_prop <- structure(
     bold = as.logical(NA_integer_),
     italic = as.logical(NA_integer_),
     underlined = as.logical(NA_integer_),
+    strike = as.logical(NA_integer_),
     color = NA_character_,
     shading.color = NA_character_,
     font.family = NA_character_,
@@ -116,7 +121,7 @@ default_fptext_prop <- structure(
 
 
 #' @export
-#' @title Chunk of text wrapper
+#' @title Text chunk
 #' @description The function lets add formated text in flextable
 #' cells.
 #'
@@ -182,6 +187,7 @@ as_chunk <- function(x, props = NULL, formatter = format_fun, ...) {
     italic = sapply(props, function(x) x$italic),
     bold = sapply(props, function(x) x$bold),
     underlined = sapply(props, function(x) x$underlined),
+    strike = sapply(props, function(x) x$strike),
     color = sapply(props, function(x) x$color),
     shading.color = sapply(props, function(x) x$shading.color),
     font.family = sapply(props, function(x) x$font.family),
@@ -295,6 +301,38 @@ as_b <- function(x) {
 }
 
 #' @export
+#' @title Strikethrough chunk
+#' @description The function is producing a chunk with
+#' strikethrough font.
+#'
+#' It is used to add it to the content of a cell of the
+#' flextable with the functions [compose()], [append_chunks()]
+#' or [prepend_chunks()].
+#'
+#' @inheritParams as_sub
+#' @family chunk elements for paragraph
+#' @examples
+#' ft <- flextable(head(iris),
+#'   col_keys = c("Sepal.Length", "dummy")
+#' )
+#'
+#' ft <- compose(ft,
+#'   j = "dummy",
+#'   value = as_paragraph(
+#'     as_strike(Sepal.Length)
+#'   )
+#' )
+#'
+#' ft
+as_strike <- function(x) {
+  if (!inherits(x, "chunk")) {
+    x <- as_chunk(x, formatter = format_fun)
+  }
+  x$strike <- TRUE
+  x
+}
+
+#' @export
 #' @title Italic chunk
 #' @description The function is producing a chunk with
 #' italic font.
@@ -388,7 +426,7 @@ as_highlight <- function(x, color) {
 }
 
 #' @export
-#' @title Chunk with values in brackets
+#' @title Bracket chunk
 #' @description The function is producing a chunk by
 #' pasting values and add the result in brackets.
 #'
@@ -425,7 +463,7 @@ as_bracket <- function(..., sep = ", ", p = "(", s = ")") {
 }
 
 #' @export
-#' @title Chunk of text with hyperlink
+#' @title Hyperlink chunk
 #' @description The function lets add hyperlinks within flextable
 #' objects.
 #'
@@ -541,6 +579,7 @@ as_equation <- function(x, width = 1, height = .2, unit = "in", props = NULL) {
     italic = sapply(props, function(x) x$italic),
     bold = sapply(props, function(x) x$bold),
     underlined = sapply(props, function(x) x$underlined),
+    strike = sapply(props, function(x) x$strike),
     color = sapply(props, function(x) x$color),
     shading.color = sapply(props, function(x) x$shading.color),
     font.family = sapply(props, function(x) x$font.family),
@@ -555,23 +594,25 @@ as_equation <- function(x, width = 1, height = .2, unit = "in", props = NULL) {
 
 
 #' @export
-#' @title 'Word' computed field
-#' @description This function is used to insert
-#' 'Word' computed field into flextable.
+#' @title Word dynamic field chunk
+#' @description
+#' `as_word_field()` inserts a Word field code (e.g. page
+#' numbers, dates, cross-references) as a chunk inside a
+#' flextable cell. Field codes are Word's mechanism for
+#' auto-computed values; see
+#' [Microsoft's field-code reference](https://support.microsoft.com/en-us/office/list-of-field-codes-in-word-1ad6d91a-55a7-4a8d-b535-cf7888659a51)
+#' for the available codes.
 #'
-#' It is used to add it to the content of a cell of the
-#' flextable with the functions [compose()], [append_chunks()]
-#' or [prepend_chunks()].
+#' The chunk is used with [compose()], [append_chunks()]
+#' or [prepend_chunks()]. It only has an effect in Word
+#' (docx) output; other formats ignore it. To apply it
+#' conditionally, use the post-processing step (see
+#' `set_flextable_defaults(post_process_docx = ...)`).
 #'
-#' This has only effect on 'Word' output. If you want to
-#' condition its execution only for Word output, you can
-#' use it in the post processing step (see
-#' `set_flextable_defaults(post_process_docx = ...)`)
-#'
-#' **Do not forget to update the computed field in Word**.
-#' Fields are defined but are not computed, this computing is an
-#' operation that has to be made by 'Microsoft Word'
-#' (select all text and hit `F9` when on mac os).
+#' **Important**: fields are inserted but not computed.
+#' After opening the document in Word, select all text
+#' and press `F9` (on macOS: `Fn + F9`) to refresh the
+#' field values.
 #' @param x computed field strings
 #' @param props text properties (see [fp_text_default()] or [officer::fp_text()])
 #' object to be used to format the text. If not specified, it will use
@@ -659,6 +700,7 @@ as_word_field <- function(x, props = NULL, width = .1, height = .15, unit = "in"
     italic = sapply(props, function(x) x$italic),
     bold = sapply(props, function(x) x$bold),
     underlined = sapply(props, function(x) x$underlined),
+    strike = sapply(props, function(x) x$strike),
     color = sapply(props, function(x) x$color),
     shading.color = sapply(props, function(x) x$shading.color),
     font.family = sapply(props, function(x) x$font.family),
@@ -694,24 +736,193 @@ to_wml_word_field <- function(x, pr_txt) {
   out
 }
 
-
+#' @export
+#' @title Quarto inline markdown chunk
+#' @description
+#' `as_qmd()` creates a chunk for inline Quarto markdown
+#' content (text-level) that fits within a table
+#' cell paragraph. This enables cross-references
+#' (`@fig-xxx`, `@tbl-xxx`), links, bold/italic, math,
+#' inline code, shortcodes and other inline Quarto markdown
+#' features inside flextable cells.
+#'
+#' It is not designed for block-level elements such as
+#' headings, bullet lists or fenced code blocks.
+#'
+#' The chunk is used with [compose()], [append_chunks()]
+#' or [prepend_chunks()]. It requires the `flextable-qmd` Lua
+#' filter extension (see [use_flextable_qmd()]) and works with
+#' HTML, PDF and Word (docx) Quarto output formats.
+#'
+#' @section Setup:
+#'
+#' 1. Install the extension once per project:
+#'
+#' ```r
+#' flextable::use_flextable_qmd()
+#' ```
+#'
+#' 2. Add the filter to your Quarto document YAML.
+#' For HTML and PDF, a single line is enough:
+#'
+#' ```yaml
+#' filters:
+#'   - flextable-qmd
+#' ```
+#'
+#' For Word (docx), an additional post-render filter
+#' removes the wrapper table that Quarto adds around
+#' labelled flextables:
+#'
+#' ```yaml
+#' filters:
+#'   - flextable-qmd
+#'   - at: post-render
+#'     path: _extensions/flextable-qmd/unwrap-float.lua
+#' ```
+#'
+#' @section Supported markdown:
+#'
+#' - Cross-references: `@fig-xxx`, `@tbl-xxx`
+#' - Bold / italic: `**bold**`, `*italic*`
+#' - Inline code: `` `code` ``
+#' - Links: `[text](url)` (internal and external)
+#' - Math: `$\\alpha + \\beta$`
+#' - Shortcodes and other Quarto markdown constructs
+#'
+#' @section Limitations:
+#'
+#' Each table cell in a flextable contains a single paragraph
+#' built from inline chunks (see [as_paragraph()]). There is no
+#' mechanism to insert block-level structures (multiple
+#' paragraphs, lists, headings, fenced code blocks, callouts,
+#' etc.) inside a cell. Because `as_qmd()` produces one of
+#' these inline chunks, only inline markdown is supported.
+#'
+#' @param x character vector of Quarto markdown content.
+#' @param display character vector of display text used
+#' as fallback when the Lua filter is not active.
+#' Defaults to `x`.
+#' @family chunk elements for paragraph
+#' @seealso [use_flextable_qmd()] to install the Lua filter extension,
+#' [knit_print.flextable()] for rendering options in knitr documents.
+#' @examples
+#' library(flextable)
+#'
+#' dat <- data.frame(
+#'   label = c("Bold", "Link", "Code"),
+#'   content = c(
+#'     "This is **bold** text",
+#'     "Visit [Quarto](https://quarto.org)",
+#'     "Use `print()` here"
+#'   )
+#' )
+#' ft <- flextable(dat)
+#' ft <- mk_par(ft, j = "content",
+#'   value = as_paragraph(as_qmd(content)))
+#' ft
+as_qmd <- function(x, display = x) {
+  x <- as.character(x)
+  display <- as.character(display)
+  if (length(display) != length(x)) {
+    stop(
+      sprintf("`display` must be the same length as `x`: %.0f.", length(x)),
+      call. = FALSE
+    )
+  }
+  chunk_dataframe(
+    txt = display,
+    qmd_data = x
+  )
+}
 
 #' @export
-#' @title Concatenate chunks in a flextable
-#' @description The function is concatenating text and images within paragraphs of
-#' a flextable object, this function is to be used with functions such as [compose()],
-#' [add_header_lines()], [add_footer_lines()].
+#' @title Install the flextable-qmd Quarto extension
+#' @description
+#' Copies the `flextable-qmd` Quarto extension (bundled with
+#' flextable) into the `_extensions/` directory of a
+#' Quarto project. The extension provides Lua filters
+#' that resolve Quarto markdown content produced by
+#' [as_qmd()] inside flextable cells for HTML, PDF
+#' and Word (docx) output formats.
 #'
-#' This allows the concatenation of formatted pieces of text (chunks) that
-#' represent the content of a paragraph.
+#' After installation, add the filter to your document
+#' or project YAML:
 #'
-#' The cells of a flextable contain each a single paragraph. This paragraph
-#' is made of chunks that can be text, images or plots, equations and links.
+#' ```yaml
+#' filters:
+#'   - flextable-qmd
+#' ```
 #'
-#' @param ... chunk elements that are defining paragraph. If a character is used,
-#' it is transformed to a chunk object with function [as_chunk()].
-#' @param list_values a list of chunk elements that are defining paragraph. If
-#' specified argument `...` is unused.
+#' For Word (docx) output with labelled flextable chunks
+#' (e.g. `#| label: tbl-xxx`), add the post-render filter
+#' to remove the wrapper table Quarto creates around the
+#' flextable:
+#'
+#' ```yaml
+#' filters:
+#'   - flextable-qmd
+#'   - at: post-render
+#'     path: _extensions/flextable-qmd/unwrap-float.lua
+#' ```
+#' @param path Path to the Quarto project root. Defaults
+#'   to the current working directory.
+#' @param quiet If `TRUE`, suppress informational messages.
+#' @return The path to the installed extension (invisibly).
+#' @seealso [as_qmd()] for creating Quarto markdown chunks,
+#' [knit_print.flextable()] for rendering options in knitr documents.
+#' @examples
+#' \dontrun{
+#' use_flextable_qmd()
+#' }
+use_flextable_qmd <- function(path = ".", quiet = FALSE) {
+  src <- system.file(
+    "_extensions", "flextable-qmd",
+    package = "flextable",
+    mustWork = TRUE
+  )
+  dest <- file.path(path, "_extensions", "flextable-qmd")
+  if (!dir.exists(dirname(dest))) {
+    dir.create(dirname(dest), recursive = TRUE)
+  }
+  if (dir.exists(dest)) {
+    unlink(dest, recursive = TRUE)
+  }
+  file.copy(src, dirname(dest), recursive = TRUE)
+  if (!quiet) {
+    message(
+      "Installed flextable-qmd extension in ", dest, ".\n",
+      "Add `filters: [flextable-qmd]` to your document YAML."
+    )
+  }
+  invisible(dest)
+}
+
+#' @export
+#' @title Build a paragraph from chunks
+#' @description
+#' `as_paragraph()` assembles one or more chunks into a single paragraph
+#' that defines the content of a flextable cell. Each cell in a flextable
+#' contains exactly one paragraph; a paragraph is an ordered sequence of
+#' chunks.
+#'
+#' Chunks are the smallest content units and can be created with
+#' [as_chunk()] (formatted text), [as_b()] / [as_i()] (bold / italic
+#' shortcuts), [minibar()] (inline bar), [as_image()] (image),
+#' [gg_chunk()] (ggplot), [as_equation()] (equation) or
+#' [hyperlink_text()] (link). Plain character strings passed to
+#' `as_paragraph()` are automatically converted to chunks via
+#' [as_chunk()].
+#'
+#' The resulting paragraph is passed to the `value` argument of
+#' [compose()], [mk_par()], [add_header_lines()],
+#' [add_footer_lines()] or [footnote()] to set cell content.
+#'
+#' @param ... chunk elements that are defining the paragraph content.
+#' If a character is used, it is transformed to a chunk object with
+#' function [as_chunk()].
+#' @param list_values a list of chunk elements that are defining
+#' the paragraph content. If specified argument `...` is unused.
 #' @family functions for mixed content paragraphs
 #' @seealso [as_chunk()], [minibar()],
 #' [as_image()], [hyperlink_text()]

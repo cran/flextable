@@ -2,7 +2,7 @@
 % Please edit documentation in R/chunk_images.R
 \name{minibar}
 \alias{minibar}
-\title{Mini barplots chunk wrapper}
+\title{Mini barplot chunk}
 \usage{
 minibar(
   value,
@@ -68,6 +68,8 @@ Other chunk elements for paragraph:
 \code{\link{as_highlight}()},
 \code{\link{as_i}()},
 \code{\link{as_image}()},
+\code{\link{as_qmd}()},
+\code{\link{as_strike}()},
 \code{\link{as_sub}()},
 \code{\link{as_sup}()},
 \code{\link{as_word_field}()},

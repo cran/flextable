@@ -2,16 +2,19 @@
 % Please edit documentation in R/borders.R
 \name{border_inner}
 \alias{border_inner}
-\title{Set vertical & horizontal inner borders}
+\title{Set all inner borders}
 \usage{
 border_inner(x, border = NULL, part = "all")
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
 \item{border}{border properties defined by a call to \code{\link[officer:fp_border]{officer::fp_border()}}}
 
-\item{part}{partname of the table (one of 'all', 'body', 'header', 'footer')}
+\item{part}{part selector, see section \emph{Part selection with the \code{part}
+parameter} in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.
+Value 'all' can be used.}
 }
 \description{
 The function is applying a vertical and horizontal borders to inner content of one

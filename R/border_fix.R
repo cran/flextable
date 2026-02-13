@@ -1,5 +1,5 @@
 #' @export
-#' @title Fix border issues when cell are merged
+#' @title Fix border issues when cells are merged
 #' @description When cells are merged, the rendered borders will be those
 #' of the first cell. If a column is made of three merged cells, the bottom
 #' border that will be seen will be the bottom border of the first cell in the
@@ -8,8 +8,7 @@
 #'
 #' Note since version `0.9.7` that the function is called automatically
 #' before rendering, user should not have to call this function anymore.
-#' @param x flextable object
-#' @param part partname of the table (one of 'all', 'body', 'header', 'footer')
+#' @inheritParams args_x_part
 #' @examples
 #' library(officer)
 #' dat <- data.frame(a = 1:5, b = 6:10)

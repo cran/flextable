@@ -12,6 +12,7 @@
 #' @return NULL
 #' @examples
 #' add_latex_dep()
+#' @seealso [knit_print.flextable()]
 #' @keywords internal
 #' @importFrom knitr knit_meta_add
 add_latex_dep <- function(float = FALSE, wrapfig = FALSE) {
@@ -26,29 +27,27 @@ list_latex_dep <- function(float = FALSE, wrapfig = FALSE) {
     return(list())
   }
 
-  is_quarto <- is_in_quarto()
-
   fonts_ignore <- flextable_global$defaults$fonts_ignore
   fontspec_compat <- get_pdf_engine() %in% c("xelatex", "lualatex")
-  if (!is_quarto && !fonts_ignore && !fontspec_compat) {
+  if (!fonts_ignore && !fontspec_compat) {
     warning("fonts used in `flextable` are ignored because ",
       "the `pdflatex` engine is used and not `xelatex` or ",
-      "`lualatex`. You can avoid this warning by using the ",
-      "`set_flextable_defaults(fonts_ignore=TRUE)` command or ",
-      "use a compatible engine by defining `latex_engine: xelatex` ",
-      "in the YAML header of the R Markdown document.",
+      "`lualatex`. You can avoid this warning by using ",
+      "`set_flextable_defaults(fonts_ignore=TRUE)` or use a ",
+      "compatible engine (e.g. `pdf-engine: xelatex`).",
       call. = FALSE
     )
   }
 
   x <- list()
 
-  if (fontspec_compat || is_quarto) {
+  if (fontspec_compat) {
     x$fontspec <- latex_dependency("fontspec")
   }
   x$multirow <- latex_dependency("multirow")
   x$multicol <- latex_dependency("multicol")
   x$colortbl <- latex_dependency("colortbl")
+  x$ulem <- latex_dependency("ulem")
   x$hhline <- latex_dependency(
     name = "hhline",
     extra_lines = c(
@@ -169,7 +168,7 @@ gen_raw_latex <- function(x, lat_container = latex_container_none(),
   setorderv(txt_data, cols = c(".part", ".row_id"))
   txt_data <- augment_part_separators(
     z = txt_data,
-    no_container = inherits(lat_container, "latex_container_none") && !quarto,
+    no_container = inherits(lat_container, "latex_container_none"),
     repeat_footer = x$properties$opts_pdf$footer_repeat
     )
 
@@ -180,7 +179,7 @@ gen_raw_latex <- function(x, lat_container = latex_container_none(),
     sep = "\n\n"
   ))]
 
-  if (inherits(lat_container, "latex_container_none") && !quarto) {
+  if (inherits(lat_container, "latex_container_none")) {
     txt_data$.part <- factor(as.character(txt_data$.part),
       levels = c("header", "footer", "body")
     )
@@ -230,24 +229,16 @@ gen_raw_latex <- function(x, lat_container = latex_container_none(),
   latex
 }
 
+# Adds empty multirow_left/multirow_right columns for vertically merged cells.
+#
+# \multirow is no longer used because it calculates vertical offsets assuming
+# equal row heights, giving wrong results when rows have different heights
+# (#639). Instead, reverse_colspan() places content in the correct row
+# (first for top, middle for center, last for bottom) and the column type
+# (p{} for top, m{} for center, b{} for bottom) handles alignment naturally.
 #' @importFrom data.table fcase
 augment_multirow_fixed <- function(properties_df) {
-  properties_df[, c("multirow_left", "multirow_right") :=
-    list(
-      fcase(
-        .SD$colspan > 1,
-        paste0(
-          "\\multirow[",
-          substr(.SD$vertical.align, 1, 1),
-          "]{-",
-          format_double(.SD$colspan, digits = 0),
-          "}{*}{\\parbox{", format_double(.SD$width, digits = 2), "in}{",
-          c("center" = "\\centering ", left = "\\raggedright ", justify = "\\raggedright ", right = "\\raggedleft ")[.SD$text.align]
-        ),
-        default = ""
-      ),
-      fcase(.SD$colspan > 1, "}}", default = "")
-    )]
+  properties_df[, c("multirow_left", "multirow_right") := list("", "")]
   properties_df
 }
 
@@ -367,21 +358,69 @@ fill_NA <- function(x) {
 }
 
 
+# Handles row placement of content in vertically merged cells (colspan > 1)
+# for LaTeX output.
+#
+# Context: "colspan" here means vertical span (number of rows merged),
+# despite the name. A cell with colspan > 1 is the spanning cell that
+# holds the content; cells with colspan < 1 are absorbed (empty).
+# By default the spanning cell is in the first row of the merged group.
+#
+# \multirow is NOT used because it calculates offsets assuming equal row
+# heights, which gives wrong positions when rows differ in height (#639).
+# Instead, content is placed in the correct row and the column type
+# (p{} for top, m{} for center, b{} for bottom) handles alignment:
+#
+# - "top": content stays in the first row, no action needed.
+# - "center": content is moved to the middle row (ceiling(N/2)) by
+#     swapping .row_id between the first and middle positions.
+# - "bottom": content is moved to the last row by reversing .row_id
+#     within the merged group.
+#
+# Vertical borders (vborder_left, vborder_right) are also swapped/reversed
+# so they follow the row position they belong to.
 reverse_colspan <- function(df) {
   setorderv(df, cols = c(".part", ".col_id", ".row_id"))
+
+  # Assign a unique id (col_uid) to each cell, then propagate the spanning
+  # cell's id to its absorbed cells via fill_NA. This groups all cells
+  # belonging to the same vertical merge.
   df[, c("col_uid") := list(UUIDgenerate(n = nrow(.SD))), by = c(".part", ".row_id")]
   df[df$colspan < 1, c("col_uid") := list(NA_character_)]
   df[, c("col_uid") := list(fill_NA(.SD$col_uid)), by = c(".part", ".col_id")]
 
-  df[, c(
-    ".row_id",
-    "vborder_left", "vborder_right"
-  ) :=
-    list(
-      rev(.SD$.row_id),
-      rev(.SD$vborder_left),
-      rev(.SD$vborder_right)
-    ), by = c("col_uid")]
+  # Bottom: reverse row_ids so content moves from first to last row.
+  bottom_uids <- unique(df$col_uid[df$colspan > 1 & df$vertical.align == "bottom"])
+  if (length(bottom_uids) > 0) {
+    df[df$col_uid %in% bottom_uids, c(
+      ".row_id",
+      "vborder_left", "vborder_right"
+    ) :=
+      list(
+        rev(.SD$.row_id),
+        rev(.SD$vborder_left),
+        rev(.SD$vborder_right)
+      ), by = c("col_uid")]
+  }
+
+  # Center: swap row_ids between first and middle positions so content
+  # moves to the middle row. ceiling(N/2) gives the middle index:
+  # N=2 -> 1 (no swap), N=3 -> 2, N=4 -> 2, N=5 -> 3, etc.
+  center_uids <- unique(df$col_uid[df$colspan > 1 & df$vertical.align == "center"])
+  if (length(center_uids) > 0) {
+    for (uid in center_uids) {
+      idx <- which(df$col_uid == uid)
+      mid <- ceiling(length(idx) / 2)
+      if (mid > 1) {
+        for (col_name in c(".row_id", "vborder_left", "vborder_right")) {
+          tmp <- df[[col_name]][idx[1]]
+          data.table::set(df, idx[1], col_name, df[[col_name]][idx[mid]])
+          data.table::set(df, idx[mid], col_name, tmp)
+        }
+      }
+    }
+  }
+
   df[, c("col_uid") := NULL]
   setorderv(df, cols = c(".part", ".row_id", ".col_id"))
   df
@@ -433,7 +472,23 @@ get_pdf_engine <- function() {
   if (length(rd)) {
     engine <- pandoc_args[rd + 1]
   } else if (is_in_quarto()) {
-    engine <- rmarkdown::metadata$`pdf-engine`
+    engine <- NULL
+
+    # Quarto >= 1.8: read the resolved engine from QUARTO_EXECUTE_INFO
+    exec_info <- Sys.getenv("QUARTO_EXECUTE_INFO", unset = "")
+    if (nzchar(exec_info) && file.exists(exec_info) &&
+        requireNamespace("jsonlite", quietly = TRUE)) {
+      qmd <- jsonlite::read_json(exec_info)
+      engine <- qmd$format$pandoc$`pdf-engine`
+    }
+
+    # Fallback: rmarkdown::metadata (top-level then nested)
+    if (is.null(engine) || engine == "") {
+      engine <- rmarkdown::metadata$`pdf-engine`
+    }
+    if (is.null(engine) || engine == "") {
+      engine <- rmarkdown::metadata$format$pdf$`pdf-engine`
+    }
     if (is.null(engine) || engine == "") {
       engine <- "xelatex"
     }
@@ -497,6 +552,9 @@ latex_container_str.latex_container_wrap <- function(x, latex_container, quarto 
   if (x$properties$layout %in% "fixed") {
     w <- sprintf("%.02fin", flextable_dim(x)$widths)
   } else {
+    # wrapfig interprets 0pt as "auto-calculate width from
+    # content"; needed because in autofit mode, column widths
+    # are determined by LaTeX (columns use 'c' spec), not by R.
     w <- "0pt"
   }
   c(

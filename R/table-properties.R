@@ -1,6 +1,6 @@
 #' @importFrom officer table_layout table_width table_colwidths prop_table
 #' @export
-#' @title Global table properties
+#' @title Set table layout and width properties
 #' @description Set table layout and table width. Default to fixed
 #' algorithm.
 #'
@@ -11,7 +11,7 @@
 #' table width is used (as a percentage).
 #' @note
 #' PowerPoint output ignore 'autofit layout'.
-#' @param x flextable object
+#' @inheritParams args_x_only
 #' @param layout 'autofit' or 'fixed' algorithm. Default to 'fixed'.
 #' @param width The parameter has a different effect depending on the
 #' output format. Users should consider it as a minimum width.
@@ -99,7 +99,8 @@
 #'   )
 #' )
 #' ft_4
-#' @seealso [flextable()], [as_flextable()], [autofit()]
+#' @seealso [flextable()], [as_flextable()], [autofit()],
+#' [knit_print.flextable()]
 set_table_properties <- function(
   x,
   layout = "fixed",
@@ -267,7 +268,7 @@ opts_ft_pdf <- function(
   }
   if (!is.logical(caption_repeat) || length(caption_repeat) != 1) {
     stop(
-      sprintf("'%s' is expected to be a single %s.", "logical"),
+      sprintf("'%s' is expected to be a single %s.", "caption_repeat", "logical"),
       call. = FALSE
     )
   }

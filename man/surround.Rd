@@ -2,7 +2,7 @@
 % Please edit documentation in R/borders.R
 \name{surround}
 \alias{surround}
-\title{Set borders for a selection of cells}
+\title{Surround cells with borders}
 \usage{
 surround(
   x,
@@ -17,11 +17,14 @@ surround(
 )
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
-\item{i}{rows selection}
+\item{i}{row selector, see section \emph{Row selection with the \code{i} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
-\item{j}{columns selection}
+\item{j}{column selector, see section \emph{Column selection with the \code{j} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
 \item{border}{border (shortcut for top, bottom, left and right)}
 
@@ -33,10 +36,13 @@ surround(
 
 \item{border.right}{border right}
 
-\item{part}{partname of the table (one of 'all', 'body', 'header', 'footer')}
+\item{part}{part selector, see section \emph{Part selection with the \code{part}
+parameter} in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.
+Value 'all' can be used.}
 }
 \description{
-Highlight specific cells with borders.
+\code{surround()} draws borders around specific cells, highlighting
+them individually.
 
 To set borders for the whole table, use \code{\link[=border_outer]{border_outer()}},
 \code{\link[=border_inner_h]{border_inner_h()}} and \code{\link[=border_inner_v]{border_inner_v()}}.

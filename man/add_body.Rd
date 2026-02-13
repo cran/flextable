@@ -2,12 +2,13 @@
 % Please edit documentation in R/augment_rows.R
 \name{add_body}
 \alias{add_body}
-\title{Add column values as new lines in body}
+\title{Add body rows with one value per column}
 \usage{
 add_body(x, top = TRUE, ..., values = NULL)
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
 \item{top}{should the rows be inserted at the top or the bottom.}
 
@@ -24,11 +25,10 @@ instead of \code{...} for programming purpose (If \code{values} is
 supplied argument \code{...} is ignored).}
 }
 \description{
-The function adds a list of values to be inserted as
-new rows in the body. The values are inserted in
-existing columns of the input data of the flextable.
-Rows can be inserted at the top or the bottom of
-the body.
+Add new rows to the body where each value maps to a named column,
+preserving the original column data types.
+Unlike \code{\link[=add_body_row]{add_body_row()}} where labels can span multiple columns,
+here each value fills exactly one column.
 
 If some columns are not provided, they will be replaced by
 \code{NA} and displayed as empty.
@@ -59,10 +59,10 @@ Other functions for row and column operations in a flextable:
 \code{\link{add_footer_lines}()},
 \code{\link{add_footer_row}()},
 \code{\link{add_header}()},
+\code{\link{add_header_lines}()},
 \code{\link{add_header_row}()},
 \code{\link{delete_columns}()},
 \code{\link{delete_part}()},
-\code{\link{delete_rows}()},
 \code{\link{separate_header}()},
 \code{\link{set_header_footer_df}},
 \code{\link{set_header_labels}()}

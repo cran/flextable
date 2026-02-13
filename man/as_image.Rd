@@ -2,7 +2,7 @@
 % Please edit documentation in R/chunk_images.R
 \name{as_image}
 \alias{as_image}
-\title{Image chunk wrapper}
+\title{Image chunk}
 \usage{
 as_image(src, width = NULL, height = NULL, unit = "in", guess_size = TRUE, ...)
 }
@@ -74,6 +74,8 @@ Other chunk elements for paragraph:
 \code{\link{as_equation}()},
 \code{\link{as_highlight}()},
 \code{\link{as_i}()},
+\code{\link{as_qmd}()},
+\code{\link{as_strike}()},
 \code{\link{as_sub}()},
 \code{\link{as_sup}()},
 \code{\link{as_word_field}()},

@@ -2,12 +2,13 @@
 % Please edit documentation in R/read_structure.R
 \name{information_data_cell}
 \alias{information_data_cell}
-\title{table cell related information of a flextable}
+\title{Get cell-level information from a flextable}
 \usage{
 information_data_cell(x)
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 }
 \value{
 a data.frame containing information about cells:

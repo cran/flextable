@@ -2,7 +2,7 @@
 % Please edit documentation in R/chunk_images.R
 \name{linerange}
 \alias{linerange}
-\title{Mini linerange chunk wrapper}
+\title{Mini linerange chunk}
 \usage{
 linerange(
   value,
@@ -77,6 +77,8 @@ Other chunk elements for paragraph:
 \code{\link{as_highlight}()},
 \code{\link{as_i}()},
 \code{\link{as_image}()},
+\code{\link{as_qmd}()},
+\code{\link{as_strike}()},
 \code{\link{as_sub}()},
 \code{\link{as_sup}()},
 \code{\link{as_word_field}()},

@@ -1,13 +1,13 @@
 # main ----
 #' @export
-#' @title flextable as an 'HTML' object
+#' @title Convert a flextable to an HTML object
 #'
 #' @description get a [htmltools::div()] from a flextable object.
 #' This can be used in a shiny application. For an output within
 #' "R Markdown" document, use [knit_print.flextable].
 #' @return an object marked as [htmltools::HTML] ready to be used within
 #' a call to `shiny::renderUI` for example.
-#' @param x a flextable object
+#' @inheritParams args_x_only
 #' @param ft.align flextable alignment, supported values are 'left', 'center' and 'right'.
 #' @param ft.shadow deprecated.
 #' @param extra_dependencies a list of HTML dependencies to
@@ -53,7 +53,7 @@ htmltools_value <- function(x, ft.align = NULL, ft.shadow = NULL,
 
 #' @importFrom knitr knit_child
 #' @export
-#' @title Knitr rendering in loops and if statements
+#' @title Print a flextable inside knitr loops and conditionals
 #'
 #' @description Print flextable in R Markdown or Quarto documents
 #' within `for` loop or `if` statement.
@@ -65,7 +65,7 @@ htmltools_value <- function(x, ft.align = NULL, ft.shadow = NULL,
 #' set to 'asis'.
 #'
 #' See [knit_print.flextable] for more details.
-#' @param x a flextable object
+#' @inheritParams args_x_only
 #' @param ... unused argument
 #' @family flextable print function
 #' @examples
@@ -121,7 +121,7 @@ flextable_to_rmd <- function(x, ...) {
 #' @title Get HTML code as a string
 #' @description Generate HTML code of corresponding
 #' flextable as an HTML table or an HTML image.
-#' @param x a flextable object
+#' @inheritParams args_x_only
 #' @param type output type. one of "table" or "img".
 #' @param ... unused
 #' @return If `type='img'`, the result will be a string
@@ -192,7 +192,7 @@ to_wml.flextable <- function(x, ...) {
 #' @noRd
 #' @title flextable HTML string
 #' @description get a string for HTML output with pandoc.
-#' @param x a flextable object
+#' @inheritParams args_x_only
 #' @param bookdown `TRUE` or `FALSE` (default) to support cross referencing with bookdown.
 #' @param quarto `TRUE` or `FALSE` (default).
 #' @examples
@@ -236,6 +236,12 @@ knit_to_wml <- function(x, bookdown = FALSE, quarto = FALSE) {
   x <- flextable_global$defaults$post_process_all(x)
   x <- flextable_global$defaults$post_process_docx(x)
   x <- fix_border_issues(x)
+
+  for(part in c("body", "header", "footer")) {
+    if (nrow_part(x, part) > 0L) {
+      x[[part]]$styles$pars$word_style$data[,] <- NA_character_
+    }
+  }
 
   is_rdocx_document <- opts_current$get("is_rdocx_document")
   if (is.null(is_rdocx_document)) is_rdocx_document <- FALSE
@@ -297,7 +303,7 @@ knit_to_wml <- function(x, bookdown = FALSE, quarto = FALSE) {
 #'
 #' @description get latex raw code for PDF
 #' from a flextable object.
-#' @param x a flextable object
+#' @inheritParams args_x_only
 #' @param ft.align flextable alignment, supported values are 'left', 'center' and 'right'.
 #' @param tabcolsep space between the text and the left/right border of its containing
 #' cell, the default value is 8 points.
@@ -403,7 +409,7 @@ knit_to_pml <- function(x) {
 
 #' @importFrom htmltools HTML browsable
 #' @export
-#' @title flextable printing
+#' @title Print a flextable
 #'
 #' @description print a flextable object to format `html`, `docx`,
 #' `pptx` or as text (not for display but for informative purpose).
@@ -421,7 +427,7 @@ knit_to_pml <- function(x) {
 #'
 #' Note also that a print method is used when flextable are used within
 #' R markdown documents. See [knit_print.flextable()].
-#' @param x flextable object
+#' @inheritParams args_x_only
 #' @param preview preview type, one of c("html", "pptx", "docx", "rtf", "pdf, "log").
 #' When `"log"` is used, a description of the flextable is printed.
 #' @param align left, center (default) or right. Only for docx/html/pdf.
@@ -470,160 +476,131 @@ print.flextable <- function(x, preview = "html", align = "center", ...) {
 
 
 
-#' @title Render flextable with 'knitr'
-#' @description Function used to render flextable in knitr/rmarkdown documents.
+#' @title Render flextable in knitr documents
+#' @description This function is called automatically by knitr to display
+#' a flextable in R Markdown and Quarto documents. You do not need to call
+#' it directly.
 #'
-#' You should not call this method directly. This function is used by the knitr
-#' package to automatically display a flextable in an "R Markdown" document from
-#' a chunk. However, it is recommended to read its documentation in order to get
-#' familiar with the different options available.
+#' Supported output formats: HTML, Word (docx), PDF and PowerPoint (pptx).
+#' For other formats (e.g., `github_document`, `beamer_presentation`),
+#' the table is rendered as a PNG image.
 #'
-#' R Markdown outputs can be :
+#' @section Getting started:
 #'
-#' * HTML
-#' * 'Microsoft Word'
-#' * 'Microsoft PowerPoint'
-#' * PDF
+#' No special setup is needed: place a flextable object in a code chunk
+#' and it will be rendered in the output document.
 #'
-#' \if{html}{\figure{fig_formats.png}{options: width="200"}}
+#' Add a caption with [set_caption()]:
 #'
+#' ```r
+#' ft <- set_caption(ft, caption = "My table caption")
+#' ```
 #'
-#' Table captioning is a flextable feature compatible with R Markdown
-#' documents. The feature is available for HTML, PDF and Word documents.
-#' Compatibility with the "bookdown" package is also ensured, including the
-#' ability to produce captions so that they can be used in cross-referencing.
+#' In Quarto documents, use chunk options `tbl-cap` and `label` instead:
 #'
-#' For Word, it's recommanded to work with package 'officedown' that supports
-#' all features of flextable.
+#' ````
+#' ```{r}
+#' #| label: tbl-mytable
+#' #| tbl-cap: "My table caption"
+#' ft
+#' ```
+#' ````
 #'
-#' @note
-#' Supported formats require some
-#' minimum [pandoc](https://pandoc.org/installing.html) versions:
+#' @section Captions:
 #'
-#' \tabular{rc}{
-#'   **Output format** \tab **pandoc minimal version** \cr
-#'   HTML              \tab >= 1.12\cr
-#'   Word (docx)       \tab >= 2.0 \cr
-#'   PowerPoint (pptx) \tab >= 2.4 \cr
-#'   PDF               \tab >= 1.12
-#' }
+#' **Recommended method:** use [set_caption()] to define the caption
+#' directly on the flextable object. When `set_caption()` is used,
+#' chunk options related to captions are ignored.
 #'
-#' If the output format is not HTML, Word, or PDF (e.g., `rtf_document`,
-#' `github_document`, `beamer_presentation`), an image will be generated
-#' instead.
+#' **Alternative (R Markdown only):** use knitr chunk options `tab.cap`
+#' and `tab.id`:
+#'
+#' | **Description**                   |  **Chunk option** | **Default** |
+#' |:----------------------------------|:-----------------:|:-----------:|
+#' | Caption text                      | tab.cap           |    NULL     |
+#' | Caption id/bookmark               | tab.id            |    NULL     |
+#' | Caption on top of the table       | tab.topcaption    |    TRUE     |
+#' | Caption sequence identifier       | tab.lp            |   "tab:"   |
+#' | Word style for captions           | tab.cap.style     |    NULL     |
+#'
+#' **Bookdown:** cross-references use the pattern
+#' `\@ref(tab:chunk_label)`. The usual bookdown numbering applies.
+#'
+#' **Quarto:** cross-references use `@tbl-chunk_label`. To embed
+#' cross-references or other Quarto markdown inside flextable cells,
+#' use [as_qmd()] with the `flextable-qmd` extension
+#' (see [use_flextable_qmd()]).
+#'
 #' @section Chunk options:
 #'
-#' Some features, often specific to an output format, are available to help you
-#' configure some global settings relatve to the table output. knitr's chunk options
-#' are to be used to change the default settings:
+#' Use `knitr::opts_chunk$set(...)` to set defaults for the whole document.
 #'
-#' - HTML, PDF and Word:
-#'   - `ft.align`: flextable alignment, supported values are 'left', 'center'
-#'   and 'right'. Its default value is 'center'.
-#' - HTML only:
-#'   - `ft.htmlscroll`, can be `TRUE` or `FALSE` (default) to enable
-#'   horizontal scrolling. Use [set_table_properties()] for more
-#'   options about scrolling.
-#' - Word only:
-#'   - `ft.split` Word option 'Allow row to break across pages' can be
-#'   activated when TRUE (default value).
-#'   - `ft.keepnext` defunct in favor of [paginate()]
-#' - PDF only:
-#'   - `ft.tabcolsep` space between the text and the left/right border of its containing
-#'   cell, the default value is 0 points.
-#'   - `ft.arraystretch` height of each row relative to its default
-#'   height, the default value is 1.5.
-#'   - `ft.latex.float` type of floating placement in the document, one of:
-#'     - 'none' (the default value), table is placed after the preceding
-#'     paragraph.
-#'     - 'float', table can float to a place in the text where it fits best
-#'     - 'wrap-r', wrap text around the table positioned to the right side of the text
-#'     - 'wrap-l', wrap text around the table positioned to the left side of the text
-#'     - 'wrap-i', wrap text around the table positioned inside edge-near the binding
-#'     - 'wrap-o', wrap text around the table positioned outside edge-far from the binding
-#' - PowerPoint only:
-#'   - `ft.left`, `ft.top` Position should be defined with these options.
-#'   Theses are the top left coordinates in inches of the placeholder
-#'   that will contain the table. Their default values are 1 and 2
-#'   inches.
+#' **All formats:**
+#' - `ft.align`: table alignment, one of `'left'`, `'center'` (default)
+#'   or `'right'`.
 #'
-#' If some values are to be used all the time in the same
-#' document, it is recommended to set these values in a
-#' 'knitr r chunk' by using function
-#' `knitr::opts_chunk$set(ft.split=FALSE, ...)`.
+#' **HTML:**
+#' - `ft.htmlscroll`: `TRUE` or `FALSE` (default) to enable horizontal
+#'   scrolling. See [set_table_properties()] for finer control.
 #'
-#' @section Table caption:
+#' **Word:**
+#' - `ft.split`: allow rows to break across pages (`TRUE` by default).
 #'
-#' Captions can be defined in two ways.
+#' **PDF:**
+#' - `ft.tabcolsep`: space between text and cell borders (default 0 pt).
+#' - `ft.arraystretch`: row height multiplier (default 1.5).
+#' - `ft.latex.float`: floating placement. One of `'none'` (default),
+#'   `'float'`, `'wrap-r'`, `'wrap-l'`, `'wrap-i'`, `'wrap-o'`.
 #'
-#' The first is with the [set_caption()] function. If it is used,
-#' the other method will be ignored. The second method is by using
-#' knitr chunk option `tab.cap`.
+#' **PowerPoint:**
+#' - `ft.left`, `ft.top`: top-left coordinates of the table placeholder
+#'   in inches (defaults: 1 and 2).
 #'
-#' ```
-#' set_caption(x, caption = "my caption")
-#' ```
+#' @section Word with officedown:
 #'
+#' When using `officedown::rdocx_document()`, additional caption options
+#' are available:
 #'
-#' If `set_caption` function is not used, caption identifier will be
-#' read from knitr's chunk option `tab.id`. Note that in a bookdown and
-#' when not using `officedown::rdocx_document()`, the usual numbering
-#' feature of bookdown is used.
+#' | **Description**                          |  **Chunk option** | **Default**               |
+#' |:-----------------------------------------|:-----------------:|:-------------------------:|
+#' | Numbering prefix                         | tab.cap.pre       | "Table "                  |
+#' | Numbering suffix                         | tab.cap.sep       | ": "                      |
+#' | Title number depth                       | tab.cap.tnd       | 0                         |
+#' | Caption prefix formatting                | tab.cap.fp_text   | `fp_text_lite(bold=TRUE)` |
+#' | Title number / table number separator    | tab.cap.tns       | "-"                       |
 #'
-#' `tab.id='my_id'`.
+#' @section Quarto:
 #'
-#' Some options are available to customise captions for any output:
+#' flextable works natively in Quarto documents for HTML, PDF and Word.
 #'
-#' | **label**                                        |    **name**     | **value**  |
-#' |:-------------------------------------------------|:---------------:|:----------:|
-#' | Word stylename to use for table captions.        | tab.cap.style   |    NULL    |
-#' | caption id/bookmark                              | tab.id          |    NULL    |
-#' | caption                                          | tab.cap         |    NULL    |
-#' | display table caption on top of the table or not | tab.topcaption  |    TRUE    |
-#' | caption table sequence identifier.               | tab.lp          |   "tab:"   |
+#' The `flextable-qmd` Lua filter extension enables Quarto markdown
+#' inside flextable cells: cross-references (`@tbl-xxx`, `@fig-xxx`),
+#' bold/italic, links, math, inline code and shortcodes.
+#' See [as_qmd()] and [use_flextable_qmd()] for setup instructions.
 #'
-#' Word output when `officedown::rdocx_document()` is used is coming with
-#' more options such as ability to choose the prefix for numbering chunk for
-#' example. The table below expose these options:
+#' @section PDF limitations:
 #'
-#' | **label**                                               |    **name**     | **value**  |
-#' |:--------------------------------------------------------|:---------------:|:----------:|
-#' | prefix for numbering chunk (default to   "Table ").     | tab.cap.pre     |   Table    |
-#' | suffix for numbering chunk (default to   ": ").         | tab.cap.sep     |    " :"    |
-#' | title number depth                                      | tab.cap.tnd     |      0     |
-#' | caption prefix formatting properties                    | tab.cap.fp_text | fp_text_lite(bold = TRUE) |
-#' | separator to use between title number and table number. | tab.cap.tns     |     "-"    |
+#' The following properties are not supported in PDF output:
+#' padding, `line_spacing` and row `height`. Justified text is
+#' converted to left-aligned.
 #'
-#' @section HTML output:
+#' To use system fonts, set `latex_engine: xelatex` in the YAML
+#' header (the default `pdflatex` engine does not support them).
 #'
-#' HTML output is using shadow dom to encapsule the table
-#' into an isolated part of the page so that no clash happens
-#' with styles.
+#' See [add_latex_dep()] when caching flextable results.
 #'
-#' @section PDF output:
+#' @section PowerPoint limitations:
 #'
-#' Some features are not implemented in PDF due to technical
-#' infeasibility. These are the padding, line_spacing and
-#' height properties. Note also justified text is not supported
-#' and is transformed to left.
+#' PowerPoint only supports fixed table layout. Use [autofit()] to
+#' adjust column widths. Images inside table cells are not supported
+#' (this is a PowerPoint limitation).
 #'
-#' It is recommended to set theses values in a
-#' 'knitr r chunk' so that they are permanent
-#' all along the document:
-#' `knitr::opts_chunk$set(ft.tabcolsep=0, ft.latex.float = "none")`.
+#' @section HTML note:
 #'
-#' See [add_latex_dep()] if caching flextable results in 'R Markdown'
-#' documents.
+#' HTML output uses Shadow DOM to isolate table styles from the rest
+#' of the page.
 #'
-#' @section PowerPoint output:
-#'
-#' Auto-adjust Layout is not available for PowerPoint, PowerPoint only support
-#' fixed layout. It's then often necessary to call function [autofit()] so
-#' that the columns' widths are adjusted if user does not provide the withs.
-#'
-#' Images cannot be integrated into tables with the PowerPoint format.
-#'
-#' @param x a `flextable` object
+#' @inheritParams args_x_only
 #' @param ... unused.
 #' @export
 #' @importFrom utils getFromNamespace
@@ -634,7 +611,8 @@ print.flextable <- function(x, preview = "html", align = "center", ...) {
 #' @importFrom stats runif
 #' @importFrom graphics plot par
 #' @family flextable print function
-#' @seealso [paginate()]
+#' @seealso [set_caption()], [as_qmd()], [use_flextable_qmd()],
+#' [paginate()]
 #' @examples
 #' \dontrun{
 #' library(rmarkdown)
@@ -986,7 +964,7 @@ save_as_rtf <- function(..., values = NULL, path, pr_section = NULL) {
 #' the caption won't be included. Captions are intended for document outputs
 #' like Word, HTML, or PDF, where tables are embedded within the document
 #' itself.
-#' @param x a flextable object
+#' @inheritParams args_x_only
 #' @param path image file to be created. It should end with '.png'
 #' or '.svg'.
 #' @param expand space in pixels to add around the table.
@@ -1005,7 +983,7 @@ save_as_rtf <- function(..., values = NULL, path, pr_section = NULL) {
 #'
 #' init_flextable_defaults()
 #' @family flextable print function
-#' @importFrom ragg agg_png
+#' @importFrom ragg agg_png agg_capture
 save_as_image <- function(x, path, expand = 10, res = 200, ...) {
   if (!inherits(x, "flextable")) {
     stop(sprintf("Function `%s` supports only flextable objects.", as.character(sys.call()[[1]])))
@@ -1044,7 +1022,7 @@ save_as_image <- function(x, path, expand = 10, res = 200, ...) {
 
   tryCatch(
     {
-      plot(gr)
+      base::plot(gr)
     },
     finally = {
       dev.off()
@@ -1061,7 +1039,7 @@ save_as_image <- function(x, path, expand = 10, res = 200, ...) {
 #' and display the result in a new graphics window.
 #' 'ragg' or 'svglite' or 'ggiraph' graphical device drivers
 #' should be used to ensure a correct rendering.
-#' @param x a flextable object
+#' @inheritParams args_x_only
 #' @param ... additional arguments passed to [gen_grob()].
 #' @inheritSection save_as_image caption
 #' @examples
@@ -1071,13 +1049,17 @@ save_as_image <- function(x, path, expand = 10, res = 200, ...) {
 #' set_flextable_defaults(font.family = "Liberation Sans")
 #' ftab <- as_flextable(cars)
 #'
-#' tf <- tempfile(fileext = ".png")
-#' agg_png(
-#'   filename = tf, width = 1.7, height = 3.26, unit = "in",
-#'   background = "transparent", res = 150
-#' )
+#' \dontshow{
+#' cap <- ragg::agg_capture(width = 7, height = 6, units = "in", res = 150)
+#' grDevices::dev.control("enable")
+#' }
 #' plot(ftab)
+#' \dontshow{
+#' raster <- cap()
 #' dev.off()
+#' plot(as.raster(raster))
+#' init_flextable_defaults()
+#' }
 #' @family flextable print function
 #' @importFrom grid grid.newpage grid.draw viewport pushViewport popViewport
 plot.flextable <- function(x, ...) {

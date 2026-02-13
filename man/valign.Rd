@@ -7,19 +7,24 @@
 valign(x, i = NULL, j = NULL, valign = "center", part = "body")
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
-\item{i}{rows selection}
+\item{i}{row selector, see section \emph{Row selection with the \code{i} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
-\item{j}{columns selection}
+\item{j}{column selector, see section \emph{Column selection with the \code{j} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
 \item{valign}{vertical alignment of paragraph within cell,
 one of "center" or "top" or "bottom".}
 
-\item{part}{partname of the table (one of 'all', 'body', 'header', 'footer')}
+\item{part}{part selector, see section \emph{Part selection with the \code{part}
+parameter} in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.
+Value 'all' can be used.}
 }
 \description{
-change vertical alignment of selected rows and columns of a flextable.
+Change the vertical alignment of selected rows and columns of a flextable.
 }
 \examples{
 ft_1 <- flextable(iris[c(1:3, 51:53, 101:103), ])
@@ -45,6 +50,7 @@ Other sugar functions for table style:
 \code{\link{line_spacing}()},
 \code{\link{padding}()},
 \code{\link{rotate}()},
+\code{\link{style}()},
 \code{\link{tab_settings}()}
 }
 \concept{sugar functions for table style}

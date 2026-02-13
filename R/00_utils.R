@@ -42,7 +42,10 @@ cast_borders <- function(value) {
 
   z <- mapply(function(name, fp_b) {
     x <- unclass(fp_b)
-    names(x) <- paste("border", names(x), name, sep = ".")
+    if (is.null(x)) {
+      x <- list(width = NA_integer_, color = NA_character_, style = NA_character_)
+    }
+    names(x) <- paste("border", c("width", "color", "style"), name, sep = ".")
     x
   }, borders_side, value[borders_id], SIMPLIFY = FALSE, USE.NAMES = FALSE)
   z <- Reduce(f = append, z)
@@ -93,7 +96,7 @@ wml_image <- function(src, width, height) {
     sprintf("<a:blip r:embed=\"%s\"/>", src),
     "<a:srcRect/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>",
     "<pic:spPr bwMode=\"auto\"><a:xfrm><a:off x=\"0\" y=\"0\"/>",
-    sprintf("<a:ext cx=\"%.0f\" cy=\"%.0f\"/></a:xfrm><a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom><a:noFill/></pic:spPr>", width * 12700, height * 12700),
+    sprintf("<a:ext cx=\"%.0f\" cy=\"%.0f\"/></a:xfrm><a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom><a:noFill/></pic:spPr>", width * 12700 * 72, height * 12700 * 72),
     "</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>"
   )
   str

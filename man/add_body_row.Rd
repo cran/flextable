@@ -2,12 +2,13 @@
 % Please edit documentation in R/augment_rows.R
 \name{add_body_row}
 \alias{add_body_row}
-\title{Add body labels}
+\title{Add a body row with spanning labels}
 \usage{
 add_body_row(x, top = TRUE, values = list(), colwidths = integer(0))
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
 \item{top}{should the row be inserted at the top or the bottom.}
 
@@ -26,8 +27,8 @@ efficient conditional formatting.}
 \item{colwidths}{the number of columns to merge in the row for each label}
 }
 \description{
-Add a row of new columns labels in body part.
-Labels can be spanned along multiple columns, as merged cells.
+Add a single row to the body where labels can span
+multiple columns (merged cells) via the \code{colwidths} argument.
 
 Labels are associated with a number of columns
 to merge that default to one if not specified.
@@ -84,10 +85,10 @@ Other functions for row and column operations in a flextable:
 \code{\link{add_footer_lines}()},
 \code{\link{add_footer_row}()},
 \code{\link{add_header}()},
+\code{\link{add_header_lines}()},
 \code{\link{add_header_row}()},
 \code{\link{delete_columns}()},
 \code{\link{delete_part}()},
-\code{\link{delete_rows}()},
 \code{\link{separate_header}()},
 \code{\link{set_header_footer_df}},
 \code{\link{set_header_labels}()}

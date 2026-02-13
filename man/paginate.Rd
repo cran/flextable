@@ -2,7 +2,7 @@
 % Please edit documentation in R/paginate.R
 \name{paginate}
 \alias{paginate}
-\title{Paginate tables}
+\title{Prevent page breaks inside a flextable}
 \usage{
 paginate(
   x,
@@ -13,7 +13,8 @@ paginate(
 )
 }
 \arguments{
-\item{x}{flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
 \item{init}{init value for keep_with_next property, it default
 value is \code{get_flextable_defaults()$keep_with_next}.}
@@ -101,4 +102,7 @@ ft_1 <- paginate(ft_1, group = "cut", group_def = "rle")
 
 save_as_docx(ft_1, path = tempfile(fileext = ".docx"))
 save_as_rtf(ft_1, path = tempfile(fileext = ".rtf"))
+}
+\seealso{
+\code{\link[=knit_print.flextable]{knit_print.flextable()}}
 }

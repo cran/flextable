@@ -12,25 +12,38 @@ footnote(
   ref_symbols = NULL,
   part = "body",
   inline = FALSE,
-  sep = "; "
+  sep = "; ",
+  symbol_sep = ""
 )
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
-\item{i, j}{cellwise rows and columns selection}
+\item{i}{row selector, see section \emph{Row selection with the \code{i} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
+
+\item{j}{column selector, see section \emph{Column selection with the \code{j} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
 \item{value}{a call to function \code{\link[=as_paragraph]{as_paragraph()}}.}
 
 \item{ref_symbols}{character value, symbols to append that will be used
 as references to notes.}
 
-\item{part}{partname of the table (one of 'body', 'header', 'footer')}
+\item{part}{part selector, see section \emph{Part selection with the \code{part}
+parameter} in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.
+Value 'all' is not allowed by the function.}
 
 \item{inline}{whether to add footnote on same line as previous footnote or not}
 
 \item{sep}{used only when inline = TRUE, character string to use as
 a separator between footnotes.}
+
+\item{symbol_sep}{separator to insert between multiple
+footnote symbols in the same cell (e.g. \code{","} to
+produce \verb{1,2} instead of \code{12}). Default is \code{""}
+(no separator, backward compatible).}
 }
 \description{
 The function let add footnotes to a flextable object

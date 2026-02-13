@@ -1,3 +1,83 @@
+# flextable 0.9.11
+
+## new features
+
+- new function `wrap_flextable()` enables integration with 'patchwork' layouts.
+Flextable objects can be combined with 'ggplot2' plots using `+`, `|`, and `/`
+operators. Table headers and footers are aligned with plot panel areas. The
+`panel` argument controls alignment (`"body"`, `"full"`, `"rows"`, `"cols"`)
+and the `space` argument controls sizing (`"free"`, `"fixed"`, `"free_x"`,
+`"free_y"`). `flex_body` stretches body rows to match a neighbouring plot's
+panel height; `flex_cols` stretches data columns to match the panel width.
+`just` controls horizontal alignment (`"left"`, `"right"`, `"center"`)
+when the table is narrower than the panel. S3 methods `ggplot_add.flextable`
+and `as_patch.flextable` are registered so that `plot + flextable` works
+transparently.
+- new function `theme_borderless()` applies a minimal theme with no borders,
+bold header, and standard column alignment.
+- support strikethrough formatting with `fp_text_default()`.
+- new function `as_strike()` to apply strikethrough formatting to text chunks.
+- new function `compact_summary()` to create a compact summary of a data.frame
+that can be transformed as a flextable with `as_flextable()`.
+- `summarizor()`: when using `overall_label` with multiple `by` columns,
+an overall level is now added for each grouping column (not only the last one).
+This produces margins at every nesting level, including a grand total.
+- `footnote()` gains a `symbol_sep` argument to insert a separator
+between multiple footnote symbols in the same cell (#699).
+- new function `as_qmd()` to embed Quarto markdown (cross-references,
+bold/italic, links, math, inline code) inside flextable cells.
+Works with HTML, PDF and Word outputs. New function `use_flextable_qmd()`
+installs the companion `flextable-qmd` Lua filter extension in
+the Quarto project.
+
+## Known limitations
+
+- PDF/LaTeX: a table row whose content is taller than a page cannot be
+split across pages (#548). This is a fundamental constraint of LaTeX's
+`longtable` environment, which only supports page breaks between rows,
+not within a single row. HTML and Word outputs are not affected.
+
+## Internals
+
+- Strings metrics are now computed with `gdtools::strings_sizes()` instead of
+`m_str_extents()` and `str_metrics()`, goal is to let 'gdtools' use only 'systemfonts'
+and be simplified.
+
+## Issues
+
+- line breaks (`\n`) in captions now render correctly in PDF/LaTeX
+output (#663).
+- images in google docs should now be sized as expected
+- specifying a `word_style` for a paragraph style works now.
+The `word_style` values will be ignored if flextable is process by 'rmarkdown'
+or 'quarto'.
+- `as_flextable.tabulator()`: the N= counts in column headers are now
+displayed when there are multiple grouping columns (previously limited
+to a single grouping column).
+- `footnote()` no longer errors when the row selector `i` matches
+zero rows (#712).
+- footnote symbols no longer clash with rotated cells in HTML
+output (#713).
+- PDF/Quarto: the `fontspec` LaTeX package is no longer included when
+the PDF engine is `pdflatex`, fixing compilation errors in Quarto
+documents using `pdf-engine: pdflatex` (#701, #707). Engine detection
+now also reads `QUARTO_EXECUTE_INFO` (Quarto >= 1.8) and nested YAML
+(`format > pdf > pdf-engine`).
+- inner borders of vertically merged cells no longer show in PDF
+output when background color is set (#673).
+- PDF/Quarto: footer repetition and longtable part ordering now work
+correctly with the default container (`none`) in Quarto output.
+- `merge_v()`: vertically merged cell labels now appear at the top of
+the merged range in PDF/LaTeX output instead of the bottom (#654).
+- vertical alignment (`valign`) in merged cells now works correctly in
+PDF/LaTeX output when rows have different heights (#639). Content is
+placed in the first (top), middle (center), or last (bottom) row of the
+merged range; `\multirow` is no longer used as it miscalculates offsets
+with unequal row heights.
+- using `by` of `summarizor()` referring to two columns, one of which has
+only one unique value no longer causes and error when passed on to 
+`as_flextable()`.
+
 # flextable 0.9.10
 
 ## new features

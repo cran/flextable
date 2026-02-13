@@ -2,12 +2,13 @@
 % Please edit documentation in R/printers.R
 \name{flextable_to_rmd}
 \alias{flextable_to_rmd}
-\title{Knitr rendering in loops and if statements}
+\title{Print a flextable inside knitr loops and conditionals}
 \usage{
 flextable_to_rmd(x, ...)
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
 \item{...}{unused argument}
 }
@@ -55,6 +56,7 @@ Other flextable print function:
 \code{\link{save_as_image}()},
 \code{\link{save_as_pptx}()},
 \code{\link{save_as_rtf}()},
-\code{\link{to_html.flextable}()}
+\code{\link{to_html.flextable}()},
+\code{\link{wrap_flextable}()}
 }
 \concept{flextable print function}

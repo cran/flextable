@@ -2,12 +2,13 @@
 % Please edit documentation in R/augment_rows.R
 \name{add_header_lines}
 \alias{add_header_lines}
-\title{Add labels as new rows in the header}
+\title{Add full-width rows to the header}
 \usage{
 add_header_lines(x, values = character(0), top = TRUE)
 }
 \arguments{
-\item{x}{a \code{flextable} object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
 \item{values}{a character vector or a call to \code{\link[=as_paragraph]{as_paragraph()}}
 to get formated content, each element will
@@ -17,12 +18,9 @@ be added as a new row.}
 or the bottom. Default to TRUE.}
 }
 \description{
-Add labels as new rows in the header,
-where all columns are merged.
-
-This is a sugar function to be used when you need to
-add labels in the header, most of the time it will
-be used to adding titles on the top rows of the flextable.
+Add one or more rows to the header where each label
+spans all columns (all cells merged into one). Useful for adding
+titles or subtitles above the column headers.
 }
 \examples{
 # ex 1----
@@ -50,4 +48,19 @@ ft_2 <- add_footer_lines(ft_2, values = ref, top = FALSE)
 ft_2 <- autofit(ft_2)
 ft_2
 }
-\concept{functions that add rows in the table}
+\seealso{
+Other functions for row and column operations in a flextable: 
+\code{\link{add_body}()},
+\code{\link{add_body_row}()},
+\code{\link{add_footer}()},
+\code{\link{add_footer_lines}()},
+\code{\link{add_footer_row}()},
+\code{\link{add_header}()},
+\code{\link{add_header_row}()},
+\code{\link{delete_columns}()},
+\code{\link{delete_part}()},
+\code{\link{separate_header}()},
+\code{\link{set_header_footer_df}},
+\code{\link{set_header_labels}()}
+}
+\concept{functions for row and column operations in a flextable}

@@ -1,9 +1,9 @@
 #' @export
-#' @title Paginate tables
+#' @title Prevent page breaks inside a flextable
 #' @description
 #' Prevents breaks between tables rows you want to stay together.
 #' This feature only applies to Word and RTF output.
-#' @param x flextable object
+#' @inheritParams args_x_only
 #' @param init init value for keep_with_next property, it default
 #' value is `get_flextable_defaults()$keep_with_next`.
 #' @param hdr_ftr if TRUE (default), prevent breaks between table body
@@ -83,6 +83,7 @@
 #'
 #' save_as_docx(ft_1, path = tempfile(fileext = ".docx"))
 #' save_as_rtf(ft_1, path = tempfile(fileext = ".rtf"))
+#' @seealso [knit_print.flextable()]
 paginate <- function(
     x,
     init = NULL,

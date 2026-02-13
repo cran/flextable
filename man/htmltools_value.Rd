@@ -2,7 +2,7 @@
 % Please edit documentation in R/printers.R
 \name{htmltools_value}
 \alias{htmltools_value}
-\title{flextable as an 'HTML' object}
+\title{Convert a flextable to an HTML object}
 \usage{
 htmltools_value(
   x,
@@ -12,7 +12,8 @@ htmltools_value(
 )
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
 \item{ft.align}{flextable alignment, supported values are 'left', 'center' and 'right'.}
 
@@ -46,6 +47,7 @@ Other flextable print function:
 \code{\link{save_as_image}()},
 \code{\link{save_as_pptx}()},
 \code{\link{save_as_rtf}()},
-\code{\link{to_html.flextable}()}
+\code{\link{to_html.flextable}()},
+\code{\link{wrap_flextable}()}
 }
 \concept{flextable print function}

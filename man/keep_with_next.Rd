@@ -7,22 +7,26 @@
 keep_with_next(x, i = NULL, value = TRUE, part = "body")
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
-\item{i}{rows selection}
+\item{i}{row selector, see section \emph{Row selection with the \code{i} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
 \item{value}{TRUE or FALSE. When applied to a group, all rows
-except the last one should be flagged with attribute 'Keep with next'.}
+except the last one should be flagged with the 'Keep with next' attribute.}
 
-\item{part}{partname of the table (one of 'all', 'body', 'header', 'footer')}
+\item{part}{part selector, see section \emph{Part selection with the \code{part}
+parameter} in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.
+Value 'all' is not allowed by the function.}
 }
 \description{
 The 'Keep with next' functionality in 'Word', applied
-to the rows of a table, ensures that the rows with that attribute
-stays together and does not break across multiple pages.
+to the rows of a table, ensures that rows with that attribute
+stay together and do not break across multiple pages.
 
-This function allows much better control of breaks between
-pages than the global \code{keep_with_next} parameter.
+This function provides better control of page breaks than
+the global \code{keep_with_next} parameter.
 }
 \examples{
 library(flextable)
@@ -52,6 +56,7 @@ Other sugar functions for table style:
 \code{\link{line_spacing}()},
 \code{\link{padding}()},
 \code{\link{rotate}()},
+\code{\link{style}()},
 \code{\link{tab_settings}()},
 \code{\link{valign}()}
 }

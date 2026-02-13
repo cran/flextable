@@ -4,14 +4,15 @@
 \alias{set_header_footer_df}
 \alias{set_header_df}
 \alias{set_footer_df}
-\title{Set flextable's header or footer rows}
+\title{Replace the entire header or footer from a data frame}
 \usage{
 set_header_df(x, mapping = NULL, key = "col_keys")
 
 set_footer_df(x, mapping = NULL, key = "col_keys")
 }
 \arguments{
-\item{x}{a \code{flextable} object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
 \item{mapping}{a \code{data.frame} specyfing for each colname
 content of the column.}
@@ -19,7 +20,9 @@ content of the column.}
 \item{key}{column to use as key when joigning data_mapping.}
 }
 \description{
-Use a data.frame to specify flextable's header or footer rows.
+Replace all header or footer rows using a mapping data frame.
+Unlike \code{\link[=set_header_labels]{set_header_labels()}} which only renames the bottom header row,
+this function rebuilds the entire header (or footer) structure.
 
 The data.frame must contain a column whose values match flextable
 \code{col_keys} argument, this column will be used as join key. The
@@ -69,10 +72,10 @@ Other functions for row and column operations in a flextable:
 \code{\link{add_footer_lines}()},
 \code{\link{add_footer_row}()},
 \code{\link{add_header}()},
+\code{\link{add_header_lines}()},
 \code{\link{add_header_row}()},
 \code{\link{delete_columns}()},
 \code{\link{delete_part}()},
-\code{\link{delete_rows}()},
 \code{\link{separate_header}()},
 \code{\link{set_header_labels}()}
 }

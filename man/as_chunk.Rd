@@ -2,7 +2,7 @@
 % Please edit documentation in R/05_content.R
 \name{as_chunk}
 \alias{as_chunk}
-\title{Chunk of text wrapper}
+\title{Text chunk}
 \usage{
 as_chunk(x, props = NULL, formatter = format_fun, ...)
 }
@@ -52,6 +52,8 @@ Other chunk elements for paragraph:
 \code{\link{as_highlight}()},
 \code{\link{as_i}()},
 \code{\link{as_image}()},
+\code{\link{as_qmd}()},
+\code{\link{as_strike}()},
 \code{\link{as_sub}()},
 \code{\link{as_sup}()},
 \code{\link{as_word_field}()},

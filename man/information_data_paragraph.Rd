@@ -2,12 +2,13 @@
 % Please edit documentation in R/read_structure.R
 \name{information_data_paragraph}
 \alias{information_data_paragraph}
-\title{paragraph related information of a flextable}
+\title{Get paragraph-level information from a flextable}
 \usage{
 information_data_paragraph(x)
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 }
 \value{
 a data.frame containing information about paragraphs:

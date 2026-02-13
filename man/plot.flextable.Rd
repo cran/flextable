@@ -7,7 +7,8 @@
 \method{plot}{flextable}(x, ...)
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
 \item{...}{additional arguments passed to \code{\link[=gen_grob]{gen_grob()}}.}
 }
@@ -33,13 +34,17 @@ register_liberationsans()
 set_flextable_defaults(font.family = "Liberation Sans")
 ftab <- as_flextable(cars)
 
-tf <- tempfile(fileext = ".png")
-agg_png(
-  filename = tf, width = 1.7, height = 3.26, unit = "in",
-  background = "transparent", res = 150
-)
+\dontshow{
+cap <- ragg::agg_capture(width = 7, height = 6, units = "in", res = 150)
+grDevices::dev.control("enable")
+}
 plot(ftab)
+\dontshow{
+raster <- cap()
 dev.off()
+plot(as.raster(raster))
+init_flextable_defaults()
+}
 }
 \seealso{
 Other flextable print function: 
@@ -54,6 +59,7 @@ Other flextable print function:
 \code{\link{save_as_image}()},
 \code{\link{save_as_pptx}()},
 \code{\link{save_as_rtf}()},
-\code{\link{to_html.flextable}()}
+\code{\link{to_html.flextable}()},
+\code{\link{wrap_flextable}()}
 }
 \concept{flextable print function}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/formatters.R
 \name{colformat_num}
 \alias{colformat_num}
-\title{Format numeric cells}
+\title{Format numeric cells with format()}
 \usage{
 colformat_num(
   x,
@@ -18,11 +18,14 @@ colformat_num(
 )
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
-\item{i}{rows selection}
+\item{i}{row selector, see section \emph{Row selection with the \code{i} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
-\item{j}{columns selection.}
+\item{j}{column selector, see section \emph{Column selection with the \code{j} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
 \item{big.mark, decimal.mark}{see \code{\link[=format]{format()}}}
 
@@ -34,7 +37,8 @@ colformat_num(
 and \code{digits} can not be used.}
 }
 \description{
-Format numeric cells in a flextable.
+Format numeric cells in a flextable
+using R's \code{\link[=format]{format()}} function.
 
 The function is different from \code{\link[=colformat_double]{colformat_double()}} on numeric type
 columns. The function uses the \code{\link[=format]{format()}} function of R on numeric

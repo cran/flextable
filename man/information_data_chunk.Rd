@@ -2,12 +2,13 @@
 % Please edit documentation in R/read_structure.R
 \name{information_data_chunk}
 \alias{information_data_chunk}
-\title{content chunk related information of a flextable}
+\title{Get chunk-level content information from a flextable}
 \usage{
 information_data_chunk(x, expand_special_chars = TRUE)
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 }
 \value{
 a data.frame containing information about chunks:

@@ -2,7 +2,7 @@
 % Please edit documentation in R/formatters.R
 \name{colformat_double}
 \alias{colformat_double}
-\title{Format numeric cells}
+\title{Format double cells}
 \usage{
 colformat_double(
   x,
@@ -18,11 +18,14 @@ colformat_double(
 )
 }
 \arguments{
-\item{x}{a flextable object}
+\item{x}{a 'flextable' object, see \link{flextable-package} to learn how to create
+'flextable' object.}
 
-\item{i}{rows selection}
+\item{i}{row selector, see section \emph{Row selection with the \code{i} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
-\item{j}{columns selection.}
+\item{j}{column selector, see section \emph{Column selection with the \code{j} parameter}
+in <\code{\link[=flextable_selectors]{Selectors in flextable}}>.}
 
 \item{big.mark, digits, decimal.mark}{see \code{\link[=formatC]{formatC()}}}
 
@@ -31,7 +34,9 @@ colformat_double(
 \item{prefix, suffix}{string to be used as prefix or suffix}
 }
 \description{
-Format numeric cells in a flextable.
+Format numeric cells in a flextable using
+\code{\link[=formatC]{formatC()}} with explicit control over digits and
+decimal mark.
 }
 \examples{
 dat <- mtcars
