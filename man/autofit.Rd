@@ -2,7 +2,7 @@
 % Please edit documentation in R/flextable_sizes.R
 \name{autofit}
 \alias{autofit}
-\title{Adjust cell widths and heights}
+\title{Adjust columns to their content size}
 \usage{
 autofit(
   x,
@@ -35,17 +35,14 @@ the number of spanned cells; if "included", all widths (included horizontally
 spanned cells) will be used in the calculation.}
 }
 \description{
-compute and apply optimized widths and heights
-(minimum estimated widths and heights for each table columns and rows
-in inches returned by function \code{\link[=dim_pretty]{dim_pretty()}}).
+Compute and apply the minimum widths and heights needed
+to display each cell's content on a single line, with an optional
+extra margin (\code{add_w}, \code{add_h}).
 
-This function is to be used when the table widths and heights
-should be adjusted to fit the size of the content.
-
-The function does not let you adjust a content that is too
-wide in a paginated document. It simply calculates the width
-of the columns so that each content has the minimum width
-necessary to display the content on one line.
+This function sizes columns to fit their content. It does not
+constrain the table to a given total width. To enforce a maximum
+width, use \code{\link[=fit_columns]{fit_columns()}} (wraps text) or \code{\link[=fit_to_width]{fit_to_width()}}
+(shrinks font size).
 
 Note that this function is not related to 'Microsoft Word'
 \emph{Autofit} feature.
@@ -62,15 +59,17 @@ ft_2 <- autofit(ft_1)
 ft_2
 }
 \seealso{
-Other functions for flextable size management: 
-\code{\link{dim.flextable}()},
-\code{\link{dim_pretty}()},
-\code{\link{fit_to_width}()},
-\code{\link{flextable_dim}()},
-\code{\link{height}()},
-\code{\link{hrule}()},
-\code{\link{ncol_keys}()},
-\code{\link{nrow_part}()},
-\code{\link{width}()}
+Other functions for flextable size management:
+\code{\link[=dim.flextable]{dim.flextable()}},
+\code{\link[=dim_pretty]{dim_pretty()}},
+\code{\link[=fit_columns]{fit_columns()}},
+\code{\link[=fit_to_width]{fit_to_width()}},
+\code{\link[=flextable_dim]{flextable_dim()}},
+\code{\link[=height]{height()}},
+\code{\link[=hrule]{hrule()}},
+\code{\link[=ncol_keys]{ncol_keys()}},
+\code{\link[=nrow_part]{nrow_part()}},
+\code{\link[=set_table_properties]{set_table_properties()}},
+\code{\link[=width]{width()}}
 }
 \concept{functions for flextable size management}

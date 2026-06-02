@@ -24,6 +24,7 @@
 #' @param location a location for a placeholder. See [officer::ph_location_type()]
 #' for example.
 #' @param ... unused arguments.
+#' @family officer_integration
 #' @note
 #' The width and height of the table can not be set with `location`. Use
 #' functions [width()], [height()], [autofit()]
@@ -48,5 +49,10 @@ ph_with.flextable <- function(x, value, location, ...) {
   value <- fix_border_issues(value)
 
   graphic_frame <- gen_raw_pml(value)
-  ph_with(x = x, value = as_xml_document(graphic_frame), location = location, ...)
+  ph_with(
+    x = x,
+    value = as_xml_document(graphic_frame),
+    location = location,
+    ...
+  )
 }

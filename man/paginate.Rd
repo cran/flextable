@@ -9,7 +9,7 @@ paginate(
   init = NULL,
   hdr_ftr = TRUE,
   group = character(),
-  group_def = c("rle", "nonempty")
+  group_def = c("rle", "nonempty", "starts")
 )
 }
 \arguments{
@@ -22,15 +22,20 @@ value is \code{get_flextable_defaults()$keep_with_next}.}
 \item{hdr_ftr}{if TRUE (default), prevent breaks between table body
 and header and between table body and footer.}
 
-\item{group}{name of a column to use for finding groups}
+\item{group}{name of a column to use for finding groups (when
+\code{group_def} is \code{"rle"} or \code{"nonempty"}) or an integer vector
+of row indices that start new groups (when \code{group_def} is \code{"starts"}).}
 
 \item{group_def}{algorithm to be used to identify groups
-that should not be split into two pages, one of 'rle', 'nonempty':
+that should not be split into two pages, one of 'rle', 'nonempty',
+'starts':
 \itemize{
 \item 'rle': runs of equal values are used to define the groups,
 to be used with \code{\link[=tabulator]{tabulator()}}.
 \item 'nonempty': non empty value start a new group,
 to be used with \code{\link[=as_flextable.tabular]{as_flextable.tabular()}}.
+\item 'starts': \code{group} is a numeric vector of body row indices
+where new groups begin. Page breaks are allowed before these rows.
 }}
 }
 \value{
@@ -105,4 +110,24 @@ save_as_rtf(ft_1, path = tempfile(fileext = ".rtf"))
 }
 \seealso{
 \code{\link[=knit_print.flextable]{knit_print.flextable()}}
+
+Other row and column operations:
+\code{\link[=add_body]{add_body()}},
+\code{\link[=add_body_row]{add_body_row()}},
+\code{\link[=add_footer]{add_footer()}},
+\code{\link[=add_footer_lines]{add_footer_lines()}},
+\code{\link[=add_footer_row]{add_footer_row()}},
+\code{\link[=add_header]{add_header()}},
+\code{\link[=add_header_lines]{add_header_lines()}},
+\code{\link[=add_header_row]{add_header_row()}},
+\code{\link[=delete_columns]{delete_columns()}},
+\code{\link[=delete_part]{delete_part()}},
+\code{\link[=delete_rows]{delete_rows()}},
+\code{\link[=separate_header]{separate_header()}},
+\code{\link{set_header_footer_df}},
+\code{\link[=set_header_labels]{set_header_labels()}},
+\code{\link[=split_columns]{split_columns()}},
+\code{\link[=split_rows]{split_rows()}},
+\code{\link[=split_to_pages]{split_to_pages()}}
 }
+\concept{table_structure}

@@ -33,21 +33,21 @@ ft <- fontsize(ft, size = 7, j = 3)
 ft
 }
 \seealso{
-Other sugar functions for table style: 
-\code{\link{align}()},
-\code{\link{bg}()},
-\code{\link{bold}()},
-\code{\link{color}()},
-\code{\link{empty_blanks}()},
-\code{\link{font}()},
-\code{\link{highlight}()},
-\code{\link{italic}()},
-\code{\link{keep_with_next}()},
-\code{\link{line_spacing}()},
-\code{\link{padding}()},
-\code{\link{rotate}()},
-\code{\link{style}()},
-\code{\link{tab_settings}()},
-\code{\link{valign}()}
+Other formatting shortcuts:
+\code{\link[=align]{align()}},
+\code{\link[=bg]{bg()}},
+\code{\link[=bold]{bold()}},
+\code{\link[=color]{color()}},
+\code{\link[=empty_blanks]{empty_blanks()}},
+\code{\link[=font]{font()}},
+\code{\link[=highlight]{highlight()}},
+\code{\link[=italic]{italic()}},
+\code{\link[=keep_with_next]{keep_with_next()}},
+\code{\link[=line_spacing]{line_spacing()}},
+\code{\link[=padding]{padding()}},
+\code{\link[=rotate]{rotate()}},
+\code{\link[=style]{style()}},
+\code{\link[=tab_settings]{tab_settings()}},
+\code{\link[=valign]{valign()}}
 }
-\concept{sugar functions for table style}
+\concept{formatting_shortcuts}

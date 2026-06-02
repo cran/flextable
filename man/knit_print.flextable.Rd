@@ -131,12 +131,27 @@ bold/italic, links, math, inline code and shortcodes.
 See \code{\link[=as_qmd]{as_qmd()}} and \code{\link[=use_flextable_qmd]{use_flextable_qmd()}} for setup instructions.
 }
 
+\section{PDF accessibility (PDF/UA-2)}{
+
+
+Quarto's \code{pdf-standard: ua-2} injects \verb{\\DocumentMetadata\{tagging=on\}}
+in the LaTeX preamble, activating 'tagpdf'.
+This code patches LaTeX commands at compile time to insert
+PDF structure tags. Neither Quarto nor flextable control this process.
+
+The tagging code does not yet support \code{longtable} + \code{colortbl},
+\code{booktabs} rules, and \code{cline}, which flextable relies on. Compilation
+fails with \verb{\\ERRORtbl/row}. When these upstream issues are resolved,
+flextable PDF output will support tagging without changes. Other formats are
+not affected.
+}
+
 \section{PDF limitations}{
 
 
 The following properties are not supported in PDF output:
-padding, \code{line_spacing} and row \code{height}. Justified text is
-converted to left-aligned.
+\code{padding.top}, \code{padding.bottom}, \code{line_spacing} and row \code{height}.
+Justified text is converted to left-aligned.
 
 To use system fonts, set \code{latex_engine: xelatex} in the YAML
 header (the default \code{pdflatex} engine does not support them).
@@ -182,19 +197,19 @@ if (pandoc_available() &&
 \code{\link[=set_caption]{set_caption()}}, \code{\link[=as_qmd]{as_qmd()}}, \code{\link[=use_flextable_qmd]{use_flextable_qmd()}},
 \code{\link[=paginate]{paginate()}}
 
-Other flextable print function: 
-\code{\link{df_printer}()},
-\code{\link{flextable_to_rmd}()},
-\code{\link{gen_grob}()},
-\code{\link{htmltools_value}()},
-\code{\link{plot.flextable}()},
-\code{\link{print.flextable}()},
-\code{\link{save_as_docx}()},
-\code{\link{save_as_html}()},
-\code{\link{save_as_image}()},
-\code{\link{save_as_pptx}()},
-\code{\link{save_as_rtf}()},
-\code{\link{to_html.flextable}()},
-\code{\link{wrap_flextable}()}
+Other functions for flextable output and export:
+\code{\link[=df_printer]{df_printer()}},
+\code{\link[=flextable_to_rmd]{flextable_to_rmd()}},
+\code{\link[=gen_grob]{gen_grob()}},
+\code{\link[=htmltools_value]{htmltools_value()}},
+\code{\link[=plot.flextable]{plot.flextable()}},
+\code{\link[=print.flextable]{print.flextable()}},
+\code{\link[=save_as_docx]{save_as_docx()}},
+\code{\link[=save_as_html]{save_as_html()}},
+\code{\link[=save_as_image]{save_as_image()}},
+\code{\link[=save_as_pptx]{save_as_pptx()}},
+\code{\link[=save_as_rtf]{save_as_rtf()}},
+\code{\link[=to_html.flextable]{to_html.flextable()}},
+\code{\link[=wrap_flextable]{wrap_flextable()}}
 }
-\concept{flextable print function}
+\concept{flextable_output_export}

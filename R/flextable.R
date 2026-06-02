@@ -68,10 +68,16 @@
 #' @importFrom stats setNames
 #' @seealso [style()], [autofit()], [theme_booktabs()], [knit_print.flextable()],
 #' [compose()], [footnote()], [set_caption()]
-flextable <- function(data, col_keys = names(data),
-                      cwidth = .75, cheight = .25,
-                      defaults = list(), theme_fun = theme_booktabs,
-                      use_labels = TRUE) {
+#' @family flextable_constructors
+flextable <- function(
+  data,
+  col_keys = names(data),
+  cwidth = .75,
+  cheight = .25,
+  defaults = list(),
+  theme_fun = theme_booktabs,
+  use_labels = TRUE
+) {
   stopifnot(is.data.frame(data), ncol(data) > 0)
   if (any(duplicated(col_keys))) {
     stop(sprintf(
@@ -81,7 +87,11 @@ flextable <- function(data, col_keys = names(data),
   }
   list_lbls <- collect_labels(dataset = data, use_labels = use_labels)
 
-  if (inherits(data, "data.table") || inherits(data, "tbl_df") || inherits(data, "tbl")) {
+  if (
+    inherits(data, "data.table") ||
+      inherits(data, "tbl_df") ||
+      inherits(data, "tbl")
+  ) {
     data <- as.data.frame(data, stringsAsFactors = FALSE)
   }
 
@@ -92,18 +102,37 @@ flextable <- function(data, col_keys = names(data),
     data[blanks] <- blanks_col
   }
 
-  body <- complex_tabpart(data = data, col_keys = col_keys, cwidth = cwidth, cheight = cheight)
+  body <- complex_tabpart(
+    data = data,
+    col_keys = col_keys,
+    cwidth = cwidth,
+    cheight = cheight
+  )
 
   # header
   header_data <- setNames(as.list(col_keys), col_keys)
   header_data[blanks] <- as.list(rep("", length(blanks)))
-  header_data <- as.data.frame(header_data, stringsAsFactors = FALSE, check.names = FALSE)
+  header_data <- as.data.frame(
+    header_data,
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
 
-  header <- complex_tabpart(data = header_data, col_keys = col_keys, cwidth = cwidth, cheight = cheight)
+  header <- complex_tabpart(
+    data = header_data,
+    col_keys = col_keys,
+    cwidth = cwidth,
+    cheight = cheight
+  )
 
   # footer
   footer_data <- header_data[FALSE, , drop = FALSE]
-  footer <- complex_tabpart(data = footer_data, col_keys = col_keys, cwidth = cwidth, cheight = cheight)
+  footer <- complex_tabpart(
+    data = footer_data,
+    col_keys = col_keys,
+    cwidth = cwidth,
+    cheight = cheight
+  )
 
   out <- list(
     header = header,
@@ -116,10 +145,17 @@ flextable <- function(data, col_keys = names(data),
   class(out) <- c("flextable")
 
   out <- do.call(flextable_global$defaults$theme_fun, list(out))
-  out <- set_table_properties(x = out, layout = flextable_global$defaults$table.layout)
+  out <- set_table_properties(
+    x = out,
+    layout = flextable_global$defaults$table.layout
+  )
 
   if (length(list_lbls$variables_labels) > 0) {
-    out <- labelizor(out, labels = unlist(list_lbls$variables_labels), part = "header")
+    out <- labelizor(
+      out,
+      labels = unlist(list_lbls$variables_labels),
+      part = "header"
+    )
   }
 
   apply_labels(out, collected_labels = list_lbls)
@@ -328,17 +364,22 @@ qflextable <- function(data) {
 #' @importFrom officer run_autonum
 #' @importFrom htmltools htmlEscape
 #' @seealso [flextable()], [knit_print.flextable()]
-set_caption <- function(x,
-                        caption = NULL,
-                        autonum = NULL,
-                        word_stylename = "Table Caption",
-                        style = word_stylename,
-                        fp_p = fp_par(padding = 3),
-                        align_with_table = TRUE,
-                        html_classes = NULL,
-                        html_escape = TRUE) {
+set_caption <- function(
+  x,
+  caption = NULL,
+  autonum = NULL,
+  word_stylename = "Table Caption",
+  style = word_stylename,
+  fp_p = fp_par(padding = 3),
+  align_with_table = TRUE,
+  html_classes = NULL,
+  html_escape = TRUE
+) {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", "set_caption()"))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      "set_caption()"
+    ))
   }
 
   caption_value <- NULL
@@ -350,8 +391,17 @@ set_caption <- function(x,
     caption_value <- caption[[1]]
 
     by_columns <- c(
-      "font.size", "italic", "bold", "underlined", "strike", "color", "shading.color",
-      "font.family", "hansi.family", "eastasia.family", "cs.family",
+      "font.size",
+      "italic",
+      "bold",
+      "underlined",
+      "strike",
+      "color",
+      "shading.color",
+      "font.family",
+      "hansi.family",
+      "eastasia.family",
+      "cs.family",
       "vertical.align"
     )
     default_fp_t <- fp_text_default()
@@ -360,8 +410,16 @@ set_caption <- function(x,
     }
   }
   if (!is.null(caption) && !simple_caption) {
-    caption_value <- expand_special_char(caption_value, what = "\n", with = "<br>")
-    caption_value <- expand_special_char(caption_value, what = "\t", with = "<tab>")
+    caption_value <- expand_special_char(
+      caption_value,
+      what = "\n",
+      with = "<br>"
+    )
+    caption_value <- expand_special_char(
+      caption_value,
+      what = "\t",
+      with = "<tab>"
+    )
   }
 
   x$caption <- list(
@@ -376,16 +434,23 @@ set_caption <- function(x,
   x$caption$fp_p <- fp_p
   x$caption$style <- style
   x$caption$word_stylename <- word_stylename
-  x$caption$html_classes <- if (!is.null(html_classes)) paste(html_classes, collapse = " ") else NULL
+  x$caption$html_classes <- if (!is.null(html_classes)) {
+    paste(html_classes, collapse = " ")
+  } else {
+    NULL
+  }
 
   x
 }
-update_caption <- function(x, caption = NULL,
-                           autonum = NULL,
-                           word_stylename = NULL,
-                           fp_p = NULL,
-                           align_with_table = NULL,
-                           html_classes = NULL) {
+update_caption <- function(
+  x,
+  caption = NULL,
+  autonum = NULL,
+  word_stylename = NULL,
+  fp_p = NULL,
+  align_with_table = NULL,
+  html_classes = NULL
+) {
   if (!is.null(caption)) {
     if (inherits(caption, "paragraph")) {
       x$caption$simple_caption <- FALSE
@@ -416,20 +481,6 @@ update_caption <- function(x, caption = NULL,
   x
 }
 
-
-#' @keywords internal
-#' @title flextable old functions
-#' @description The function is maintained for compatibility with old codes
-#' mades by users but be aware it produces the same exact object than [flextable()].
-#' This function should be deprecated then removed in the next versions.
-#' @param data dataset
-#' @param col_keys columns names/keys to display. If some column names are not in
-#' the dataset, they will be added as blank columns by default.
-#' @param cwidth,cheight initial width and height to use for cell sizes in inches.
-#' @export
-regulartable <- function(data, col_keys = names(data), cwidth = .75, cheight = .25) {
-  flextable(data = data, col_keys = col_keys, cwidth = cwidth, cheight = cheight)
-}
 
 #' @export
 knit_print.run_reference <- function(x, ...) {

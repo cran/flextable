@@ -37,12 +37,13 @@
 #' ft_3
 #' @export
 summarizor <- function(
-    x, by = character(),
-    overall_label = NULL,
-    num_stats = c("mean_sd", "median_iqr", "range"),
-    hide_null_na = TRUE,
-    use_labels = TRUE) {
-
+  x,
+  by = character(),
+  overall_label = NULL,
+  num_stats = c("mean_sd", "median_iqr", "range"),
+  hide_null_na = TRUE,
+  use_labels = TRUE
+) {
   if (length(by) < 1) {
     by <- ".overall"
     x[[by]] <- by
@@ -52,12 +53,12 @@ summarizor <- function(
   }
 
   list_lbls <- collect_labels(dataset = x, use_labels = use_labels)
-  for(colname in names(list_lbls$values_labels)) {
+  for (colname in names(list_lbls$values_labels)) {
     x[[colname]] <- factor(
       x = x[[colname]],
       levels = names(list_lbls$values_labels[[colname]]),
       labels = unname(list_lbls$values_labels[[colname]])
-      )
+    )
   }
 
   x <- as.data.frame(x)
@@ -86,13 +87,17 @@ summarizor <- function(
   dat <- dtx[, list(data = list(.SD)), by = by, .SDcols = cols]
   dat$data <- lapply(dat$data, dataset_describe)
 
-  dat$data <- lapply(dat$data, function(dat, drop_stats) {
-    dat <- dat[!dat$stat %in% drop_stats, ]
-    if (hide_null_na) {
-      dat <- dat[!(dat$stat %in% "missing" & dat$cts < 1), ]
-    }
-    dat
-  }, drop_stats = setdiff(c("mean_sd", "median_iqr", "range"), num_stats))
+  dat$data <- lapply(
+    dat$data,
+    function(dat, drop_stats) {
+      dat <- dat[!dat$stat %in% drop_stats, ]
+      if (hide_null_na) {
+        dat <- dat[!(dat$stat %in% "missing" & dat$cts < 1), ]
+      }
+      dat
+    },
+    drop_stats = setdiff(c("mean_sd", "median_iqr", "range"), num_stats)
+  )
 
   for (i in seq_len(nrow(dat))) {
     w <- as.data.frame(dat$data[[i]])
@@ -105,7 +110,11 @@ summarizor <- function(
 
   first_levels <- c("n", "mean_sd", "median_iqr", "range")
   last_levels <- c("missing")
-  levs <- c(first_levels, setdiff(unique(dat$stat), c(first_levels, last_levels)), last_levels)
+  levs <- c(
+    first_levels,
+    setdiff(unique(dat$stat), c(first_levels, last_levels)),
+    last_levels
+  )
   labs <- levs
   dat$stat <- factor(dat$stat, levels = levs, labels = labs)
 
@@ -113,8 +122,11 @@ summarizor <- function(
   setDF(dat)
   attr(dat, "use_labels") <- list(
     stat = c(
-      stat = "", mean_sd = "Mean (SD)", median_iqr = "Median (IQR)",
-      range = "Range", missing = "Missing"
+      stat = "",
+      mean_sd = "Mean (SD)",
+      median_iqr = "Median (IQR)",
+      range = "Range",
+      missing = "Missing"
     ),
     variable = c(variable = "", unlist(list_lbls$variables_labels))
   )
@@ -155,8 +167,10 @@ as_flextable.summarizor <- function(x, ...) {
       as_chunk(
         fmt_summarizor(
           stat = !!sym("stat"),
-          num1 = !!sym("value1"), num2 = !!sym("value2"),
-          cts = !!sym("cts"), pcts = !!sym("percent")
+          num1 = !!sym("value1"),
+          num2 = !!sym("value2"),
+          cts = !!sym("cts"),
+          pcts = !!sym("percent")
         )
       )
     )
@@ -183,9 +197,20 @@ dataset_describe <- function(dataset) {
     } else if (is.numeric(x)) {
       z <- data.frame(
         stat = c("mean_sd", "median_iqr", "range", "missing"),
-        value1 = c(mean(x, na.rm = TRUE), as.double(median(x, na.rm = TRUE)), min(x, na.rm = TRUE), NA_real_),
-        value2 = c(sd(x, na.rm = TRUE), as.double(IQR(x, na.rm = TRUE)), max(x, na.rm = TRUE), NA_real_),
-        cts = NA_real_, percent = NA_real_
+        value1 = c(
+          mean(x, na.rm = TRUE),
+          as.double(median(x, na.rm = TRUE)),
+          min(x, na.rm = TRUE),
+          NA_real_
+        ),
+        value2 = c(
+          sd(x, na.rm = TRUE),
+          as.double(IQR(x, na.rm = TRUE)),
+          max(x, na.rm = TRUE),
+          NA_real_
+        ),
+        cts = NA_real_,
+        percent = NA_real_
       )
 
       z$cts[z$stat %in% "missing"] <- sum(is.na(x))
@@ -212,7 +237,7 @@ dataset_describe <- function(dataset) {
 #' @param pcts a percentage to display
 #' @param ... unused arguments
 #' @seealso [summarizor()], [tabulator()], [mk_par()]
-#' @family text formatter functions
+#' @family value formatters
 #' @examples
 #' library(flextable)
 #' z <- summarizor(iris, by = "Species")
@@ -260,7 +285,8 @@ fmt_2stats <- function(stat, num1, num2, cts, pcts, ...) {
   z_num[is_mean_sd] <- paste0(
     fmt_dbl(num1[is_mean_sd]),
     " (",
-    fmt_dbl(num2[is_mean_sd]), ")"
+    fmt_dbl(num2[is_mean_sd]),
+    ")"
   )
   z_num[is_median_iqr] <- paste0(
     fmt_dbl(num1[is_median_iqr]),
@@ -277,7 +303,8 @@ fmt_2stats <- function(stat, num1, num2, cts, pcts, ...) {
   z_cts[is_cts_2] <- paste0(
     fmt_int(cts[is_cts_2]),
     " (",
-    fmt_pct(pcts[is_cts_2]), ")"
+    fmt_pct(pcts[is_cts_2]),
+    ")"
   )
   z_cts[is_cts_1] <- fmt_int(cts[is_cts_1])
 
@@ -296,7 +323,7 @@ fmt_summarizor <- fmt_2stats
 #' @param pct percent values
 #' @param digit number of digits for the percentages
 #' @seealso [tabulator()], [mk_par()]
-#' @family text formatter functions
+#' @family value formatters
 #' @examples
 #' library(flextable)
 #'
@@ -339,7 +366,7 @@ fmt_n_percent <- function(n, pct, digit = 1) {
 #' @param newline indicates to prefix the text with a new line
 #' (sof return).
 #' @seealso [tabulator()], [mk_par()]
-#' @family text formatter functions
+#' @family value formatters
 #' @examples
 #' library(flextable)
 #'
@@ -369,7 +396,7 @@ fmt_header_n <- function(n, newline = TRUE) {
 #' @description Format numeric values as integers (no decimals).
 #' @param x numeric values
 #' @seealso [tabulator()], [mk_par()]
-#' @family text formatter functions
+#' @family value formatters
 #' @examples
 #' library(flextable)
 #'
@@ -394,7 +421,7 @@ fmt_int <- function(x) {
 #' @description Format numeric values as percentages (e.g. `"45.0%"`).
 #' @param x numeric values
 #' @seealso [tabulator()], [mk_par()]
-#' @family text formatter functions
+#' @family value formatters
 #' @examples
 #' library(flextable)
 #'
@@ -413,9 +440,13 @@ fmt_pct <- function(x) {
   pct_digits <- get_flextable_defaults()$pct_digits
   na_str <- get_flextable_defaults()$na_str
   nan_str <- get_flextable_defaults()$nan_str
-  format_fun.pct(x,
-    big.mark = big.mark, decimal.mark = decimal.mark,
-    pct_digits = pct_digits, na_str = na_str, nan_str = nan_str
+  format_fun.pct(
+    x,
+    big.mark = big.mark,
+    decimal.mark = decimal.mark,
+    pct_digits = pct_digits,
+    na_str = na_str,
+    nan_str = nan_str
   )
 }
 
@@ -425,7 +456,7 @@ fmt_pct <- function(x) {
 #' the flextable default settings for separators and precision.
 #' @param x numeric values
 #' @seealso [tabulator()], [mk_par()]
-#' @family text formatter functions
+#' @family value formatters
 #' @examples
 #' library(flextable)
 #'
@@ -445,9 +476,13 @@ fmt_dbl <- function(x) {
   na_str <- get_flextable_defaults()$na_str
   nan_str <- get_flextable_defaults()$nan_str
 
-  format_fun.double(x,
-    big.mark = big.mark, decimal.mark = decimal.mark,
-    digits = digits, na_str = na_str, nan_str = nan_str
+  format_fun.double(
+    x,
+    big.mark = big.mark,
+    decimal.mark = decimal.mark,
+    digits = digits,
+    na_str = na_str,
+    nan_str = nan_str
   )
 }
 
@@ -458,7 +493,7 @@ fmt_dbl <- function(x) {
 #' @param avg,dev mean and sd values
 #' @param digit1,digit2 number of digits to show when printing 'mean' and 'sd'.
 #' @seealso [tabulator()], [mk_par()]
-#' @family text formatter functions
+#' @family value formatters
 #' @examples
 #' library(flextable)
 #'
@@ -487,7 +522,7 @@ fmt_avg_dev <- function(avg, dev, digit1 = 1, digit2 = 1) {
 #' @param x numeric values
 #' @param digits number of digits displayed after the leading zeros
 #' @seealso [tabulator()], [mk_par()]
-#' @family text formatter functions
+#' @family value formatters
 #' @examples
 #' x <- data.frame(
 #'   x = c(0.00000004567, 2.000003456, 3, pi)
@@ -497,7 +532,6 @@ fmt_avg_dev <- function(avg, dev, digit1 = 1, digit2 = 1) {
 #' mk_par(ft_1, value = as_paragraph(
 #'   fmt_signif_after_zeros(x)))
 fmt_signif_after_zeros <- function(x, digits = 3) {
-
   na_str = flextable_global$defaults$na_str
   nan_str = flextable_global$defaults$nan_str
   decimal.mark = flextable_global$defaults$decimal.mark
@@ -520,7 +554,11 @@ fmt_signif_after_zeros <- function(x, digits = 3) {
   pos_non0[pos_non0 < 0] <- nchar(decimal_part)[pos_non0 < 0]
 
   dec_str <- substr(decimal_part, start = regex_non0, stop = pos_non0 + digits)
-  dec_str[regex_non0 < 0] <- substr(decimal_part[regex_non0 < 0], start = 1, stop = digits)
+  dec_str[regex_non0 < 0] <- substr(
+    decimal_part[regex_non0 < 0],
+    start = 1,
+    stop = digits
+  )
   which_have_dec <- grepl("[^0]", dec_str)
   dec_str[which_have_dec] <- paste0(decimal.mark, dec_str[which_have_dec])
   dec_str[!which_have_dec] <- ""
@@ -532,4 +570,3 @@ fmt_signif_after_zeros <- function(x, digits = 3) {
   out[wisnan] <- nan_str
   out
 }
-

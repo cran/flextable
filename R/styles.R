@@ -27,7 +27,7 @@
 #' defining paragraph formatting (alignment, padding, line spacing, ...).
 #' @param pr_c an [officer::fp_cell()] object defining cell formatting
 #' (background, borders, vertical alignment, ...).
-#' @family sugar functions for table style
+#' @family formatting_shortcuts
 #' @importFrom stats terms
 #' @examples
 #' library(officer)
@@ -44,13 +44,14 @@
 #'
 #' ft
 style <- function(
-    x,
-    i = NULL,
-    j = NULL,
-    pr_t = NULL,
-    pr_p = NULL,
-    pr_c = NULL,
-    part = "body") {
+  x,
+  i = NULL,
+  j = NULL,
+  pr_t = NULL,
+  pr_p = NULL,
+  pr_c = NULL,
+  part = "body"
+) {
   if (!inherits(x, "flextable")) {
     stop(sprintf("Function `%s` supports only flextable objects.", "style()"))
   }
@@ -102,6 +103,7 @@ style <- function(
       pr_p$tabs <- NULL
     }
 
+    pr_p <- cast_borders(pr_p)
     for (property in intersect(names(pr_p), names(x[[part]]$styles$pars))) {
       if (!is.null(pr_p[[property]]) && !is.na(pr_p[[property]])) {
         x[[part]]$styles$pars[[property]]$data[i, j] <- pr_p[[property]]
@@ -127,7 +129,7 @@ style <- function(
 #' @description Change the font weight of selected rows and columns of a flextable.
 #' @inheritParams args_selectors_with_all
 #' @param bold boolean value
-#' @family sugar functions for table style
+#' @family formatting_shortcuts
 #' @examples
 #' ft <- flextable(head(iris))
 #' ft <- bold(ft, bold = TRUE, part = "header")
@@ -177,7 +179,7 @@ bold <- function(x, i = NULL, j = NULL, bold = TRUE, part = "body") {
 #' @description Change the font size of selected rows and columns of a flextable.
 #' @inheritParams args_selectors_with_all
 #' @param size integer value (points)
-#' @family sugar functions for table style
+#' @family formatting_shortcuts
 #' @examples
 #' ft <- flextable(head(iris))
 #' ft <- fontsize(ft, size = 14, part = "header")
@@ -227,7 +229,7 @@ fontsize <- function(x, i = NULL, j = NULL, size = 11, part = "body") {
 #' @description Change the font decoration of selected rows and columns of a flextable.
 #' @inheritParams args_selectors_with_all
 #' @param italic boolean value
-#' @family sugar functions for table style
+#' @family formatting_shortcuts
 #' @examples
 #' ft <- flextable(head(mtcars))
 #' ft <- italic(ft, italic = TRUE, part = "header")
@@ -291,7 +293,7 @@ italic <- function(x, i = NULL, j = NULL, italic = TRUE, part = "body") {
 #' @param source if color is a function, source specifies the dataset column to be used
 #' as an argument to `color`. This is only useful when j is colored with values contained in
 #' other columns.
-#' @family sugar functions for table style
+#' @family formatting_shortcuts
 #' @examples
 #' my_color_fun <- function(x) {
 #'   out <- rep("yellow", length(x))
@@ -305,12 +307,13 @@ italic <- function(x, i = NULL, j = NULL, italic = TRUE, part = "body") {
 #' ft <- highlight(ft, j = ~ drat + wt + qsec, color = my_color_fun)
 #' ft
 highlight <- function(
-    x,
-    i = NULL,
-    j = NULL,
-    color = "yellow",
-    part = "body",
-    source = j) {
+  x,
+  i = NULL,
+  j = NULL,
+  color = "yellow",
+  part = "body",
+  source = j
+) {
   if (!inherits(x, "flextable")) {
     stop(sprintf(
       "Function `%s` supports only flextable objects.",
@@ -381,7 +384,7 @@ highlight <- function(
 #' @param source if color is a function, source specifies the dataset column to be used
 #' as an argument to `color`. This is only useful when j is colored with values contained in
 #' other columns.
-#' @family sugar functions for table style
+#' @family formatting_shortcuts
 #' @examples
 #' ft <- flextable(head(mtcars))
 #' ft <- color(ft, color = "orange", part = "header")
@@ -483,7 +486,7 @@ color <- function(x, i = NULL, j = NULL, color, part = "body", source = j) {
 #' other categories.
 #' Used only with Word and PowerPoint outputs. The default value is the value
 #' of `fontname`.
-#' @family sugar functions for table style
+#' @family formatting_shortcuts
 #' @examples
 #' library(gdtools)
 #' fontname <- "Brush Script MT"
@@ -495,14 +498,15 @@ color <- function(x, i = NULL, j = NULL, color, part = "body", source = j) {
 #'   ft_2
 #' }
 font <- function(
-    x,
-    i = NULL,
-    j = NULL,
-    fontname,
-    part = "body",
-    cs.family = fontname,
-    hansi.family = fontname,
-    eastasia.family = fontname) {
+  x,
+  i = NULL,
+  j = NULL,
+  fontname,
+  part = "body",
+  cs.family = fontname,
+  hansi.family = fontname,
+  eastasia.family = fontname
+) {
   if (!inherits(x, "flextable")) {
     stop(sprintf("Function `%s` supports only flextable objects.", "font()"))
   }
@@ -578,15 +582,17 @@ font <- function(
 #' @title Set paragraph paddings
 #' @description Change the padding of selected rows and columns of a flextable.
 #' @note
-#' Padding is not implemented in PDF due to technical infeasibility but
-#' it can be replaced with `set_table_properties(opts_pdf = list(tabcolsep = 1))`.
+#' In PDF output, only `padding.left` and `padding.right` are supported.
+#' `padding.top` and `padding.bottom` are ignored due to LaTeX limitations.
+#' Global horizontal spacing can also be set with
+#' `set_table_properties(opts_pdf = list(tabcolsep = 1))`.
 #' @inheritParams args_selectors_with_all
 #' @param padding padding (shortcut for top, bottom, left and right), unit is pts (points).
 #' @param padding.top padding top, unit is pts (points).
 #' @param padding.bottom padding bottom, unit is pts (points).
 #' @param padding.left padding left, unit is pts (points).
 #' @param padding.right padding right, unit is pts (points).
-#' @family sugar functions for table style
+#' @family formatting_shortcuts
 #' @examples
 #' ft_1 <- flextable(head(iris))
 #' ft_1 <- theme_vader(ft_1)
@@ -598,15 +604,16 @@ font <- function(
 #' ft_1 <- autofit(ft_1)
 #' ft_1
 padding <- function(
-    x,
-    i = NULL,
-    j = NULL,
-    padding = NULL,
-    padding.top = NULL,
-    padding.bottom = NULL,
-    padding.left = NULL,
-    padding.right = NULL,
-    part = "body") {
+  x,
+  i = NULL,
+  j = NULL,
+  padding = NULL,
+  padding.top = NULL,
+  padding.bottom = NULL,
+  padding.left = NULL,
+  padding.right = NULL,
+  part = "body"
+) {
   if (!inherits(x, "flextable")) {
     stop(sprintf("Function `%s` supports only flextable objects.", "padding()"))
   }
@@ -704,7 +711,7 @@ padding <- function(
 #'
 #' If the number of columns is a multiple of the length of the `align` parameter,
 #' then the values in `align` will be recycled across the remaining columns.
-#' @family sugar functions for table style
+#' @family formatting_shortcuts
 #' @examples
 #' # Table of 6 columns
 #' ft_car <- flextable(head(mtcars)[, 2:7])
@@ -725,11 +732,12 @@ padding <- function(
 #' # Alternate left and center alignment across columns 1-4 for header only
 #' align(ft_car, j = 1:4, align = c("left", "center"), part = "header")
 align <- function(
-    x,
-    i = NULL,
-    j = NULL,
-    align = "left",
-    part = c("body", "header", "footer", "all")) {
+  x,
+  i = NULL,
+  j = NULL,
+  align = "left",
+  part = c("body", "header", "footer", "all")
+) {
   if (!inherits(x, "flextable")) {
     stop(sprintf("Function `%s` supports only flextable objects.", "align()"))
   }
@@ -790,7 +798,7 @@ align <- function(
 #' @inheritParams args_selectors_without_all
 #' @param value TRUE or FALSE. When applied to a group, all rows
 #' except the last one should be flagged with the 'Keep with next' attribute.
-#' @family sugar functions for table style
+#' @family formatting_shortcuts
 #' @seealso [paginate()]
 #' @examples
 #' library(flextable)
@@ -842,7 +850,7 @@ keep_with_next <- function(x, i = NULL, value = TRUE, part = "body") {
 #' by aligning numbers properly.
 #' @inheritParams args_selectors_with_all
 #' @param value an object generated by [officer::fp_tabs()].
-#' @family sugar functions for table style
+#' @family formatting_shortcuts
 #' @examples
 #' library(officer)
 #' library(flextable)
@@ -903,7 +911,7 @@ tab_settings <- function(x, i = NULL, j = NULL, value = TRUE, part = "body") {
 #' @description Change the line spacing of selected rows and columns of a flextable.
 #' @inheritParams args_selectors_with_all
 #' @param space space between lines of text; 1 is single line spacing, 2 is double line spacing.
-#' @family sugar functions for table style
+#' @family formatting_shortcuts
 #' @examples
 #' ft <- flextable(head(mtcars)[, 3:6])
 #' ft <- line_spacing(ft, space = 1.6, part = "all")
@@ -970,10 +978,11 @@ align_text_col <- function(x, align = "left", header = TRUE, footer = TRUE) {
 #' @export
 #' @rdname align
 align_nottext_col <- function(
-    x,
-    align = "right",
-    header = TRUE,
-    footer = TRUE) {
+  x,
+  align = "right",
+  header = TRUE,
+  footer = TRUE
+) {
   which_j <- which(
     !sapply(x$body$dataset[x$col_keys], function(x) {
       is.character(x) | is.factor(x)
@@ -1010,7 +1019,7 @@ align_nottext_col <- function(
 #' @param source if bg is a function, source specifies the dataset column to be used
 #' as an argument to `bg`. This is only useful when j is colored with values contained in
 #' other columns.
-#' @family sugar functions for table style
+#' @family formatting_shortcuts
 #' @note
 #' Word does not allow you to apply transparency to table cells or paragraph shading.
 #' @examples
@@ -1106,7 +1115,7 @@ data_colors <- function(dataset, fun) {
 #' @inheritParams args_selectors_with_all
 #' @param valign vertical alignment of paragraph within cell,
 #' one of "center" or "top" or "bottom".
-#' @family sugar functions for table style
+#' @family formatting_shortcuts
 #' @examples
 #' ft_1 <- flextable(iris[c(1:3, 51:53, 101:103), ])
 #' ft_1 <- theme_box(ft_1)
@@ -1176,7 +1185,7 @@ valign <- function(x, i = NULL, j = NULL, valign = "center", part = "body") {
 #' When the [autofit()] function is used, rotation will be
 #' ignored. In that case, use [dim_pretty] and [width] instead
 #' of `autofit()`.
-#' @family sugar functions for table style
+#' @family formatting_shortcuts
 #' @examples
 #' library(flextable)
 #'
@@ -1216,12 +1225,13 @@ valign <- function(x, i = NULL, j = NULL, valign = "center", part = "body") {
 #'
 #' ft_2
 rotate <- function(
-    x,
-    i = NULL,
-    j = NULL,
-    rotation,
-    align = NULL,
-    part = "body") {
+  x,
+  i = NULL,
+  j = NULL,
+  rotation,
+  align = NULL,
+  part = "body"
+) {
   if (!inherits(x, "flextable")) {
     stop(sprintf("Function `%s` supports only flextable objects.", "rotate()"))
   }
@@ -1264,7 +1274,7 @@ rotate <- function(
 #' @inheritParams args_selectors_with_all
 #' @param width width of blank columns (.1 inch by default).
 #' @param unit unit for width, one of "in", "cm", "mm".
-#' @family sugar functions for table style
+#' @family formatting_shortcuts
 #' @examples
 #' typology <- data.frame(
 #'   col_keys = c(

@@ -4,7 +4,15 @@
 \alias{as_image}
 \title{Image chunk}
 \usage{
-as_image(src, width = NULL, height = NULL, unit = "in", guess_size = TRUE, ...)
+as_image(
+  src,
+  width = NULL,
+  height = NULL,
+  unit = "in",
+  guess_size = TRUE,
+  alt = "",
+  ...
+)
 }
 \arguments{
 \item{src}{image filename}
@@ -20,6 +28,8 @@ can be used (set it to \code{TRUE} and don't provide values for paramters
 the images will be read and width and height will be guessed. This
 should be avoid if possible as it can be an extensive task when
 several images.}
+
+\item{alt}{alternative text for the image (used for accessibility)}
 
 \item{...}{unused argument}
 }
@@ -67,24 +77,24 @@ if (require("magick")) {
 \seealso{
 \code{\link[=compose]{compose()}}, \code{\link[=as_paragraph]{as_paragraph()}}
 
-Other chunk elements for paragraph: 
-\code{\link{as_b}()},
-\code{\link{as_bracket}()},
-\code{\link{as_chunk}()},
-\code{\link{as_equation}()},
-\code{\link{as_highlight}()},
-\code{\link{as_i}()},
-\code{\link{as_qmd}()},
-\code{\link{as_strike}()},
-\code{\link{as_sub}()},
-\code{\link{as_sup}()},
-\code{\link{as_word_field}()},
-\code{\link{colorize}()},
-\code{\link{gg_chunk}()},
-\code{\link{grid_chunk}()},
-\code{\link{hyperlink_text}()},
-\code{\link{linerange}()},
-\code{\link{minibar}()},
-\code{\link{plot_chunk}()}
+Other chunk elements for paragraph:
+\code{\link[=as_b]{as_b()}},
+\code{\link[=as_bracket]{as_bracket()}},
+\code{\link[=as_chunk]{as_chunk()}},
+\code{\link[=as_equation]{as_equation()}},
+\code{\link[=as_highlight]{as_highlight()}},
+\code{\link[=as_i]{as_i()}},
+\code{\link[=as_qmd]{as_qmd()}},
+\code{\link[=as_strike]{as_strike()}},
+\code{\link[=as_sub]{as_sub()}},
+\code{\link[=as_sup]{as_sup()}},
+\code{\link[=as_word_field]{as_word_field()}},
+\code{\link[=colorize]{colorize()}},
+\code{\link[=gg_chunk]{gg_chunk()}},
+\code{\link[=grid_chunk]{grid_chunk()}},
+\code{\link[=hyperlink_text]{hyperlink_text()}},
+\code{\link[=linerange]{linerange()}},
+\code{\link[=minibar]{minibar()}},
+\code{\link[=plot_chunk]{plot_chunk()}}
 }
 \concept{chunk elements for paragraph}

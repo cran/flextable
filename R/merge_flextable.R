@@ -48,9 +48,15 @@
 #'   target = c("srdr_id", "substances")
 #' )
 #' ft_2
-#' @family flextable merging function
+#' @family cell merging functions
 #' @export
-merge_v <- function(x, j = NULL, target = NULL, part = "body", combine = FALSE) {
+merge_v <- function(
+  x,
+  j = NULL,
+  target = NULL,
+  part = "body",
+  combine = FALSE
+) {
   if (!inherits(x, "flextable")) {
     stop(sprintf("Function `%s` supports only flextable objects.", "merge_v()"))
   }
@@ -64,11 +70,15 @@ merge_v <- function(x, j = NULL, target = NULL, part = "body", combine = FALSE) 
     target <- as_col_keys(x[[part]], j, blanks = character())
   }
 
-  x[[part]] <- span_columns(x = x[[part]], columns = j, target = target, combine = combine)
+  x[[part]] <- span_columns(
+    x = x[[part]],
+    columns = j,
+    target = target,
+    combine = combine
+  )
 
   x
 }
-
 
 
 #' @title Merge flextable cells horizontally
@@ -78,15 +88,22 @@ merge_v <- function(x, j = NULL, target = NULL, part = "body", combine = FALSE) 
 #' values.
 #'
 #' @inheritParams args_x_i_part_no_all
-#' @family flextable merging function
+#' @family cell merging functions
 #' @examples
-#' dummy_df <- data.frame(
-#'   col1 = letters,
-#'   col2 = letters, stringsAsFactors = FALSE
+#' library(flextable)
+#'
+#' schedule <- data.frame(
+#'   time = c("9h", "10h", "11h", "14h", "15h", "16h"),
+#'   monday = c("Math", "Math", "French", "History", "Science", "French"),
+#'   tuesday = c("English", "Math", "Art", "Math", "Math", "French"),
+#'   wednesday = c("Science", "Math", "Science", "English", "English", "French"),
+#'   stringsAsFactors = FALSE
 #' )
-#' ft_merge <- flextable(dummy_df)
-#' ft_merge <- merge_h(x = ft_merge)
-#' ft_merge
+#'
+#' ft <- flextable(schedule)
+#' ft <- theme_box(ft)
+#' ft <- merge_h(ft)
+#' ft
 #' @export
 merge_h <- function(x, i = NULL, part = "body") {
   if (!inherits(x, "flextable")) {
@@ -106,7 +123,7 @@ merge_h <- function(x, i = NULL, part = "body") {
 #' @description Delete all merging information from a flextable.
 #'
 #' @inheritParams args_x_part
-#' @family flextable merging function
+#' @family cell merging functions
 #' @export
 #' @examples
 #' typology <- data.frame(
@@ -124,9 +141,16 @@ merge_h <- function(x, i = NULL, part = "body") {
 #' ft
 merge_none <- function(x, part = "all") {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", "merge_none()"))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      "merge_none()"
+    ))
   }
-  part <- match.arg(part, c("all", "body", "header", "footer"), several.ok = FALSE)
+  part <- match.arg(
+    part,
+    c("all", "body", "header", "footer"),
+    several.ok = FALSE
+  )
 
   if (part == "all") {
     args <- list()
@@ -141,16 +165,13 @@ merge_none <- function(x, part = "all") {
 }
 
 
-
-
-
 #' @title Merge flextable cells into a single one
 #'
 #' @description Merge flextable cells into a single one. All
 #' rows and columns must be consecutive.
 #'
 #' @inheritParams args_selectors_without_all
-#' @family flextable merging function
+#' @family cell merging functions
 #' @examples
 #' ft_merge <- flextable(head(mtcars), cwidth = .5)
 #' ft_merge <- merge_at(ft_merge, i = 1:2, j = 1:2)
@@ -158,7 +179,10 @@ merge_none <- function(x, part = "all") {
 #' @export
 merge_at <- function(x, i = NULL, j = NULL, part = "body") {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", "merge_at()"))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      "merge_at()"
+    ))
   }
   part <- match.arg(part, c("body", "header", "footer"), several.ok = FALSE)
 
@@ -180,7 +204,7 @@ merge_at <- function(x, i = NULL, j = NULL, part = "body") {
 #'
 #' @inheritParams args_x_i_part_no_all
 #' @param j1,j2 selected columns that will define the range of columns to merge.
-#' @family flextable merging function
+#' @family cell merging functions
 #' @examples
 #' ft <- flextable(head(mtcars), cwidth = .5)
 #' ft <- theme_box(ft)
@@ -190,7 +214,10 @@ merge_at <- function(x, i = NULL, j = NULL, part = "body") {
 #' @export
 merge_h_range <- function(x, i = NULL, j1 = NULL, j2 = NULL, part = "body") {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", "merge_h_range()"))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      "merge_h_range()"
+    ))
   }
   part <- match.arg(part, c("body", "header", "footer"), several.ok = FALSE)
 
@@ -203,7 +230,6 @@ merge_h_range <- function(x, i = NULL, j1 = NULL, j2 = NULL, part = "body") {
   x[[part]]$spans$rows[i, seq_cols] <- 0
   x[[part]]$spans$rows[i, j1] <- length(seq_cols)
   check_merge(x[[part]])
-
 
   x
 }

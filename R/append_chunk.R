@@ -6,7 +6,7 @@
 #' @param ... chunks to be appened, see [as_chunk()], [gg_chunk()] and other
 #' chunk elements for paragraph.
 #' @seealso [as_chunk()], [as_sup()], [as_sub()], [colorize()]
-#' @family functions for mixed content paragraphs
+#' @family cell_content_composition
 #' @examples
 #' library(flextable)
 #' img.file <- file.path(R.home("doc"), "html", "logo.jpg")
@@ -25,11 +25,12 @@
 #' ft_1
 append_chunks <- function(x, ..., i = NULL, j = NULL, part = "body") {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", "append_chunks()"))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      "append_chunks()"
+    ))
   }
-  part <- match.arg(part, c("body", "header", "footer"),
-    several.ok = FALSE
-  )
+  part <- match.arg(part, c("body", "header", "footer"), several.ok = FALSE)
 
   if (nrow_part(x, part) < 1) {
     return(x)
@@ -48,7 +49,10 @@ append_chunks <- function(x, ..., i = NULL, j = NULL, part = "body") {
     value <- eval_tidy(col_expr, data = tmp_data)
     x[[part]]$content <- append_chunkset_struct_element(
       x = x[[part]]$content,
-      i = i, j = j, chunk_data = value)
+      i = i,
+      j = j,
+      chunk_data = value
+    )
   }
 
   x
@@ -60,7 +64,7 @@ append_chunks <- function(x, ..., i = NULL, j = NULL, part = "body") {
 #' @inheritParams args_selectors_without_all
 #' @param ... chunks to be prepended, see [as_chunk()], [gg_chunk()] and other
 #' chunk elements for paragraph.
-#' @family functions for mixed content paragraphs
+#' @family cell_content_composition
 #' @examples
 #' x <- flextable(head(iris))
 #' x <- prepend_chunks(
@@ -72,11 +76,12 @@ append_chunks <- function(x, ..., i = NULL, j = NULL, part = "body") {
 #' x
 prepend_chunks <- function(x, ..., i = NULL, j = NULL, part = "body") {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", "prepend_chunks()"))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      "prepend_chunks()"
+    ))
   }
-  part <- match.arg(part, c("body", "header", "footer"),
-    several.ok = FALSE
-  )
+  part <- match.arg(part, c("body", "header", "footer"), several.ok = FALSE)
 
   if (nrow_part(x, part) < 1) {
     return(x)
@@ -94,9 +99,11 @@ prepend_chunks <- function(x, ..., i = NULL, j = NULL, part = "body") {
     value <- eval_tidy(col_expr, data = tmp_data)
     x[[part]]$content <- append_chunkset_struct_element(
       x = x[[part]]$content,
-      i = i, j = j,
+      i = i,
+      j = j,
       chunk_data = value,
-      last = FALSE)
+      last = FALSE
+    )
   }
   x
 }

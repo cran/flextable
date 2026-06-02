@@ -13,7 +13,7 @@ add_latex_dep(float = FALSE, wrapfig = FALSE)
 }
 \description{
 Manually add flextable latex dependencies to
-the knitr session via \code{\link[knitr:knit_meta]{knitr::knit_meta_add()}}.
+the knitr session via \code{\link[knitr:knit_meta_add]{knitr::knit_meta_add()}}.
 
 When enabling caching in 'R Markdown' documents for PDF output,
 the flextable cached result is used directly. Call \code{add_latex_dep()} in a
@@ -25,5 +25,11 @@ add_latex_dep()
 }
 \seealso{
 \code{\link[=knit_print.flextable]{knit_print.flextable()}}
+
+Other flextable configuration:
+\code{\link[=use_df_printer]{use_df_printer()}},
+\code{\link[=use_flextable_qmd]{use_flextable_qmd()}},
+\code{\link[=use_model_printer]{use_model_printer()}}
 }
+\concept{flextable_configuration}
 \keyword{internal}

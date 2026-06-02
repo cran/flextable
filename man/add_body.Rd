@@ -53,18 +53,23 @@ ft
 \seealso{
 \code{\link[=flextable]{flextable()}}
 
-Other functions for row and column operations in a flextable: 
-\code{\link{add_body_row}()},
-\code{\link{add_footer}()},
-\code{\link{add_footer_lines}()},
-\code{\link{add_footer_row}()},
-\code{\link{add_header}()},
-\code{\link{add_header_lines}()},
-\code{\link{add_header_row}()},
-\code{\link{delete_columns}()},
-\code{\link{delete_part}()},
-\code{\link{separate_header}()},
+Other row and column operations:
+\code{\link[=add_body_row]{add_body_row()}},
+\code{\link[=add_footer]{add_footer()}},
+\code{\link[=add_footer_lines]{add_footer_lines()}},
+\code{\link[=add_footer_row]{add_footer_row()}},
+\code{\link[=add_header]{add_header()}},
+\code{\link[=add_header_lines]{add_header_lines()}},
+\code{\link[=add_header_row]{add_header_row()}},
+\code{\link[=delete_columns]{delete_columns()}},
+\code{\link[=delete_part]{delete_part()}},
+\code{\link[=delete_rows]{delete_rows()}},
+\code{\link[=paginate]{paginate()}},
+\code{\link[=separate_header]{separate_header()}},
 \code{\link{set_header_footer_df}},
-\code{\link{set_header_labels}()}
+\code{\link[=set_header_labels]{set_header_labels()}},
+\code{\link[=split_columns]{split_columns()}},
+\code{\link[=split_rows]{split_rows()}},
+\code{\link[=split_to_pages]{split_to_pages()}}
 }
-\concept{functions for row and column operations in a flextable}
+\concept{table_structure}

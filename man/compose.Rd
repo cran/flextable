@@ -81,9 +81,12 @@ ft_2
 \seealso{
 \code{\link[=fp_text_default]{fp_text_default()}}, \code{\link[=as_chunk]{as_chunk()}}, \code{\link[=as_b]{as_b()}}, \code{\link[=as_word_field]{as_word_field()}}, \code{\link[=labelizor]{labelizor()}}
 
-Other functions for mixed content paragraphs: 
-\code{\link{append_chunks}()},
-\code{\link{as_paragraph}()},
-\code{\link{prepend_chunks}()}
+Other functions to compose cell content:
+\code{\link[=append_chunks]{append_chunks()}},
+\code{\link[=as_paragraph]{as_paragraph()}},
+\code{\link[=footnote]{footnote()}},
+\code{\link[=labelizor]{labelizor()}},
+\code{\link[=prepend_chunks]{prepend_chunks()}},
+\code{\link[=void]{void()}}
 }
-\concept{functions for mixed content paragraphs}
+\concept{cell_content_composition}

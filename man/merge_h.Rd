@@ -23,19 +23,26 @@ identical values. Text of formatted values are used to compare
 values.
 }
 \examples{
-dummy_df <- data.frame(
-  col1 = letters,
-  col2 = letters, stringsAsFactors = FALSE
+library(flextable)
+
+schedule <- data.frame(
+  time = c("9h", "10h", "11h", "14h", "15h", "16h"),
+  monday = c("Math", "Math", "French", "History", "Science", "French"),
+  tuesday = c("English", "Math", "Art", "Math", "Math", "French"),
+  wednesday = c("Science", "Math", "Science", "English", "English", "French"),
+  stringsAsFactors = FALSE
 )
-ft_merge <- flextable(dummy_df)
-ft_merge <- merge_h(x = ft_merge)
-ft_merge
+
+ft <- flextable(schedule)
+ft <- theme_box(ft)
+ft <- merge_h(ft)
+ft
 }
 \seealso{
-Other flextable merging function: 
-\code{\link{merge_at}()},
-\code{\link{merge_h_range}()},
-\code{\link{merge_none}()},
-\code{\link{merge_v}()}
+Other cell merging functions:
+\code{\link[=merge_at]{merge_at()}},
+\code{\link[=merge_h_range]{merge_h_range()}},
+\code{\link[=merge_none]{merge_none()}},
+\code{\link[=merge_v]{merge_v()}}
 }
-\concept{flextable merging function}
+\concept{cell merging functions}

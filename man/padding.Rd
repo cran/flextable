@@ -44,8 +44,10 @@ Value 'all' can be used.}
 Change the padding of selected rows and columns of a flextable.
 }
 \note{
-Padding is not implemented in PDF due to technical infeasibility but
-it can be replaced with \code{set_table_properties(opts_pdf = list(tabcolsep = 1))}.
+In PDF output, only \code{padding.left} and \code{padding.right} are supported.
+\code{padding.top} and \code{padding.bottom} are ignored due to LaTeX limitations.
+Global horizontal spacing can also be set with
+\code{set_table_properties(opts_pdf = list(tabcolsep = 1))}.
 }
 \examples{
 ft_1 <- flextable(head(iris))
@@ -59,21 +61,21 @@ ft_1 <- autofit(ft_1)
 ft_1
 }
 \seealso{
-Other sugar functions for table style: 
-\code{\link{align}()},
-\code{\link{bg}()},
-\code{\link{bold}()},
-\code{\link{color}()},
-\code{\link{empty_blanks}()},
-\code{\link{font}()},
-\code{\link{fontsize}()},
-\code{\link{highlight}()},
-\code{\link{italic}()},
-\code{\link{keep_with_next}()},
-\code{\link{line_spacing}()},
-\code{\link{rotate}()},
-\code{\link{style}()},
-\code{\link{tab_settings}()},
-\code{\link{valign}()}
+Other formatting shortcuts:
+\code{\link[=align]{align()}},
+\code{\link[=bg]{bg()}},
+\code{\link[=bold]{bold()}},
+\code{\link[=color]{color()}},
+\code{\link[=empty_blanks]{empty_blanks()}},
+\code{\link[=font]{font()}},
+\code{\link[=fontsize]{fontsize()}},
+\code{\link[=highlight]{highlight()}},
+\code{\link[=italic]{italic()}},
+\code{\link[=keep_with_next]{keep_with_next()}},
+\code{\link[=line_spacing]{line_spacing()}},
+\code{\link[=rotate]{rotate()}},
+\code{\link[=style]{style()}},
+\code{\link[=tab_settings]{tab_settings()}},
+\code{\link[=valign]{valign()}}
 }
-\concept{sugar functions for table style}
+\concept{formatting_shortcuts}

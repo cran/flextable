@@ -2,7 +2,7 @@
 % Please edit documentation in R/flextable_sizes.R
 \name{fit_to_width}
 \alias{fit_to_width}
-\title{Fit a flextable to a maximum width}
+\title{Constrain table width by shrinking font size}
 \usage{
 fit_to_width(x, max_width, inc = 1L, max_iter = 20, unit = "in")
 }
@@ -19,8 +19,12 @@ fit_to_width(x, max_width, inc = 1L, max_iter = 20, unit = "in")
 \item{unit}{unit for max_width, one of "in", "cm", "mm".}
 }
 \description{
-decrease font size for each cell incrementally until
-it fits a given max_width.
+Decrease font size incrementally until the table fits
+within \code{max_width}.
+
+To constrain width by wrapping text instead, see \code{\link[=fit_columns]{fit_columns()}}.
+To size columns to their content without a width constraint,
+see \code{\link[=autofit]{autofit()}}.
 }
 \examples{
 ft_1 <- qflextable(head(mtcars))
@@ -31,15 +35,17 @@ ft_2 <- fit_to_width(ft_1, max_width = 4)
 ft_2
 }
 \seealso{
-Other functions for flextable size management: 
-\code{\link{autofit}()},
-\code{\link{dim.flextable}()},
-\code{\link{dim_pretty}()},
-\code{\link{flextable_dim}()},
-\code{\link{height}()},
-\code{\link{hrule}()},
-\code{\link{ncol_keys}()},
-\code{\link{nrow_part}()},
-\code{\link{width}()}
+Other functions for flextable size management:
+\code{\link[=autofit]{autofit()}},
+\code{\link[=dim.flextable]{dim.flextable()}},
+\code{\link[=dim_pretty]{dim_pretty()}},
+\code{\link[=fit_columns]{fit_columns()}},
+\code{\link[=flextable_dim]{flextable_dim()}},
+\code{\link[=height]{height()}},
+\code{\link[=hrule]{hrule()}},
+\code{\link[=ncol_keys]{ncol_keys()}},
+\code{\link[=nrow_part]{nrow_part()}},
+\code{\link[=set_table_properties]{set_table_properties()}},
+\code{\link[=width]{width()}}
 }
 \concept{functions for flextable size management}

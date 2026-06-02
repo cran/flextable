@@ -5,7 +5,7 @@
 #' text columns are left aligned, other columns are
 #' right aligned.
 #' @inheritParams args_x_only
-#' @family functions related to themes
+#' @family themes_and_defaults
 #' @inheritSection theme_vanilla behavior
 #' @examples
 #' ft <- flextable(head(airquality))
@@ -13,7 +13,10 @@
 #' ft
 theme_borderless <- function(x) {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", "theme_borderless()"))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      "theme_borderless()"
+    ))
   }
   x <- border_remove(x)
   x <- bold(x = x, bold = TRUE, part = "header")
@@ -54,18 +57,27 @@ theme_borderless <- function(x) {
 #' in this case, don't forget to take care that the theme doesn't
 #' override any formatting done before the print statement.
 #' @inheritParams args_x_only
-#' @family functions related to themes
+#' @family themes_and_defaults
 #' @examples
 #' ft <- flextable(head(airquality))
 #' ft <- theme_vanilla(ft)
 #' ft
 theme_vanilla <- function(x) {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", "theme_vanilla()"))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      "theme_vanilla()"
+    ))
   }
 
-  std_b <- fp_border(width = flextable_global$defaults$border.width * 2, color = flextable_global$defaults$border.color)
-  thin_b <- fp_border(width = flextable_global$defaults$border.width, color = flextable_global$defaults$border.color)
+  std_b <- fp_border(
+    width = flextable_global$defaults$border.width * 2,
+    color = flextable_global$defaults$border.color
+  )
+  thin_b <- fp_border(
+    width = flextable_global$defaults$border.width,
+    color = flextable_global$defaults$border.color
+  )
 
   x <- border_remove(x)
 
@@ -84,7 +96,7 @@ theme_vanilla <- function(x) {
 #' @title Apply box theme
 #' @description Apply theme box to a flextable
 #' @inheritParams args_x_only
-#' @family functions related to themes
+#' @family themes_and_defaults
 #' @inheritSection theme_vanilla behavior
 #' @examples
 #' ft <- flextable(head(airquality))
@@ -92,7 +104,10 @@ theme_vanilla <- function(x) {
 #' ft
 theme_box <- function(x) {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", "theme_box()"))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      "theme_box()"
+    ))
   }
 
   x <- border_remove(x)
@@ -118,7 +133,7 @@ theme_box <- function(x) {
 #' @title Apply alafoli theme
 #' @description Apply alafoli theme
 #' @inheritParams args_x_only
-#' @family functions related to themes
+#' @family themes_and_defaults
 #' @inheritSection theme_vanilla behavior
 #' @examples
 #' ft <- flextable(head(airquality))
@@ -126,7 +141,10 @@ theme_box <- function(x) {
 #' ft
 theme_alafoli <- function(x) {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", "theme_alafoli()"))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      "theme_alafoli()"
+    ))
   }
 
   fp_bdr <- fp_border(
@@ -153,7 +171,7 @@ theme_alafoli <- function(x) {
 #' @description Apply Sith Lord Darth Vader theme to a flextable
 #' @inheritParams args_x_only
 #' @param ... unused
-#' @family functions related to themes
+#' @family themes_and_defaults
 #' @inheritSection theme_vanilla behavior
 #' @examples
 #' ft <- flextable(head(airquality))
@@ -161,7 +179,10 @@ theme_alafoli <- function(x) {
 #' ft
 theme_vader <- function(x, ...) {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", "theme_vader()"))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      "theme_vader()"
+    ))
   }
 
   x <- border_remove(x)
@@ -171,7 +192,10 @@ theme_vader <- function(x, ...) {
   x <- bold(x = x, bold = TRUE, part = "header")
   x <- italic(x = x, italic = FALSE, part = "all")
 
-  big_border <- fp_border(color = "#ff0000", width = flextable_global$defaults$border.width * 2)
+  big_border <- fp_border(
+    color = "#ff0000",
+    width = flextable_global$defaults$border.width * 2
+  )
 
   h_nrow <- nrow_part(x, "header")
   b_nrow <- nrow_part(x, "body")
@@ -198,16 +222,24 @@ theme_vader <- function(x, ...) {
 #' @description Apply theme zebra to a flextable
 #' @inheritParams args_x_only
 #' @param odd_header,odd_body,even_header,even_body odd/even colors for table header and body
-#' @family functions related to themes
+#' @family themes_and_defaults
 #' @inheritSection theme_vanilla behavior
 #' @examples
 #' ft <- flextable(head(airquality))
 #' ft <- theme_zebra(ft)
 #' ft
-theme_zebra <- function(x, odd_header = "#CFCFCF", odd_body = "#EFEFEF",
-                        even_header = "transparent", even_body = "transparent") {
+theme_zebra <- function(
+  x,
+  odd_header = "#CFCFCF",
+  odd_body = "#EFEFEF",
+  even_header = "transparent",
+  even_body = "transparent"
+) {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", "theme_zebra()"))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      "theme_zebra()"
+    ))
   }
 
   h_nrow <- nrow_part(x, "header")
@@ -250,7 +282,7 @@ theme_zebra <- function(x, odd_header = "#CFCFCF", odd_body = "#EFEFEF",
 #' @title Apply tron legacy theme
 #' @description Apply theme tron legacy to a flextable
 #' @inheritParams args_x_only
-#' @family functions related to themes
+#' @family themes_and_defaults
 #' @inheritSection theme_vanilla behavior
 #' @examples
 #' ft <- flextable(head(airquality))
@@ -258,7 +290,10 @@ theme_zebra <- function(x, odd_header = "#CFCFCF", odd_body = "#EFEFEF",
 #' ft
 theme_tron_legacy <- function(x) {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", "theme_tron_legacy()"))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      "theme_tron_legacy()"
+    ))
   }
 
   h_nrow <- nrow_part(x, "header")
@@ -266,7 +301,11 @@ theme_tron_legacy <- function(x) {
   b_nrow <- nrow_part(x, "body")
 
   x <- border(
-    x = x, border = fp_border(width = flextable_global$defaults$border.width, color = "#6FC3DF"),
+    x = x,
+    border = fp_border(
+      width = flextable_global$defaults$border.width,
+      color = "#6FC3DF"
+    ),
     part = "all"
   )
   x <- align(x = x, align = "right", part = "all")
@@ -292,7 +331,7 @@ theme_tron_legacy <- function(x) {
 #' @title Apply tron theme
 #' @description Apply theme tron to a flextable
 #' @inheritParams args_x_only
-#' @family functions related to themes
+#' @family themes_and_defaults
 #' @inheritSection theme_vanilla behavior
 #' @examples
 #' ft <- flextable(head(airquality))
@@ -300,7 +339,10 @@ theme_tron_legacy <- function(x) {
 #' ft
 theme_tron <- function(x) {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", "theme_tron()"))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      "theme_tron()"
+    ))
   }
 
   h_nrow <- nrow_part(x, "header")
@@ -308,7 +350,11 @@ theme_tron <- function(x) {
   b_nrow <- nrow_part(x, "body")
 
   x <- border(
-    x = x, border = fp_border(width = flextable_global$defaults$border.width, color = "#a4cee5"),
+    x = x,
+    border = fp_border(
+      width = flextable_global$defaults$border.width,
+      color = "#a4cee5"
+    ),
     part = "all"
   )
   x <- align(x = x, align = "right", part = "all")
@@ -336,7 +382,7 @@ theme_tron <- function(x) {
 #' @inheritParams args_x_only
 #' @param bold_header header will be bold if TRUE.
 #' @param ... unused
-#' @family functions related to themes
+#' @family themes_and_defaults
 #' @inheritSection theme_vanilla behavior
 #' @examples
 #' ft <- flextable(head(airquality))
@@ -344,14 +390,20 @@ theme_tron <- function(x) {
 #' ft
 theme_booktabs <- function(x, bold_header = FALSE, ...) {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", "theme_booktabs()"))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      "theme_booktabs()"
+    ))
   }
 
   big_border <- fp_border(
     width = flextable_global$defaults$border.width * 2,
     color = flextable_global$defaults$border.color
   )
-  std_border <- update(big_border, width = flextable_global$defaults$border.width)
+  std_border <- update(
+    big_border,
+    width = flextable_global$defaults$border.width
+  )
 
   h_nrow <- nrow_part(x, "header")
   f_nrow <- nrow_part(x, "footer")
@@ -388,7 +440,7 @@ theme_booktabs <- function(x, bold_header = FALSE, ...) {
 #'              Psychological Association) to a flextable
 #' @inheritParams args_x_only
 #' @param ... unused
-#' @family functions related to themes
+#' @family themes_and_defaults
 #' @inheritSection theme_vanilla behavior
 #' @examples
 #' ft <- flextable(head(mtcars * 22.22))
@@ -396,9 +448,16 @@ theme_booktabs <- function(x, bold_header = FALSE, ...) {
 #' ft
 theme_apa <- function(x, ...) {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", "theme_apa()"))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      "theme_apa()"
+    ))
   }
-  apa.border <- list("width" = flextable_global$defaults$border.width, color = "black", style = "solid")
+  apa.border <- list(
+    "width" = flextable_global$defaults$border.width,
+    color = "black",
+    style = "solid"
+  )
   x <- font(x, part = "all", fontname = "Times New Roman")
   x <- line_spacing(x, space = 2, part = "all")
   x <- hline_top(x, part = "head", border = apa.border)

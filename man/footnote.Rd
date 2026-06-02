@@ -114,3 +114,13 @@ ft_3 <- footnote(
 )
 ft_3
 }
+\seealso{
+Other functions to compose cell content:
+\code{\link[=append_chunks]{append_chunks()}},
+\code{\link[=as_paragraph]{as_paragraph()}},
+\code{\link[=compose]{compose()}},
+\code{\link[=labelizor]{labelizor()}},
+\code{\link[=prepend_chunks]{prepend_chunks()}},
+\code{\link[=void]{void()}}
+}
+\concept{cell_content_composition}

@@ -101,6 +101,7 @@
 #' ft_4
 #' @seealso [flextable()], [as_flextable()], [autofit()],
 #' [knit_print.flextable()]
+#' @family functions for flextable size management
 set_table_properties <- function(
   x,
   layout = "fixed",
@@ -268,7 +269,11 @@ opts_ft_pdf <- function(
   }
   if (!is.logical(caption_repeat) || length(caption_repeat) != 1) {
     stop(
-      sprintf("'%s' is expected to be a single %s.", "caption_repeat", "logical"),
+      sprintf(
+        "'%s' is expected to be a single %s.",
+        "caption_repeat",
+        "logical"
+      ),
       call. = FALSE
     )
   }

@@ -1,3 +1,47 @@
+# flextable 0.9.12
+
+## issues
+
+- PDF/LaTeX cell fonts are now selected with `\fontspec` instead of
+`\global\setmainfont`. The latter re-ran the math font machinery on every
+cell, which could exhaust LaTeX math alphabets and break compilation when a
+document contained many equations before the table (#636).
+- `dim_pretty()` height estimates now account for line spacing and
+border widths.
+- `padding.left` and `padding.right` are now supported in PDF/LaTeX output.
+- `delete_rows()` and `delete_columns()` no longer reset all spans
+unconditionally. `span_free()` is now only triggered when the
+deletion actually breaks a merged cell, preserving existing
+merge structures in all other cases.
+- fix Shadow DOM handling for paged.js contexts, again
+- Image chunks (`as_image()`, `colformat_image()`, `plot_chunk()`, `gg_chunk()`,
+`grid_chunk()`) gain an `alt` parameter for alternative text. Alt text is 
+rendered in DOCX (`descr` attribute) and HTML (`alt` attribute) output.
+
+## new features
+
+- new function `fit_columns()` constrains total table width by shrinking
+  columns proportionally. Text wraps inside narrower cells; font sizes are
+  unchanged. Columns that cannot shrink below their longest word are clamped
+  at that floor and remaining space is iteratively redistributed among
+  unclamped columns. A `no_wrap` argument lets specific columns keep their
+  optimal width.
+- function `paginate()` gains a new option `"starts"` for argument `group_def`.
+  When used, `group` is an integer vector of body row indices where new groups
+  begin; page breaks are allowed before these rows.
+- New functions `split_columns()` and `split_rows()` to split a flextable
+  into a list of flextables that fit within a given width or height.
+  `split_columns()` accepts column names, indices, or formulas for `rep_cols`,
+  allowing users to choose which columns to repeat and in what order.
+  `split_rows()` supports a `group` argument to keep row groups together
+  across pages; header and footer are repeated on every page.
+- new function `split_to_pages()` combines `split_rows()` and `split_columns()`
+  in a single call for convenient two-dimensional pagination.
+- new method `as_flextable()` for 'rtables' `TableTree` and `ElementaryTable`
+  objects. The conversion maps formatted content, column spans, alignments,
+  indentation and footnotes to flextable features. Use `split_to_pages()` on
+  the result for pagination.
+
 # flextable 0.9.11
 
 ## new features
@@ -45,6 +89,10 @@ and be simplified.
 
 ## Issues
 
+- fix Shadow DOM handling for paged.js contexts (e.g. pagedown):
+tables marked with `no-shadow-dom` are no longer moved into a
+Shadow DOM, restoring visibility when the document contains
+LaTeX equations (pagedown#332).
 - line breaks (`\n`) in captions now render correctly in PDF/LaTeX
 output (#663).
 - images in google docs should now be sized as expected

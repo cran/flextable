@@ -2,6 +2,7 @@
 #' @title Add flextable into a Word document
 #' @description Add a flextable into a Word document
 #' created with 'officer'.
+#' @family officer_integration
 #'
 #' @details
 #' Use the [paginate()] function to define whether the table should
@@ -95,12 +96,15 @@
 #' \dontshow{
 #' init_flextable_defaults()
 #' }
-body_add_flextable <- function(x, value,
-                               align = NULL,
-                               pos = "after",
-                               split = NULL,
-                               topcaption = TRUE,
-                               keepnext = NULL) {
+body_add_flextable <- function(
+  x,
+  value,
+  align = NULL,
+  pos = "after",
+  split = NULL,
+  topcaption = TRUE,
+  keepnext = NULL
+) {
   stopifnot(
     inherits(x, "rdocx"),
     inherits(value, "flextable")
@@ -149,6 +153,7 @@ body_add_flextable <- function(x, value,
 
 #' @export
 #' @title Add flextable at bookmark location in a Word document
+#' @family officer_integration
 #' @description
 #' Use this function if you want to replace a paragraph containing
 #' a bookmark with a flextable. As a side effect, the bookmark will be lost.
@@ -160,9 +165,20 @@ body_add_flextable <- function(x, value,
 #' option 'Allow row to break across pages'.
 #' @importFrom officer cursor_bookmark
 #' @importFrom xml2 as_xml_document
-body_replace_flextable_at_bkm <- function(x, bookmark, value, align = "center", split = FALSE) {
+body_replace_flextable_at_bkm <- function(
+  x,
+  bookmark,
+  value,
+  align = "center",
+  split = FALSE
+) {
   x <- cursor_bookmark(x, bookmark)
-  x <- body_add_flextable(x = x, value = value, pos = "on", align = align, split = split)
+  x <- body_add_flextable(
+    x = x,
+    value = value,
+    pos = "on",
+    align = align,
+    split = split
+  )
   x
 }
-

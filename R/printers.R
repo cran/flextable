@@ -12,12 +12,16 @@
 #' @param ft.shadow deprecated.
 #' @param extra_dependencies a list of HTML dependencies to
 #' add in the HTML output.
-#' @family flextable print function
+#' @family flextable_output_export
 #' @examples
 #' htmltools_value(flextable(iris[1:5, ]))
 #' @importFrom htmltools tagList attachDependencies tags
-htmltools_value <- function(x, ft.align = NULL, ft.shadow = NULL,
-                            extra_dependencies = NULL) {
+htmltools_value <- function(
+  x,
+  ft.align = NULL,
+  ft.shadow = NULL,
+  extra_dependencies = NULL
+) {
   x <- flextable_global$defaults$post_process_all(x)
   x <- flextable_global$defaults$post_process_html(x)
   x <- fix_border_issues(x)
@@ -42,7 +46,8 @@ htmltools_value <- function(x, ft.align = NULL, ft.shadow = NULL,
       x = tags$style(""),
       list_deps
     ),
-    HTML(gen_raw_html(x,
+    HTML(gen_raw_html(
+      x,
       class = "tabwid",
       caption = caption,
       manual_css = manual_css
@@ -67,7 +72,7 @@ htmltools_value <- function(x, ft.align = NULL, ft.shadow = NULL,
 #' See [knit_print.flextable] for more details.
 #' @inheritParams args_x_only
 #' @param ... unused argument
-#' @family flextable print function
+#' @family flextable_output_export
 #' @examples
 #' \dontrun{
 #' library(rmarkdown)
@@ -99,18 +104,20 @@ flextable_to_rmd <- function(x, ...) {
   }
 
   writeLines(
-    c("```{r echo=FALSE}",
-      "x", "```", ""),
+    c("```{r echo=FALSE}", "x", "```", ""),
     tmp_file,
-    useBytes = TRUE)
+    useBytes = TRUE
+  )
 
   z <- knit_child(
     input = tmp_file,
     options = list(
-      fig.path=tempfile(),
+      fig.path = tempfile(),
       eval = isTRUE(knitr::opts_current$get("eval"))
     ),
-    envir = environment(), quiet = TRUE)
+    envir = environment(),
+    quiet = TRUE
+  )
 
   cat(z, sep = '\n')
 
@@ -128,7 +135,7 @@ flextable_to_rmd <- function(x, ...) {
 #' containing HTML code of an image tag, otherwise, the
 #' result will be a string containing HTML code of
 #' a table tag.
-#' @family flextable print function
+#' @family flextable_output_export
 #' @examples
 #' library(officer)
 #' library(flextable)
@@ -145,8 +152,16 @@ to_html.flextable <- function(x, type = c("table", "img"), ...) {
     x <- flextable_global$defaults$post_process_all(x)
     x <- flextable_global$defaults$post_process_html(x)
     x <- fix_border_issues(x)
-    manual_css <- readLines(system.file(package = "flextable", "web_1.1.3", "tabwid.css"), encoding = "UTF-8")
-    gen_raw_html(x, class = "tabwid", caption = "", manual_css = paste0(manual_css, collapse = "\n"))
+    manual_css <- readLines(
+      system.file(package = "flextable", "web_1.1.3", "tabwid.css"),
+      encoding = "UTF-8"
+    )
+    gen_raw_html(
+      x,
+      class = "tabwid",
+      caption = "",
+      manual_css = paste0(manual_css, collapse = "\n")
+    )
   } else {
     tmp <- tempfile(fileext = ".png")
 
@@ -160,7 +175,8 @@ to_html.flextable <- function(x, type = c("table", "img"), ...) {
       filename = tmp,
       width = dims$width + expand / 72,
       height = dims$height + expand / 72,
-      res = 200, units = "in",
+      res = 200,
+      units = "in",
       background = "transparent"
     )
 
@@ -175,7 +191,12 @@ to_html.flextable <- function(x, type = c("table", "img"), ...) {
 
     base64_string <- image_to_base64(tmp)
 
-    sprintf("<img style=\"width:%.3fin;height:%.3fin;\" src=\"%s\" />", width, height, base64_string)
+    sprintf(
+      "<img style=\"width:%.3fin;height:%.3fin;\" src=\"%s\" />",
+      width,
+      height,
+      base64_string
+    )
   }
 }
 
@@ -217,7 +238,8 @@ knit_to_html <- function(x, bookdown = FALSE, quarto = FALSE) {
     manual_css <- attr(caption_str, "css")
   }
 
-  table_str <- gen_raw_html(x,
+  table_str <- gen_raw_html(
+    x,
     caption = caption_str,
     topcaption = topcaption,
     manual_css = manual_css
@@ -237,14 +259,16 @@ knit_to_wml <- function(x, bookdown = FALSE, quarto = FALSE) {
   x <- flextable_global$defaults$post_process_docx(x)
   x <- fix_border_issues(x)
 
-  for(part in c("body", "header", "footer")) {
+  for (part in c("body", "header", "footer")) {
     if (nrow_part(x, part) > 0L) {
       x[[part]]$styles$pars$word_style$data[,] <- NA_character_
     }
   }
 
   is_rdocx_document <- opts_current$get("is_rdocx_document")
-  if (is.null(is_rdocx_document)) is_rdocx_document <- FALSE
+  if (is.null(is_rdocx_document)) {
+    is_rdocx_document <- FALSE
+  }
 
   tab_props <- opts_current_table()
   topcaption <- tab_props$topcaption
@@ -374,10 +398,19 @@ knit_to_latex <- function(x, bookdown, quarto = FALSE) {
   z <- paste(
     "\\global\\setlength{\\Oldarrayrulewidth}{\\arrayrulewidth}",
     "\\global\\setlength{\\Oldtabcolsep}{\\tabcolsep}",
-    sprintf("\\setlength{\\tabcolsep}{%spt}", format_double(x$properties$opts_pdf$tabcolsep, 0)),
-    sprintf("\\renewcommand*{\\arraystretch}{%s}", format_double(x$properties$opts_pdf$arraystretch, 2)),
+    sprintf(
+      "\\setlength{\\tabcolsep}{%spt}",
+      format_double(x$properties$opts_pdf$tabcolsep, 0)
+    ),
+    sprintf(
+      "\\renewcommand*{\\arraystretch}{%s}",
+      format_double(x$properties$opts_pdf$arraystretch, 2)
+    ),
     latex,
-    sprintf("\\arrayrulecolor[HTML]{%s}", colcode0(x$properties$opts_pdf$default_line_color)),
+    sprintf(
+      "\\arrayrulecolor[HTML]{%s}",
+      colcode0(x$properties$opts_pdf$default_line_color)
+    ),
     "\\global\\setlength{\\arrayrulewidth}{\\Oldarrayrulewidth}",
     "\\global\\setlength{\\tabcolsep}{\\Oldtabcolsep}",
     "\\renewcommand*{\\arraystretch}{1}",
@@ -432,7 +465,7 @@ knit_to_pml <- function(x) {
 #' When `"log"` is used, a description of the flextable is printed.
 #' @param align left, center (default) or right. Only for docx/html/pdf.
 #' @param ... arguments for 'pdf_document' call when preview is "pdf".
-#' @family flextable print function
+#' @family flextable_output_export
 #' @importFrom utils browseURL str
 #' @importFrom rmarkdown render pdf_document
 #' @importFrom officer read_pptx add_slide read_docx
@@ -465,7 +498,10 @@ print.flextable <- function(x, preview = "html", align = "center", ...) {
     browseURL(file_out)
   } else if (preview == "pdf") {
     rmd <- tempfile(fileext = ".Rmd")
-    cat(sprintf("```{r echo=FALSE, ft.align=\"%s\"}\nx\n```\n", align), file = rmd)
+    cat(
+      sprintf("```{r echo=FALSE, ft.align=\"%s\"}\nx\n```\n", align),
+      file = rmd
+    )
     render(rmd, output_format = pdf_document(...), quiet = TRUE)
     file_out <- gsub("\\.Rmd$", ".pdf", rmd)
     browseURL(file_out)
@@ -473,7 +509,6 @@ print.flextable <- function(x, preview = "html", align = "center", ...) {
 
   invisible(NULL)
 }
-
 
 
 #' @title Render flextable in knitr documents
@@ -578,11 +613,24 @@ print.flextable <- function(x, preview = "html", align = "center", ...) {
 #' bold/italic, links, math, inline code and shortcodes.
 #' See [as_qmd()] and [use_flextable_qmd()] for setup instructions.
 #'
+#' @section PDF accessibility (PDF/UA-2):
+#'
+#' Quarto's `pdf-standard: ua-2` injects `\DocumentMetadata{tagging=on}`
+#' in the LaTeX preamble, activating 'tagpdf'.
+#' This code patches LaTeX commands at compile time to insert
+#' PDF structure tags. Neither Quarto nor flextable control this process.
+#'
+#' The tagging code does not yet support `longtable` + `colortbl`,
+#' `booktabs` rules, and `cline`, which flextable relies on. Compilation
+#' fails with `\ERRORtbl/row`. When these upstream issues are resolved,
+#' flextable PDF output will support tagging without changes. Other formats are
+#' not affected.
+#'
 #' @section PDF limitations:
 #'
 #' The following properties are not supported in PDF output:
-#' padding, `line_spacing` and row `height`. Justified text is
-#' converted to left-aligned.
+#' `padding.top`, `padding.bottom`, `line_spacing` and row `height`.
+#' Justified text is converted to left-aligned.
 #'
 #' To use system fonts, set `latex_engine: xelatex` in the YAML
 #' header (the default `pdflatex` engine does not support them).
@@ -605,12 +653,11 @@ print.flextable <- function(x, preview = "html", align = "center", ...) {
 #' @export
 #' @importFrom utils getFromNamespace
 #' @importFrom htmltools HTML div
-#' @importFrom knitr knit_print asis_output opts_knit opts_current
-#' fig_path is_html_output is_latex_output include_graphics pandoc_to
+#' @importFrom knitr knit_print asis_output opts_knit opts_current fig_path is_html_output is_latex_output include_graphics pandoc_to
 #' @importFrom rmarkdown pandoc_version
 #' @importFrom stats runif
 #' @importFrom graphics plot par
-#' @family flextable print function
+#' @family flextable_output_export
 #' @seealso [set_caption()], [as_qmd()], [use_flextable_qmd()],
 #' [paginate()]
 #' @examples
@@ -640,32 +687,40 @@ knit_print.flextable <- function(x, ...) {
   if (is.null(pandoc_to())) {
     str <- to_html(x, type = "table")
     str <- asis_output(str)
-  } else if (!is.null(getOption("xaringan.page_number.offset"))) { # xaringan
+  } else if (!is.null(getOption("xaringan.page_number.offset"))) {
+    # xaringan
     str <- knit_to_html(x, bookdown = FALSE, quarto = FALSE)
     str <- asis_output(str, meta = html_dependencies_list(x))
-  } else if(is_html_output(excludes = "gfm") && isTRUE(knitr::opts_knit$get("is.paged.js"))) {
+  } else if (
+    is_html_output(excludes = "gfm") &&
+      isTRUE(knitr::opts_knit$get("is.paged.js"))
+  ) {
     x$properties$opts_html$extra_class <- c(
       x$properties$opts_html$extra_class,
       "no-shadow-dom"
     )
     str <- knit_to_html(x, bookdown = FALSE, quarto = is_quarto)
     str <- raw_html(str, meta = html_dependencies_list(x))
-  } else if (is_html_output(excludes = "gfm")) { # html
+  } else if (is_html_output(excludes = "gfm")) {
+    # html
     str <- knit_to_html(x, bookdown = is_bookdown, quarto = is_quarto)
     str <- raw_html(str, meta = html_dependencies_list(x))
-  } else if (is_latex_output()) { # latex
+  } else if (is_latex_output()) {
+    # latex
     str <- knit_to_latex(x, bookdown = is_bookdown, quarto = is_quarto)
     str <- raw_latex(
       x = str,
       meta = unname(list_latex_dep(float = TRUE, wrapfig = TRUE))
     )
-  } else if (grepl("docx", opts_knit$get("rmarkdown.pandoc.to"))) { # docx
+  } else if (grepl("docx", opts_knit$get("rmarkdown.pandoc.to"))) {
+    # docx
     if (pandoc_version() < numeric_version("2")) {
       stop("pandoc version >= 2 required for printing flextable in docx")
     }
     str <- knit_to_wml(x, bookdown = is_bookdown, quarto = is_quarto)
     str <- asis_output(str)
-  } else if (grepl("pptx", opts_knit$get("rmarkdown.pandoc.to"))) { # pptx
+  } else if (grepl("pptx", opts_knit$get("rmarkdown.pandoc.to"))) {
+    # pptx
     if (pandoc_version() < numeric_version("2.4")) {
       stop("pandoc version >= 2.4 required for printing flextable in pptx")
     }
@@ -717,11 +772,15 @@ knit_print.flextable <- function(x, ...) {
 #'   )
 #'   # browseURL(tf2)
 #' }
-#' @family flextable print function
+#' @family flextable_output_export
 #' @importFrom htmltools save_html
-save_as_html <- function(..., values = NULL, path,
-                         lang = "en",
-                         title = "&#32;") {
+save_as_html <- function(
+  ...,
+  values = NULL,
+  path,
+  lang = "en",
+  title = "&#32;"
+) {
   if (is.null(values)) {
     values <- list(...)
   }
@@ -741,13 +800,16 @@ save_as_html <- function(..., values = NULL, path,
   values <- do.call(htmltools::tagList, values)
 
   is_succes <- render_htmltag(
-    x = values, path = absolute_path(path), title = title,
+    x = values,
+    path = absolute_path(path),
+    title = title,
     lang = lang
   )
-  if (!is_succes) stop("could not write the file ", shQuote(path))
+  if (!is_succes) {
+    stop("could not write the file ", shQuote(path))
+  }
   invisible(path)
 }
-
 
 
 #' @export
@@ -776,7 +838,7 @@ save_as_html <- function(..., values = NULL, path,
 #' ft2 <- flextable(head(mtcars))
 #' tf <- tempfile(fileext = ".pptx")
 #' save_as_pptx(`iris table` = ft1, `mtcars table` = ft2, path = tf)
-#' @family flextable print function
+#' @family flextable_output_export
 save_as_pptx <- function(..., values = NULL, path) {
   if (is.null(values)) {
     values <- list(...)
@@ -796,7 +858,6 @@ save_as_pptx <- function(..., values = NULL, path) {
   print(z, target = path)
   invisible(path)
 }
-
 
 
 #' @export
@@ -833,11 +894,16 @@ save_as_pptx <- function(..., values = NULL, path) {
 #'   `iris table` = ft1, `mtcars table` = ft2,
 #'   path = tf, pr_section = sect_properties
 #' )
-#' @family flextable print function
+#' @family flextable_output_export
 #' @seealso [paginate()]
-#' @importFrom officer body_add_par prop_section body_set_default_section
-#'   page_size page_mar
-save_as_docx <- function(..., values = NULL, path, pr_section = NULL, align = "center") {
+#' @importFrom officer body_add_par prop_section body_set_default_section page_size page_mar
+save_as_docx <- function(
+  ...,
+  values = NULL,
+  path,
+  pr_section = NULL,
+  align = "center"
+) {
   if (is.null(values)) {
     values <- list(...)
   }
@@ -883,7 +949,7 @@ save_as_docx <- function(..., values = NULL, path, pr_section = NULL, align = "c
 #' @param pr_section a [officer::prop_section] object that can be used to define page
 #' layout such as orientation, width and height.
 #' @return a string containing the full name of the generated file
-#' @family flextable print function
+#' @family flextable_output_export
 #' @seealso [paginate()]
 #' @examples
 #'
@@ -936,11 +1002,20 @@ save_as_rtf <- function(..., values = NULL, path, pr_section = NULL) {
 
   for (i in seq_along(values)) {
     if (show_names) {
-      z <- rtf_add(z,
+      z <- rtf_add(
+        z,
         value = fpar(
           titles[i],
-          fp_p = fp_par(text.align = "left", padding.top = 6, padding.bottom = 6),
-          fp_t = fp_text_lite(bold = TRUE, font.size = 18, font.family = "Arial")
+          fp_p = fp_par(
+            text.align = "left",
+            padding.top = 6,
+            padding.bottom = 6
+          ),
+          fp_t = fp_text_lite(
+            bold = TRUE,
+            font.size = 18,
+            font.family = "Arial"
+          )
         )
       )
     }
@@ -949,7 +1024,6 @@ save_as_rtf <- function(..., values = NULL, path, pr_section = NULL) {
   print(z, target = path)
   invisible(path)
 }
-
 
 
 #' @export
@@ -982,17 +1056,24 @@ save_as_rtf <- function(..., values = NULL, path, pr_section = NULL) {
 #' save_as_image(x = ft, path = tf)
 #'
 #' init_flextable_defaults()
-#' @family flextable print function
+#' @family flextable_output_export
 #' @importFrom ragg agg_png agg_capture
 save_as_image <- function(x, path, expand = 10, res = 200, ...) {
   if (!inherits(x, "flextable")) {
-    stop(sprintf("Function `%s` supports only flextable objects.", as.character(sys.call()[[1]])))
+    stop(sprintf(
+      "Function `%s` supports only flextable objects.",
+      as.character(sys.call()[[1]])
+    ))
   }
 
   file_ext_pos <- regexpr("\\.([[:alnum:]]+)$", path)
   file_ext <- substring(path, file_ext_pos + 1L)
 
-  file_ext <- match.arg(tolower(file_ext), choices = c("png", "svg"), several.ok = FALSE)
+  file_ext <- match.arg(
+    tolower(file_ext),
+    choices = c("png", "svg"),
+    several.ok = FALSE
+  )
 
   gr <- gen_grob(x, fit = "fixed", just = "center")
   dims <- dim(gr)
@@ -1002,14 +1083,16 @@ save_as_image <- function(x, path, expand = 10, res = 200, ...) {
       filename = path,
       width = dims$width + expand / 72,
       height = dims$height + expand / 72,
-      res = res, units = "in",
+      res = res,
+      units = "in",
       background = "transparent"
     )
   } else if (file_ext %in% "svg") {
     if (!requireNamespace("svglite", quietly = TRUE)) {
       stop(sprintf(
         "'%s' package should be installed to save a flextable in a '%s' image.",
-        "svglite", "svg"
+        "svglite",
+        "svg"
       ))
     }
     svglite::svglite(
@@ -1060,7 +1143,7 @@ save_as_image <- function(x, path, expand = 10, res = 200, ...) {
 #' plot(as.raster(raster))
 #' init_flextable_defaults()
 #' }
-#' @family flextable print function
+#' @family flextable_output_export
 #' @importFrom grid grid.newpage grid.draw viewport pushViewport popViewport
 plot.flextable <- function(x, ...) {
   grid.newpage()
@@ -1078,7 +1161,9 @@ plot.flextable <- function(x, ...) {
 # utils ----
 is_in_bookdown <- function() {
   is_rdocx_document <- opts_current$get("is_rdocx_document")
-  if (is.null(is_rdocx_document)) is_rdocx_document <- FALSE
+  if (is.null(is_rdocx_document)) {
+    is_rdocx_document <- FALSE
+  }
 
   isTRUE(opts_knit$get("bookdown.internal.label")) &&
     isTRUE(!is_rdocx_document)
@@ -1109,7 +1194,10 @@ knitr_update_properties <- function(x, bookdown = FALSE, quarto = FALSE) {
   ft.split <- opts_current$get("ft.split")
   ft.tabcolsep <- opts_current$get("ft.tabcolsep")
   ft.arraystretch <- opts_current$get("ft.arraystretch")
-  ft.latex.float <- mcoalesce_options(opts_current$get("ft.latex.float"), opts_current$get("ft-latex-float"))
+  ft.latex.float <- mcoalesce_options(
+    opts_current$get("ft.latex.float"),
+    opts_current$get("ft-latex-float")
+  )
   ft.left <- opts_current$get("ft.left")
   ft.top <- opts_current$get("ft.top")
   ft.htmlscroll <- opts_current$get("ft.htmlscroll")
@@ -1145,14 +1233,17 @@ knitr_update_properties <- function(x, bookdown = FALSE, quarto = FALSE) {
     caption = knitr_tab_opts$cap,
     word_stylename = knitr_tab_opts$cap.style
   )
-  if (has_caption(x) &&
-    !has_autonum(x) &&
-    !is.null(knitr_tab_opts$id)) {
+  if (
+    has_caption(x) &&
+      !has_autonum(x) &&
+      !is.null(knitr_tab_opts$id)
+  ) {
     autonum <- run_autonum(
       seq_id = gsub(":$", "", knitr_tab_opts$tab.lp),
       pre_label = knitr_tab_opts$cap.pre,
       post_label = knitr_tab_opts$cap.sep,
-      bkm = knitr_tab_opts$id, bkm_all = FALSE,
+      bkm = knitr_tab_opts$id,
+      bkm_all = FALSE,
       tnd = knitr_tab_opts$cap.tnd,
       tns = knitr_tab_opts$cap.tns,
       prop = knitr_tab_opts$cap.fp_text

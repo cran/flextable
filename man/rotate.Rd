@@ -90,21 +90,21 @@ ft_2 <- valign(ft_2, i = 3, valign = "bottom")
 ft_2
 }
 \seealso{
-Other sugar functions for table style: 
-\code{\link{align}()},
-\code{\link{bg}()},
-\code{\link{bold}()},
-\code{\link{color}()},
-\code{\link{empty_blanks}()},
-\code{\link{font}()},
-\code{\link{fontsize}()},
-\code{\link{highlight}()},
-\code{\link{italic}()},
-\code{\link{keep_with_next}()},
-\code{\link{line_spacing}()},
-\code{\link{padding}()},
-\code{\link{style}()},
-\code{\link{tab_settings}()},
-\code{\link{valign}()}
+Other formatting shortcuts:
+\code{\link[=align]{align()}},
+\code{\link[=bg]{bg()}},
+\code{\link[=bold]{bold()}},
+\code{\link[=color]{color()}},
+\code{\link[=empty_blanks]{empty_blanks()}},
+\code{\link[=font]{font()}},
+\code{\link[=fontsize]{fontsize()}},
+\code{\link[=highlight]{highlight()}},
+\code{\link[=italic]{italic()}},
+\code{\link[=keep_with_next]{keep_with_next()}},
+\code{\link[=line_spacing]{line_spacing()}},
+\code{\link[=padding]{padding()}},
+\code{\link[=style]{style()}},
+\code{\link[=tab_settings]{tab_settings()}},
+\code{\link[=valign]{valign()}}
 }
-\concept{sugar functions for table style}
+\concept{formatting_shortcuts}
