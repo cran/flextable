@@ -156,37 +156,36 @@ to_html.flextable <- function(x, type = c("table", "img"), ...) {
       system.file(package = "flextable", "web_1.1.3", "tabwid.css"),
       encoding = "UTF-8"
     )
-    gen_raw_html(
+    str <- gen_raw_html(
       x,
       class = "tabwid",
       caption = "",
       manual_css = paste0(manual_css, collapse = "\n")
     )
+    # `to_html()` returns a standalone string that does not carry html
+    # dependencies; like `tabwid.css` above, the KaTeX stylesheet (math
+    # fonts, issue #622) must travel inline with the markup.
+    if (has_equation(x)) {
+      katex_link <- katex_css_link()
+      if (!is.null(katex_link)) {
+        str <- paste0(katex_link, str)
+      }
+    }
+    str
   } else {
-    tmp <- tempfile(fileext = ".png")
-
     gr <- gen_grob(x, fit = "fixed", just = "center")
     dims <- dim(gr)
     expand <- 10
     width <- dims$width + expand / 72
     height <- dims$height + expand / 72
 
-    agg_png(
-      filename = tmp,
-      width = dims$width + expand / 72,
-      height = dims$height + expand / 72,
+    tmp <- plot_in_png(
+      code = plot(gr),
+      width = width,
+      height = height,
       res = 200,
       units = "in",
-      background = "transparent"
-    )
-
-    tryCatch(
-      {
-        plot(gr)
-      },
-      finally = {
-        dev.off()
-      }
+      path = tempfile(fileext = ".png")
     )
 
     base64_string <- image_to_base64(tmp)
@@ -268,6 +267,24 @@ knit_to_wml <- function(x, bookdown = FALSE, quarto = FALSE) {
   is_rdocx_document <- opts_current$get("is_rdocx_document")
   if (is.null(is_rdocx_document)) {
     is_rdocx_document <- FALSE
+  }
+
+  # images and hyperlinks are referenced by file path/URL in the raw
+  # OOXML; only officer can register them in the docx package (when the
+  # docx is written or re-written by officer). When pandoc writes the
+  # final file (Quarto `format: docx`, rmarkdown `word_document`), the
+  # references stay unresolved and Word refuses to open the document
+  # (#711).
+  if (!is_rdocx_document && (has_raster(x) || has_hlink(x))) {
+    warning(
+      "This flextable contains images or hyperlinks and the document ",
+      "is not post-processed by officer: the resulting 'docx' file ",
+      "will be invalid. Use `officedown::rdocx_document()` ",
+      "(R Markdown) or repair the file after rendering with ",
+      "`flextable::repair_docx()` (with Quarto, call it from a ",
+      "post-render script).",
+      call. = FALSE
+    )
   }
 
   tab_props <- opts_current_table()
@@ -440,6 +457,26 @@ knit_to_pml <- function(x) {
   with_openxml_quotes(str)
 }
 
+#' @noRd
+#' @title flextable Typst string
+#' @description get Typst raw code from a flextable object, to be
+#' embedded in a Quarto document rendered with `format: typst`.
+knit_to_typst <- function(x, bookdown = FALSE, quarto = FALSE) {
+  x <- flextable_global$defaults$post_process_all(x)
+  x <- fix_border_issues(x)
+
+  str <- gen_raw_typst(x)
+
+  # equations rely on the mitex Typst package; emit the import once,
+  # right before a table that contains at least one equation. Users can
+  # also declare it in the document preamble.
+  if (has_equation(x)) {
+    str <- paste0("#import \"@preview/mitex:0.2.7\": *\n", str)
+  }
+
+  str
+}
+
 #' @importFrom htmltools HTML browsable
 #' @export
 #' @title Print a flextable
@@ -516,9 +553,10 @@ print.flextable <- function(x, preview = "html", align = "center", ...) {
 #' a flextable in R Markdown and Quarto documents. You do not need to call
 #' it directly.
 #'
-#' Supported output formats: HTML, Word (docx), PDF and PowerPoint (pptx).
-#' For other formats (e.g., `github_document`, `beamer_presentation`),
-#' the table is rendered as a PNG image.
+#' Supported output formats: HTML, Word (docx), PDF, PowerPoint (pptx) and
+#' Typst (`format: typst`, Quarto only). For other formats (e.g.,
+#' `github_document`, `beamer_presentation`), the table is rendered as a
+#' PNG image.
 #'
 #' @section Getting started:
 #'
@@ -606,7 +644,8 @@ print.flextable <- function(x, preview = "html", align = "center", ...) {
 #'
 #' @section Quarto:
 #'
-#' flextable works natively in Quarto documents for HTML, PDF and Word.
+#' flextable works natively in Quarto documents for HTML, PDF, Word and
+#' Typst.
 #'
 #' The `flextable-qmd` Lua filter extension enables Quarto markdown
 #' inside flextable cells: cross-references (`@tbl-xxx`, `@fig-xxx`),
@@ -726,6 +765,10 @@ knit_print.flextable <- function(x, ...) {
     }
     str <- knit_to_pml(x)
     str <- asis_output(str)
+  } else if (grepl("typst", opts_knit$get("rmarkdown.pandoc.to"))) {
+    # typst (Quarto `format: typst`)
+    str <- knit_to_typst(x, bookdown = is_bookdown, quarto = is_quarto)
+    str <- raw_block(str, "typst")
   } else {
     plot_counter <- getFromNamespace("plot_counter", "knitr")
     in_base_dir <- getFromNamespace("in_base_dir", "knitr")
@@ -939,6 +982,99 @@ save_as_docx <- function(
 }
 
 #' @export
+#' @title Repair flextables in a 'Word' document produced by 'pandoc'
+#' @description
+#' Word documents produced by Quarto (`format: docx`) or by
+#' `rmarkdown::word_document()` are written by 'pandoc', which copies the
+#' raw OOXML of flextable objects verbatim: images and hyperlinks are
+#' left as unresolved references (file paths and URLs instead of
+#' relationship identifiers) and **Word refuses to open the file**.
+#'
+#' This function reads such a document and rewrites it with the package
+#' 'officer', whose writer resolves these references: images and SVG
+#' files are embedded, hyperlinks are registered, and the other
+#' officer-flavored contents are processed as well (sections, footnotes,
+#' comments, custom style names, list markers, documents poured with
+#' `officer::block_pour_docx()`).
+#'
+#' It is not needed when the document is produced with
+#' `officedown::rdocx_document()` or [save_as_docx()], where the file is
+#' already written by 'officer'.
+#'
+#' @section What to do with Quarto:
+#'
+#' The repair must run after `quarto render`. Quarto can do it for you
+#' with a *post-render script*, but this can **only** be declared in a
+#' `_quarto.yml` file - the `project:` key is ignored in the YAML header
+#' of a `.qmd` file.
+#'
+#' 1. Next to your `.qmd` file, create a file `_quarto.yml` containing:
+#'
+#' ```yaml
+#' project:
+#'   post-render: repair.R
+#' ```
+#'
+#' 2. In the same directory, create the file `repair.R` containing:
+#'
+#' ```r
+#' files <- strsplit(Sys.getenv("QUARTO_PROJECT_OUTPUT_FILES"), "\n")[[1]]
+#' for (f in files[grepl("\\.docx$", files, ignore.case = TRUE)]) {
+#'   flextable::repair_docx(f)
+#' }
+#' ```
+#'
+#' 3. Render as usual, either the whole project (`quarto render`) or a
+#' single file (`quarto render doc.qmd`); the script runs in both cases
+#' and only processes the files that were rendered.
+#'
+#' Without a `_quarto.yml`, call `repair_docx("doc.docx")` manually
+#' after each render.
+#'
+#' @section What to do with R Markdown:
+#'
+#' Prefer `officedown::rdocx_document()` as output format: the file is
+#' post-processed by 'officer' and no repair is needed. With
+#' `rmarkdown::word_document()`, call
+#' `repair_docx()` on the output file after `rmarkdown::render()`.
+#'
+#' @section Requirements and limits:
+#'
+#' - The images referenced in the document must still exist, at paths
+#' resolvable **from the directory where `repair_docx()` runs**: a
+#' Quarto post-render script runs at the project root, so images
+#' referenced with paths relative to a sub-directory document will not
+#' be found - use absolute paths (e.g. `here::here()`) in that case.
+#' - Mini graphics generated by [minibar()], [linerange()],
+#' [gg_chunk()], [plot_chunk()] and [grid_chunk()] are written to
+#' temporary 'PNG' files that no longer exist once rendering has
+#' completed: **these can not be repaired afterwards**. With Quarto or
+#' `rmarkdown::word_document()`, use image files you manage yourself
+#' ([as_image()], [colformat_image()]); mini graphics require
+#' `officedown::rdocx_document()` or [save_as_docx()].
+#' - When a referenced image can not be found, the rewrite fails with
+#' an error `cannot open the connection` and a warning naming the
+#' missing file.
+#'
+#' @param path path of the 'docx' file to repair. The file is modified
+#' in place unless `target` is provided.
+#' @param target path of the resulting 'docx' file. Defaults to `path`.
+#' @return the path of the repaired file, invisibly.
+#' @examples
+#' \dontrun{
+#' repair_docx("document.docx")
+#' }
+#' @family flextable_output_export
+repair_docx <- function(path, target = path) {
+  if (!file.exists(path) || !grepl("\\.docx$", path, ignore.case = TRUE)) {
+    stop("`path` must be an existing 'docx' file.", call. = FALSE)
+  }
+  z <- read_docx(path)
+  print(z, target = target)
+  invisible(target)
+}
+
+#' @export
 #' @title Save flextable objects in an 'RTF' file
 #' @description sugar function to save flextable objects in an 'RTF' file.
 #' @param ... flextable objects, objects, possibly named. If named objects, names are
@@ -1079,13 +1215,13 @@ save_as_image <- function(x, path, expand = 10, res = 200, ...) {
   dims <- dim(gr)
 
   if (file_ext %in% "png") {
-    agg_png(
-      filename = path,
+    plot_in_png(
+      code = base::plot(gr),
       width = dims$width + expand / 72,
       height = dims$height + expand / 72,
       res = res,
       units = "in",
-      background = "transparent"
+      path = path
     )
   } else if (file_ext %in% "svg") {
     if (!requireNamespace("svglite", quietly = TRUE)) {
@@ -1101,16 +1237,15 @@ save_as_image <- function(x, path, expand = 10, res = 200, ...) {
       height = dims$height + expand / 72,
       bg = "transparent"
     )
+    tryCatch(
+      {
+        base::plot(gr)
+      },
+      finally = {
+        dev.off()
+      }
+    )
   }
-
-  tryCatch(
-    {
-      base::plot(gr)
-    },
-    finally = {
-      dev.off()
-    }
-  )
 
   path
 }

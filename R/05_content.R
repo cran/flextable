@@ -478,7 +478,9 @@ as_bracket <- function(..., sep = ", ", p = "(", s = ")") {
 #'
 #' @note
 #' This chunk option requires package officedown in a R Markdown
-#' context with Word output format.
+#' context with Word output format. With Quarto (`format: docx`) or
+#' `rmarkdown::word_document()`, the resulting file must be repaired
+#' with [repair_docx()].
 #' @inheritParams as_chunk
 #' @param url url to be used
 #' @seealso [compose()]
@@ -605,7 +607,7 @@ as_equation <- function(x, width = 1, height = .2, unit = "in", props = NULL) {
 #' numbers, dates, cross-references) as a chunk inside a
 #' flextable cell. Field codes are Word's mechanism for
 #' auto-computed values; see
-#' [Microsoft's field-code reference](https://support.microsoft.com/en-us/office/list-of-field-codes-in-word-1ad6d91a-55a7-4a8d-b535-cf7888659a51)
+#' [Microsoft's field-code reference](https://support.microsoft.com/en-US/Word/list-of-field-codes-in-word)
 #' for the available codes.
 #'
 #' The chunk is used with [compose()], [append_chunks()]
@@ -766,7 +768,7 @@ to_wml_word_field <- function(x, pr_txt) {
 #' The chunk is used with [compose()], [append_chunks()]
 #' or [prepend_chunks()]. It requires the `flextable-qmd` Lua
 #' filter extension (see [use_flextable_qmd()]) and works with
-#' HTML, PDF and Word (docx) Quarto output formats.
+#' HTML, PDF, Typst and Word (docx) Quarto output formats.
 #'
 #' @section Setup:
 #'
@@ -857,8 +859,8 @@ as_qmd <- function(x, display = x) {
 #' flextable) into the `_extensions/` directory of a
 #' Quarto project. The extension provides Lua filters
 #' that resolve Quarto markdown content produced by
-#' [as_qmd()] inside flextable cells for HTML, PDF
-#' and Word (docx) output formats.
+#' [as_qmd()] inside flextable cells for HTML, PDF,
+#' Typst and Word (docx) output formats.
 #'
 #' After installation, add the filter to your document
 #' or project YAML:
@@ -868,10 +870,14 @@ as_qmd <- function(x, display = x) {
 #'   - flextable-qmd
 #' ```
 #'
+#' This single filter is all that is required for HTML,
+#' PDF and Typst (`format: typst`) output.
+#'
 #' For Word (docx) output with labelled flextable chunks
 #' (e.g. `#| label: tbl-xxx`), add the post-render filter
 #' to remove the wrapper table Quarto creates around the
-#' flextable:
+#' flextable (this extra filter is not needed for Typst,
+#' where the table is embedded directly in the figure):
 #'
 #' ```yaml
 #' filters:

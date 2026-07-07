@@ -1,3 +1,18 @@
+# note_docx_images -----
+
+#' @title internal utils for roxygen tags reuse
+#' @note
+#' This chunk option requires package officedown in a R Markdown
+#' context with Word output format. With Quarto (`format: docx`) or
+#' `rmarkdown::word_document()`, the resulting file must be repaired
+#' with [repair_docx()].
+#'
+#' PowerPoint cannot mix images and text in a paragraph, images
+#' are removed when outputing to PowerPoint format.
+#' @name note_docx_images
+#' @keywords internal
+NULL
+
 #' @importFrom grDevices as.raster
 #' @export
 #' @title Image chunk
@@ -22,12 +37,7 @@
 #' @param alt alternative text for the image (used for accessibility)
 #' @param ... unused argument
 #' @family chunk elements for paragraph
-#' @note
-#' This chunk option requires package officedown in a R Markdown
-#' context with Word output format.
-#'
-#' PowerPoint cannot mix images and text in a paragraph, images
-#' are removed when outputing to PowerPoint format.
+#' @inherit note_docx_images note
 #' @seealso [compose()], [as_paragraph()]
 #' @examples
 #' img.file <- file.path(
@@ -109,12 +119,7 @@ as_image <- function(
 #' @param width,height size of the resulting png file in inches
 #' @param unit unit for width and height, one of "in", "cm", "mm".
 #' @param alt alternative text for the image (used for accessibility)
-#' @note
-#' This chunk option requires package officedown in a R Markdown
-#' context with Word output format.
-#'
-#' PowerPoint cannot mix images and text in a paragraph, images
-#' are removed when outputing to PowerPoint format.
+#' @inherit note_docx_images note
 #' @family chunk elements for paragraph
 #' @examples
 #' ft <- flextable(head(iris, n = 10))
@@ -211,12 +216,7 @@ minibar <- function(
 #' @param alt alternative text for the image (used for accessibility)
 #' @param raster_width number of pixels used as width
 #' when interpolating value.
-#' @note
-#' This chunk option requires package officedown in a R Markdown
-#' context with Word output format.
-#'
-#' PowerPoint cannot mix images and text in a paragraph, images
-#' are removed when outputing to PowerPoint format.
+#' @inherit note_docx_images note
 #' @family chunk elements for paragraph
 #' @examples
 #' myft <- flextable(head(iris, n = 10))
@@ -325,12 +325,7 @@ linerange <- function(
 #' @param unit unit for width and height, one of "in", "cm", "mm".
 #' @param alt alternative text for the image (used for accessibility)
 #' @param ... arguments sent to plot functions (see [par()])
-#' @note
-#' This chunk option requires package officedown in a R Markdown
-#' context with Word output format.
-#'
-#' PowerPoint cannot mix images and text in a paragraph, images
-#' are removed when outputing to PowerPoint format.
+#' @inherit note_docx_images note
 #' @family chunk elements for paragraph
 #' @examples
 #' library(data.table)
@@ -400,41 +395,41 @@ plot_chunk <- function(
 
   files <- mapply(
     function(x, width, height, type) {
-      file <- tempfile(fileext = ".png")
-      agg_png(
-        filename = file,
+      # pointsize = 12 matches agg_png's previous default (plot_in_png uses 11)
+      plot_in_png(
+        code = {
+          par(mar = rep(0, 4))
+          parcall <- params
+
+          if ("box" %in% type) {
+            parcall$x <- x
+            parcall$horizontal <- TRUE
+            parcall$ylim <- lims
+            do.call(boxplot, parcall)
+          } else if ("line" %in% type) {
+            parcall$x <- seq_along(x)
+            parcall$y <- x
+            parcall$type <- "l"
+            parcall$ylim <- lims
+            do.call(plot, parcall)
+          } else if ("points" %in% type) {
+            parcall$x <- seq_along(x)
+            parcall$y <- x
+            parcall$ylim <- lims
+            do.call(plot, parcall)
+          } else if ("density" %in% type) {
+            parcall$x <- density(x)
+            parcall$xlim <- lims
+            do.call(plot, parcall)
+          }
+        },
         width = width,
         height = height,
         res = 200,
         units = "in",
-        background = "transparent"
+        pointsize = 12,
+        path = tempfile(fileext = ".png")
       )
-      par(mar = rep(0, 4))
-      parcall <- params
-
-      if ("box" %in% type) {
-        parcall$x <- x
-        parcall$horizontal <- TRUE
-        parcall$ylim <- lims
-        do.call(boxplot, parcall)
-      } else if ("line" %in% type) {
-        parcall$x <- seq_along(x)
-        parcall$y <- x
-        parcall$type <- "l"
-        parcall$ylim <- lims
-        do.call(plot, parcall)
-      } else if ("points" %in% type) {
-        parcall$x <- seq_along(x)
-        parcall$y <- x
-        parcall$ylim <- lims
-        do.call(plot, parcall)
-      } else if ("density" %in% type) {
-        parcall$x <- density(x)
-        parcall$xlim <- lims
-        do.call(plot, parcall)
-      }
-      dev.off()
-      file
     },
     x = value,
     width = width,
@@ -471,12 +466,7 @@ plot_chunk <- function(
 #' @param unit unit for width and height, one of "in", "cm", "mm".
 #' @param res resolution of the png image in ppi
 #' @param alt alternative text for the image (used for accessibility)
-#' @note
-#' This chunk option requires package officedown in a R Markdown
-#' context with Word output format.
-#'
-#' PowerPoint cannot mix images and text in a paragraph, images
-#' are removed when outputing to PowerPoint format.
+#' @inherit note_docx_images note
 #' @family chunk elements for paragraph
 #' @examples
 #' library(data.table)
@@ -528,18 +518,14 @@ gg_chunk <- function(
 
   files <- mapply(
     function(x, width, height) {
-      file <- tempfile(fileext = ".png")
-      agg_png(
-        filename = file,
+      plot_in_png(
+        ggobj = x,
         width = width,
         height = height,
         units = "in",
-        background = "transparent",
-        res = res
+        res = res,
+        path = tempfile(fileext = ".png")
       )
-      print(x)
-      dev.off()
-      file
     },
     x = value,
     width = width,
@@ -574,12 +560,7 @@ gg_chunk <- function(
 #' @param unit unit for width and height, one of "in", "cm", "mm".
 #' @param res resolution of the png image in ppi
 #' @param alt alternative text for the image (used for accessibility)
-#' @note
-#' This chunk option requires package officedown in a R Markdown
-#' context with Word output format.
-#'
-#' PowerPoint cannot mix images and text in a paragraph, images
-#' are removed when outputing to PowerPoint format.
+#' @inherit note_docx_images note
 #' @family chunk elements for paragraph
 #' @examples
 #' library(flextable)
@@ -622,18 +603,14 @@ grid_chunk <- function(
   height <- as.double(rep(height, length(value)))
   files <- mapply(
     function(x, width, height) {
-      file <- tempfile(fileext = ".png")
-      agg_png(
-        filename = file,
+      plot_in_png(
+        code = grid::grid.draw(x),
         width = width,
         height = height,
         units = "in",
-        background = "transparent",
-        res = res
+        res = res,
+        path = tempfile(fileext = ".png")
       )
-      grid::grid.draw(x)
-      dev.off()
-      file
     },
     x = value,
     width = width,

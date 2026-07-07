@@ -1,7 +1,7 @@
 Type: Package
 Package: flextable
 Title: Functions for Tabular Reporting
-Version: 0.9.12
+Version: 0.10.0
 Authors@R: c(
     person("David", "Gohel", , "david.gohel@ardata.fr", role = c("aut", "cre")),
     person("ArData", role = "cph"),
@@ -21,10 +21,10 @@ Authors@R: c(
     person("Keith", "Newman", role = "ctb")
   )
 Description: Use a grammar for creating and customizing pretty tables.
-    The following formats are supported: 'HTML', 'PDF', 'RTF', 'Microsoft
-    Word', 'Microsoft PowerPoint', R 'Grid Graphics' and 'patchwork'.
-    'R Markdown', 'Quarto' and the package 'officer' can be used to
-    produce the result files. The syntax is the same for the user
+    The following formats are supported: 'HTML', 'PDF', 'Typst', 'RTF',
+    'Microsoft Word', 'Microsoft PowerPoint', R 'Grid Graphics' and
+    'patchwork'.  'R Markdown', 'Quarto' and the package 'officer' can be
+    used to produce the result files. The syntax is the same for the user
     regardless of the type of output to be produced. A set of functions
     allows the creation, definition of cell arrangement, addition of
     headers or footers, formatting and definition of cell content with
@@ -36,20 +36,20 @@ URL: https://ardata-fr.github.io/flextable-book/,
         https://davidgohel.github.io/flextable/
 BugReports: https://github.com/davidgohel/flextable/issues
 Imports: data.table (>= 1.13.0), gdtools (>= 0.5.0), graphics,
-        grDevices, grid, htmltools, knitr, officer (>= 0.7.3), ragg,
+        grDevices, grid, htmltools, knitr, officer (>= 0.7.5), ragg,
         rlang, rmarkdown (>= 2.0), stats, utils, uuid (>= 0.1-4), xml2
-Suggests: bookdown (>= 0.40), broom, broom.mixed, formatters, chromote,
-        cluster, commonmark, doconv (>= 0.3.0), equatags, ggplot2,
+Suggests: bookdown (>= 0.40), broom, broom.mixed, chromote, cluster,
+        commonmark, doconv (>= 0.3.0), equatags, formatters, ggplot2,
         gtable, jsonlite, lme4, magick, mgcv, nlme, officedown,
         patchwork, pdftools, pkgdown (>= 2.0.0), rtables, scales,
         svglite, tables (>= 0.9.17), testthat (>= 3.0.0), webshot2,
         withr, xtable
 VignetteBuilder: knitr
+Config/roxygen2/version: 8.0.0
 Config/testthat/edition: 3
 Encoding: UTF-8
-Config/roxygen2/version: 8.0.0
 NeedsCompilation: no
-Packaged: 2026-06-02 05:37:13 UTC; davidgohel
+Packaged: 2026-07-07 08:49:11 UTC; davidgohel
 Author: David Gohel [aut, cre],
   ArData [cph],
   Clementine Jager [ctb],
@@ -67,4 +67,4 @@ Author: David Gohel [aut, cre],
   Keith Newman [ctb]
 Maintainer: David Gohel <david.gohel@ardata.fr>
 Repository: CRAN
-Date/Publication: 2026-06-02 07:00:02 UTC
+Date/Publication: 2026-07-07 11:00:02 UTC

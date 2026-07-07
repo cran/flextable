@@ -124,11 +124,6 @@ runs_as_html <- function(x, chunk_data = information_data_chunk(x)) {
         )
       )
     ]
-    katex_link <- "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://cdn.jsdelivr.net/npm/katex@0.15.2/dist/katex.min.css\" data-external=\"1\">"
-    spans_dataset[
-      which(runs_types_lst$is_equation == TRUE)[1],
-      c("txt") := list(paste0(katex_link, .SD$txt))
-    ]
   }
 
   setorderv(spans_dataset, cols = order_columns)
@@ -683,19 +678,18 @@ add_raster_as_filecolumn <- function(x, is_raster) {
   files <- mapply(
     function(x, width, height, alt) {
       if (inherits(x, "raster")) {
-        file <- tempfile(fileext = ".png")
-        agg_png(
-          filename = file,
-          units = "in",
-          res = 300,
-          background = "transparent",
+        file <- plot_in_png(
+          code = {
+            op <- par(mar = rep(0, 4))
+            plot(x, interpolate = FALSE, asp = NA)
+            par(op)
+          },
           width = width,
-          height = height
+          height = height,
+          res = 300,
+          units = "in",
+          path = tempfile(fileext = ".png")
         )
-        op <- par(mar = rep(0, 4))
-        plot(x, interpolate = FALSE, asp = NA)
-        par(op)
-        dev.off()
       } else if (is.character(x)) {
         file <- x
       } else {
