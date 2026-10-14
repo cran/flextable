@@ -16,7 +16,7 @@ test_that("with html_document", {
   unlink(html_file, force = TRUE)
   render(
     rmd_file,
-    output_format = rmarkdown::html_document(),
+    output_format = rmarkdown::html_document(mathjax = NULL),
     output_file = html_file,
     envir = new.env(),
     quiet = TRUE
@@ -54,7 +54,7 @@ test_that("with html_document2", {
   unlink(html_file, force = TRUE)
   render(
     rmd_file,
-    output_format = bookdown::html_document2(keep_md = FALSE),
+    output_format = bookdown::html_document2(keep_md = FALSE, mathjax = NULL),
     output_file = html_file,
     envir = new.env(),
     quiet = TRUE
@@ -123,7 +123,7 @@ test_that("with word_document", {
 
   bookmarks <- xml_find_all(
     doc,
-    "//w:tbl/preceding-sibling::w:p[1]/w:bookmarkStart"
+    "//w:tbl/preceding-sibling::w:p[1][w:pPr/w:pStyle[@w:val='TableCaption']]/w:bookmarkStart"
   )
   expect_length(bookmarks, 0)
 })
@@ -165,9 +165,15 @@ test_that("with word_document2", {
 
   bookmarks <- xml_find_all(
     doc,
-    "//w:tbl/preceding-sibling::w:p[1]/w:bookmarkStart"
+    "//w:tbl/preceding-sibling::w:p[1][w:pPr/w:pStyle[@w:val='TableCaption']]/w:bookmarkStart"
   )
   expect_length(bookmarks, 3)
+
+  bookmarks <- xml_find_all(
+    doc,
+    "//w:tbl/following-sibling::w:p[1][w:pPr/w:pStyle[@w:val='TableCaption']]/w:bookmarkStart"
+  )
+  expect_length(bookmarks, 1)
 })
 
 
