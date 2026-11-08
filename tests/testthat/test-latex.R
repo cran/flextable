@@ -363,3 +363,101 @@ test_that("padding.left and padding.right produce advance leftskip/rightskip in 
     1L
   )
 })
+
+test_that("padding.top and padding.bottom produce vertical spacing in latex", {
+  ft <- flextable(data.frame(a = c("hello", "world"), b = 1:2))
+  ft <- padding(ft, padding.top = 0, padding.bottom = 0, part = "all")
+  ft <- padding(ft, i = 1, j = 1, padding.top = 8)
+  ft <- padding(ft, i = 2, j = 1, padding.bottom = 6)
+  ft <- valign(ft, i = 2, j = 2, valign = "top")
+  ft <- padding(ft, i = 2, j = 2, padding.top = 4)
+
+  # opt-in: nothing by default
+  latex_str <- flextable:::gen_raw_latex(ft)
+  expect_no_match(latex_str, "vspace*", fixed = TRUE)
+  expect_no_match(latex_str, "vrule width0pt", fixed = TRUE)
+
+  ft <- set_table_properties(ft, opts_pdf = list(padding_vertical = TRUE))
+  latex_str <- flextable:::gen_raw_latex(ft)
+
+  # top padding, centered cell
+  expect_match(latex_str, "\\vspace*{\\dimexpr 8.0pt\\relax}", fixed = TRUE)
+  # top padding, top-aligned cell: the array strut height is removed
+  expect_match(
+    latex_str,
+    "\\vspace*{\\dimexpr 4.0pt-\\ht\\csname @arstrutbox\\endcsname\\relax}",
+    fixed = TRUE
+  )
+  # bottom padding deepens the last line
+  expect_match(
+    latex_str,
+    "\\vrule width0pt depth\\dimexpr\\dp\\csname @arstrutbox\\endcsname+6.0pt\\relax}",
+    fixed = TRUE
+  )
+  # nothing for null paddings
+  expect_equal(
+    length(gregexpr("vspace\\*", latex_str, perl = TRUE)[[1]]),
+    2L
+  )
+  expect_equal(
+    length(gregexpr("vrule width0pt", latex_str, perl = TRUE)[[1]]),
+    1L
+  )
+
+  # autofit layout: no vertical padding
+  ft <- set_table_properties(
+    ft,
+    layout = "autofit",
+    opts_pdf = list(padding_vertical = TRUE)
+  )
+  latex_str <- flextable:::gen_raw_latex(ft)
+  expect_no_match(latex_str, "vspace*", fixed = TRUE)
+  expect_no_match(latex_str, "vrule width0pt", fixed = TRUE)
+})
+
+test_that("padding_vertical option is validated and has a default", {
+  ft <- flextable(head(iris))
+  expect_false(ft$properties$opts_pdf$padding_vertical)
+  expect_error(
+    set_table_properties(ft, opts_pdf = list(padding_vertical = "yes")),
+    "padding_vertical"
+  )
+  init_flextable_defaults()
+  set_flextable_defaults(padding_vertical = TRUE)
+  on.exit(init_flextable_defaults())
+  ft <- flextable(head(iris))
+  expect_true(ft$properties$opts_pdf$padding_vertical)
+})
+
+test_that("knitr_output_path() writes in the directory of the document", {
+  withr::defer(knitr::opts_knit$restore())
+  knitr::opts_knit$set(output.dir = NULL, base.dir = NULL)
+  expect_equal(flextable:::knitr_output_path("figure/a.png"), "figure/a.png")
+
+  knitr::opts_knit$set(output.dir = "/doc/dir")
+  expect_equal(
+    flextable:::knitr_output_path(c("figure/a.png", "/abs/b.png")),
+    c("/doc/dir/figure/a.png", "/abs/b.png")
+  )
+  knitr::opts_knit$set(base.dir = "/base/dir")
+  expect_equal(
+    flextable:::knitr_output_path("figure/a.png"),
+    "/base/dir/figure/a.png"
+  )
+})
+
+test_that("latex images are written in the output directory, not in root.dir", {
+  out_dir <- withr::local_tempdir()
+  root_dir <- withr::local_tempdir()
+  withr::local_dir(root_dir)
+  withr::defer(knitr::opts_knit$restore())
+  knitr::opts_knit$set(output.dir = out_dir, base.dir = NULL)
+
+  img <- file.path(R.home("doc"), "html", "logo.jpg")
+  str <- flextable:::img_to_latex(img, width = 1, height = 1)
+  path <- sub("^.*\\{(.*)\\}$", "\\1", str)
+
+  expect_false(grepl(out_dir, str, fixed = TRUE))
+  expect_true(file.exists(file.path(out_dir, path)))
+  expect_false(file.exists(file.path(root_dir, path)))
+})

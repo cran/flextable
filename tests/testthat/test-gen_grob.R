@@ -173,3 +173,132 @@ test_that("grid with raster", {
   expect_s3_class(gr$children[[11]]$children$contents$ftgrobs[[2]], "text")
   expect_s3_class(gr$children[[12]]$children$contents$ftgrobs[[1]], "text")
 })
+
+test_that("a word wider than its cell starts on a new line, then is split", {
+  skip_if_not_installed("ragg")
+  # the drawn lines of the only body cell: the first label is the header
+  cell_lines <- function(text) {
+    ft <- flextable(data.frame(x = text))
+    ft <- width(ft, j = 1, width = 1.5)
+    gr <- gen_grob(ft, fit = "fixed", wrapping = TRUE, autowidths = FALSE)
+    find_labels <- function(x) {
+      labels <- if (inherits(x, "text")) as.character(x$label)
+      c(labels, unlist(lapply(x$children, find_labels), use.names = FALSE))
+    }
+    ragg::agg_png(withr::local_tempfile(fileext = ".png"))
+    on.exit(grDevices::dev.off())
+    grid::grid.draw(gr)
+    find_labels(grid::grid.force(gr))[-1]
+  }
+  long <- strrep("abcdefghij", 6)
+
+  lines <- cell_lines(paste("short", long, "end"))
+  expect_identical(lines[1], "short ")
+  expect_gt(nchar(lines[2]), 1L)
+  expect_identical(paste(lines[-1], collapse = ""), paste(long, "end"))
+
+  # the word comes first: there is no empty line above it
+  lines <- cell_lines(long)
+  expect_gt(length(lines), 1L)
+  expect_gt(nchar(lines[1]), 1L)
+  expect_identical(paste(lines, collapse = ""), long)
+
+  # a word that fits is not moved or split differently
+  expect_identical(cell_lines("ab cd"), "ab cd")
+})
+
+test_that("line breaks give the expected lines", {
+  count_lines <- function(text, width = 3, wrapping = TRUE) {
+    ft <- flextable(data.frame(x = text))
+    ft <- width(ft, j = 1, width = width)
+    gr <- gen_grob(
+      ft,
+      fit = "fixed",
+      wrapping = wrapping,
+      autowidths = !wrapping
+    )
+    find_contents <- function(x) {
+      if (!is.null(x$ftgrobs)) {
+        return(list(x))
+      }
+      unlist(lapply(x$children, find_contents), recursive = FALSE)
+    }
+    max(vapply(find_contents(gr), function(z) length(z$children), integer(1)))
+  }
+  for (wrapping in c(TRUE, FALSE)) {
+    expect_equal(count_lines("a\nb", wrapping = wrapping), 2L)
+    expect_equal(count_lines("\na", wrapping = wrapping), 2L)
+    expect_equal(count_lines("a\n", wrapping = wrapping), 1L)
+    # consecutive line breaks give empty lines
+    expect_equal(count_lines("a\n\nb", wrapping = wrapping), 3L)
+    expect_equal(count_lines("a\n\n\nb", wrapping = wrapping), 4L)
+    expect_equal(count_lines("\n\na", wrapping = wrapping), 3L)
+    expect_equal(count_lines("a\n\n", wrapping = wrapping), 2L)
+    expect_equal(count_lines("a\nb\n\nc", wrapping = wrapping), 4L)
+    expect_equal(count_lines("a\n \nb", wrapping = wrapping), 3L)
+  }
+  # a line break just after a wrapped line does not add an empty line
+  expect_equal(count_lines("word word word word \nb", width = .5), 5L)
+  expect_equal(count_lines("word word word word\n\nb", width = .5), 6L)
+  long_word <- strrep("a", 30)
+  n <- count_lines(paste0(long_word, "\nb"), width = .5)
+  expect_equal(count_lines(paste0(long_word, "\n\nb"), width = .5), n + 1L)
+})
+
+test_that("cells with empty lines can be drawn", {
+  ft <- flextable(data.frame(x = "a\n\nb"))
+  gr <- gen_grob(ft, fit = "fixed")
+  png <- withr::local_tempfile(fileext = ".png")
+  ragg::agg_png(png, width = 2, height = 2, units = "in", res = 72)
+  expect_no_error(grid::grid.draw(gr))
+  grDevices::dev.off()
+})
+
+test_that("the height of a line does not depend on its text", {
+  gdtools::font_set_liberation()
+  text_height <- function(text) {
+    ft <- flextable(data.frame(x = text))
+    ft <- font(ft, fontname = "Liberation Sans", part = "all")
+    ft <- padding(ft, padding = 0, part = "all")
+    gen_grob(ft, fit = "fixed")$ftpar$heights[2]
+  }
+  one_line <- vapply(c("xxx", "Hello", "Mg", "(N=86)"), text_height, numeric(1))
+  expect_length(unique(round(one_line, 6)), 1L)
+
+  # an empty line has the height of a line of text
+  expect_equal(text_height("a\nb"), 2 * text_height("a"), tolerance = 1e-6)
+  expect_equal(text_height("a\n\nb"), 3 * text_height("a"), tolerance = 1e-6)
+})
+
+test_that("tables with a single cell can be drawn", {
+  one_cell <- delete_part(flextable(data.frame(x = "a")), part = "header")
+  merged <- merge_at(
+    delete_part(flextable(data.frame(x = "a", y = "b")), part = "header"),
+    i = 1,
+    j = 1:2
+  )
+  image <- compose(
+    one_cell,
+    j = 1,
+    value = as_paragraph(as_image(
+      src = file.path(R.home("doc"), "html", "logo.jpg"),
+      width = .3,
+      height = .2
+    ))
+  )
+  png <- withr::local_tempfile(fileext = ".png")
+  ragg::agg_png(png, width = 2, height = 2, units = "in", res = 72)
+  on.exit(grDevices::dev.off(), add = TRUE)
+
+  for (ft in list(one_cell, merged, image)) {
+    expect_no_error(grid::grid.draw(gen_grob(ft, fit = "fixed")))
+  }
+
+  # the background is kept, with or without a fill
+  fill_of <- function(ft) {
+    gen_grob(ft, fit = "fixed")$children[[1]]$children$background$gp$fill
+  }
+  expect_null(fill_of(one_cell))
+  expect_equal(fill_of(bg(one_cell, bg = "yellow")), "yellow")
+  expect_equal(fill_of(bg(merged, bg = "yellow")), "yellow")
+})

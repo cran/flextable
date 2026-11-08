@@ -37,7 +37,11 @@ participate in alignment with the plot axes.}
 
 \item{flex_body}{If \code{TRUE}, the table body row heights become flexible:
 the adjacent ggplot determines the panel height and the body rows
-stretch equally to fill it. Header and footer keep their fixed size.
+stretch equally. With \code{panel = "body"} or \code{"cols"}, each row is centered
+on its category of a discrete y axis (see \code{expand}), header and footer keep
+their fixed size above and below the panel. With \code{panel = "full"} or
+\code{"rows"}, the whole table fills the panel: body rows take the height left by
+header and footer and are not aligned with the categories.
 This is useful to align table rows with discrete bars or categories
 in a neighbouring plot. Implies \code{free_y} for \code{space}.}
 
@@ -50,7 +54,9 @@ Implies \code{free_x} for \code{space}.}
 
 \item{expand}{Expansion value matching the ggplot discrete axis expansion
 (\code{ggplot2::expansion(add = expand)}). Default is \code{0.6}, which is the
-ggplot2 default for discrete axes. Only used when \code{flex_cols = TRUE}.}
+ggplot2 default for discrete axes. Used when \code{flex_body = TRUE} (with
+\code{panel = "body"} or \code{"cols"}) or \code{flex_cols = TRUE}. With \code{0.5}, rows (or
+columns) fill the whole panel.}
 
 \item{just}{Horizontal alignment of the table within its patchwork panel.
 One of \code{"left"} (default), \code{"right"}, or \code{"center"}. Useful when the
@@ -69,6 +75,33 @@ optional alignment of table headers and body with plot panel areas.
 
 Note this is experimental and may change in the future.
 }
+\section{Placement and stretching}{
+
+
+Two arguments set how the table relates to the panel of the plot (its
+plotting area, without axes and legends):
+\itemize{
+\item \code{panel} sets \strong{where} the table is placed: which part of the table is
+aligned with the panel (\code{"body"}: the body, header above and footer
+below; \code{"full"}: the whole table).
+\item \code{flex_body} sets \strong{whether body rows stretch} to fill the panel. With
+\code{FALSE}, rows keep their natural height and the body may be shorter or
+taller than the plot. With \code{TRUE}, the plot sets the height and body
+rows share it.
+}
+
+To align each row with a category of a discrete y axis, use both
+\code{panel = "body"} and \code{flex_body = TRUE}:\tabular{lll}{
+    \tab \code{flex_body = FALSE} \tab \code{flex_body = TRUE} \cr
+   \code{panel = "body"} \tab body at the top of the panel, natural height, not aligned \tab rows aligned with the categories \cr
+   \code{panel = "full"} \tab table at the top of the panel, natural height \tab table fills the height of the panel, not aligned \cr
+}
+
+
+The same applies to columns: \code{flex_cols = TRUE} with \code{panel = "body"} or
+\code{"cols"} aligns data columns with the categories of a discrete x axis.
+}
+
 \examples{
 \dontshow{if (requireNamespace("patchwork", quietly = TRUE) && requireNamespace("ggplot2", quietly = TRUE) && requireNamespace("ragg", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 library(gdtools)

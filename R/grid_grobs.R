@@ -32,7 +32,7 @@
 #' The size of the flextable can be known by using the method
 #' \link[=dim.flextableGrob]{dim} on the grob.
 #'
-#' @inheritParams args_x_only
+#' @template params_x
 #'
 #' @param fit Determines the fitting/scaling of the grob on its parent viewport.
 #' One of `auto`, `width`, `fixed`, `TRUE`, `FALSE`:
@@ -504,7 +504,7 @@ dim.flextableGrob <- function(x) {
 
 # contents grob -----------------------------------------------------------
 
-#' @importFrom data.table is.data.table .GRP
+#' @importFrom data.table is.data.table
 make_contents_grob <- function(
   row_index,
   col_index,
@@ -540,10 +540,9 @@ make_contents_grob <- function(
   )
 
   # create chunk grobs
-  gr$ftgrobs <- chunk_data[,
-    list(grobs = list(make_chunk_grob(.GRP, .SD, params))),
-    by = "chunk_index"
-  ]$grobs
+  gr$ftgrobs <- lapply(seq_len(nrow(chunk_data)), function(i) {
+    make_chunk_grob(i, as.list(chunk_data[i]), params)
+  })
 
   # set data
   gr$ftdat <- chunk_part_data
@@ -620,78 +619,18 @@ arrange_contents_grob <- function(
     }
     n <- nrow(dat)
     if (n > 1) {
-      # loop the chunk parts and arrange them in rows/columns
-      # according to their width
-      row_index <- integer(n)
-      col_index <- integer(n)
-      cur_width <- 0
-      cur_row <- 1L
-      cur_col <- 1L
-      cur_chunk <- 0L
-      for (i in seq_len(n)) {
-        item <- dat[i, ]
-        cur_width <- cur_width + (item$width * cex)
-        # available width depends on the line: `first_line` narrows the
-        # first line, `hanging` narrows the continuation lines
-        row_width <- max_width -
-          (if (cur_row == 1) first_line_in else hanging_in)
-        if (item$is_newline) {
-          # if it's the first item in first row, add it, else ignore it
-          if (cur_row == 1 && cur_col == 1) {
-            row_index[[i]] <- cur_row
-            col_index[[i]] <- cur_col
-          }
-          cur_row <- cur_row + 1L
-          cur_col <- 1L
-          cur_width <- 0
-          cur_chunk <- 0L
-        } else if (params$wrapping && cur_width > row_width) {
-          if (cur_col == 1) {
-            # if it's the first item in row, add it and go to next row
-            row_index[[i]] <- cur_row
-            col_index[[i]] <- cur_col
-            cur_row <- cur_row + 1L
-            cur_col <- 1L
-            cur_width <- 0
-            cur_chunk <- 0L
-          } else {
-            # else go to next row and then add it
-            cur_row <- cur_row + 1L
-            cur_col <- 1L
-            if (item$is_whitespace) {
-              # ignore whitespace in line break
-              cur_width <- 0
-              cur_chunk <- 0L
-            } else {
-              row_index[[i]] <- cur_row
-              col_index[[i]] <- cur_col
-              cur_col <- cur_col + 1L
-              cur_width <- (item$width * cex)
-              cur_chunk <- item$chunk_index
-            }
-          }
-        } else {
-          if (cur_row > 1L && cur_col == 1L && item$is_whitespace) {
-            # ignore whitespace
-            cur_width <- 0
-            cur_chunk <- 0L
-          } else {
-            # set the row
-            row_index[[i]] <- cur_row
-            # if the item is from a different chunk than the previous
-            if (item$chunk_index != cur_chunk) {
-              # set the column
-              col_index[[i]] <- cur_col
-              # and go to next column
-              cur_col <- cur_col + 1L
-            } else {
-              # set it to the previous column
-              col_index[[i]] <- cur_col - 1
-            }
-            cur_chunk <- item$chunk_index
-          }
-        }
-      }
+      # lines are given by layout_lines(), columns group the pieces of a chunk
+      row_index <- layout_lines(
+        width = dat$width * cex,
+        newline = dat$is_newline,
+        space = dat$is_whitespace,
+        max_width = if (params$wrapping) max_width else Inf,
+        first_line = first_line_in,
+        hanging = hanging_in,
+        # the characters left here belong to a word wider than the line
+        break_before = dat$first_char
+      )
+      col_index <- layout_columns(row_index, dat$chunk_index)
       dat$row_index <- row_index
       dat$col_index <- col_index
       dat <- dat[row_index > 0, ]
@@ -805,19 +744,18 @@ arrange_contents_grob <- function(
 
     if (do_update_grob) {
       # create grobs for columns
-      col_dat[,
-        "grob" := mapply(
-          make_col_grob,
-          .SD$col_index,
-          .SD$chunk_index,
-          .SD$txt_data,
-          .SD$from,
-          .SD$to,
-          .SD$width,
-          .SD$height,
-          SIMPLIFY = FALSE
-        )
-      ]
+      # grobs are kept out of the tables: they may hold large rasters
+      col_grobs <- mapply(
+        make_col_grob,
+        col_dat$col_index,
+        col_dat$chunk_index,
+        col_dat$txt_data,
+        col_dat$from,
+        col_dat$to,
+        col_dat$width,
+        col_dat$height,
+        SIMPLIFY = FALSE
+      )
     }
 
     # group data by row
@@ -825,7 +763,6 @@ arrange_contents_grob <- function(
       {
         row_indent <- first(.SD$row_indent)
         list(
-          grobs = list(.SD$grob),
           layout = list(grid.layout(
             nrow = 1,
             ncol = nrow(.SD) + (row_indent > 0),
@@ -845,16 +782,15 @@ arrange_contents_grob <- function(
 
     if (do_update_grob) {
       # create grobs for rows
-      row_dat[,
-        "grob" := mapply(
-          make_row_grob,
-          .SD$row_index,
-          .SD$grobs,
-          .SD$layout,
-          SIMPLIFY = FALSE
-        )
-      ]
-      children <- do.call(gList, row_dat$grob)
+      row_grobs <- split(col_grobs, col_dat$row_index)
+      row_grobs <- mapply(
+        make_row_grob,
+        row_dat$row_index,
+        row_grobs[as.character(row_dat$row_index)],
+        row_dat$layout,
+        SIMPLIFY = FALSE
+      )
+      children <- do.call(gList, unname(row_grobs))
     }
     widths <- row_dat$width
     heights <- row_dat$height
@@ -933,9 +869,14 @@ make_chunk_grob <- function(chunk_index, dat, params) {
       is_italic = dat$is_italic
     )
   } else if (dat$is_raster) {
-    if (inherits(dat$img_data[[1]], "flextableRasterChunk")) {
+    image <- calc_grid_image(
+      dat$img_data[[1]],
+      width = dat$width,
+      height = dat$height
+    )
+    if (inherits(image, "flextableRasterChunk")) {
       gr <- rasterGrob(
-        image = dat$img_data[[1]],
+        image = image,
         width = unit(1, "npc"),
         height = unit(1, "npc"),
         gp = dat$gp[[1]]
@@ -943,7 +884,7 @@ make_chunk_grob <- function(chunk_index, dat, params) {
       class(gr) <- c("flextableRasterChunk", class(gr))
     } else {
       gr <- rasterGrob(
-        image = dat$img_data[[1]],
+        image = image,
         gp = dat$gp[[1]]
       )
     }

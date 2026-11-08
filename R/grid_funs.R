@@ -236,8 +236,9 @@ grid_data_add_cell_info <- function(grid_data, x) {
   )
 
   # generate argument list for creating the cell background rect
+  # list(): with one row, `:=` would unwrap a list holding NULL or a list of length 1
   cell_data[,
-    "background" := mapply(
+    "background" := list(mapply(
       function(fill) {
         gp <- gpar_background(fill)
         if (length(gp) > 0) {
@@ -246,7 +247,7 @@ grid_data_add_cell_info <- function(grid_data, x) {
       },
       fill = .SD$background.color,
       SIMPLIFY = FALSE
-    )
+    ))
   ]
 
   # generate argument list for creating the border segments
@@ -542,21 +543,12 @@ grid_data_add_chunk_info <- function(grid_data, x, autowidths, wrapping) {
     )
   ]
 
-  # resolve image data
+  # images are read by make_chunk_grob(), not here: a raster in a column of these
+  # tables is copied many times while the layout is computed
   if (is.character(chunk_data$img_data)) {
     # fix to avoid data.table complaining about casting from char to list
     chunk_data$img_data <- as.list(chunk_data$img_data)
   }
-  chunk_data[
-    (is_raster),
-    "img_data" := mapply(
-      calc_grid_image,
-      .SD$img_data,
-      width = .SD$width,
-      height = .SD$height,
-      SIMPLIFY = FALSE
-    )
-  ]
 
   # create chunk .part data (parts split by newline)
   part_data <- chunk_data[,
@@ -906,6 +898,7 @@ grid_data_add_chunk_info <- function(grid_data, x, autowidths, wrapping) {
     part_data[, ".chunk_index" := 1:.N, by = keycols]
     part_data[, "child_count" := 0L]
     part_data[, "children_index" := integer(0)]
+    part_data[, "char_index" := 0L]
   }
   setorderv(part_data, cols = c(keycols, ".chunk_index"))
 
@@ -959,6 +952,7 @@ grid_data_add_chunk_info <- function(grid_data, x, autowidths, wrapping) {
             col_index = 0L,
             is_newline = .SD$is_newline,
             is_whitespace = .SD$is_space,
+            first_char = .SD$char_index %in% 1L,
             width = .SD$width,
             height = .SD$height,
             ascent = .SD$ascent,
@@ -1341,6 +1335,22 @@ calc_grid_rotated_just <- function(just, angle) {
 }
 
 #' @importFrom gdtools strings_sizes
+# ascent and descent of "Mg" for each font, in inches: the height of a line
+# depends on its font and not on its text
+font_reference_metrics <- function(family, size, bold, italic) {
+  key <- paste(family, size, bold, italic, sep = "|")
+  first <- which(!duplicated(key))
+  ref <- gdtools::strings_sizes(
+    rep("Mg", length(first)),
+    fontname = family[first],
+    fontsize = size[first],
+    bold = bold[first],
+    italic = italic[first]
+  )
+  i <- match(key, key[first])
+  list(ascent = ref$ascent[i], descent = ref$descent[i])
+}
+
 calc_grid_text_metrics <- function(dat) {
   # avoid CMD check warnings
   is_text <- is_newline <- is_space <- is_superscript <- is_subscript <- NULL
@@ -1366,8 +1376,16 @@ calc_grid_text_metrics <- function(dat) {
   # set width/ascent/descent/height
   dat[(is_text), "width" := .SD$part_width]
   dat[(is_superscript | is_subscript), "width" := .SD$width * 0.75]
-  dat[(is_text), "ascent" := .SD$part_ascent * .SD$line_spacing]
-  dat[(is_text), "descent" := .SD$part_descent * .SD$line_spacing]
+  ref <- font_reference_metrics(
+    dat$font.family,
+    dat$font.size,
+    dat$bold,
+    dat$italic
+  )
+  dat[, c("ref_ascent", "ref_descent") := list(ref$ascent, ref$descent)]
+  dat[(is_text), "ascent" := .SD$ref_ascent * .SD$line_spacing]
+  dat[(is_text), "descent" := .SD$ref_descent * .SD$line_spacing]
+  dat[, c("ref_ascent", "ref_descent") := NULL]
   dat[(is_text), "height" := .SD$ascent + .SD$descent]
   dat[!(is_text), c("ascent", "descent") := list(.SD$height, 0)]
   dat[(is_newline), "txt" := "\n"]
@@ -1379,24 +1397,24 @@ calc_grid_text_metrics <- function(dat) {
   dat
 }
 
+# For each row, the first `child_count` rows of the next wrap level that follow
+# it. `.chunk_index` is sorted, so that they are found without any subset.
 calc_grid_wrap_children <- function(dat) {
-  wrap_level <- .chunk_index <- NULL
-  mapply(
-    function(level, index, child_count) {
-      if (child_count > 0) {
-        head(
-          dat[wrap_level == (level + 1) & .chunk_index > index, , drop = FALSE],
-          n = child_count
-        )$.chunk_index
-      } else {
-        integer(0)
-      }
-    },
-    dat$wrap_level,
-    dat$.chunk_index,
-    dat$child_count,
-    SIMPLIFY = FALSE
-  )
+  index <- dat$.chunk_index
+  level <- dat$wrap_level
+  child_count <- dat$child_count
+  index_by_level <- split(index, level)
+
+  children <- rep(list(integer(0)), length(index))
+  for (i in which(child_count > 0)) {
+    candidates <- index_by_level[[as.character(level[i] + 1L)]]
+    first <- findInterval(index[i], candidates)
+    n <- min(child_count[i], length(candidates) - first)
+    if (n > 0L) {
+      children[[i]] <- candidates[first + seq_len(n)]
+    }
+  }
+  children
 }
 
 calc_grid_label <- function(
@@ -1442,12 +1460,7 @@ calc_grid_image <- function(img_data, width = NULL, height = NULL) {
     } else if (requireNamespace("magick", quietly = TRUE)) {
       tryCatch(
         {
-          if (grepl("\\.svg$", ignore.case = TRUE, x = img_data)) {
-            image <- magick::image_read_svg(img_data, width * 72, height * 72)
-          } else {
-            image <- magick::image_read(img_data)
-          }
-          image <- as.raster(image)
+          image <- image_raster(img_data, width, height)
         },
         error = function(e) {
           warning("error reading image: ", e)
